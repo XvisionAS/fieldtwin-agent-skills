@@ -29,7 +29,7 @@ FRONTMATTER_FIELDS = {
     "metadata",
     "allowed-tools",
 }
-REQUIRED_REFERENCES = {
+DEVELOP_INTEGRATION_REFERENCES = {
     "bridge-and-api.md",
     "documentation-map.md",
     "manifest-and-loading.md",
@@ -38,6 +38,7 @@ REQUIRED_REFERENCES = {
     "recipes.md",
     "security-and-testing.md",
 }
+CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
     "CHANGELOG.md",
@@ -258,12 +259,20 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
             heading = re.compile(rf"^##\s+{re.escape(version)}(?:\s|$)", re.MULTILINE)
             validation.require(bool(heading.search(changelog)), f"CHANGELOG.md has no heading for skill version {version}")
 
-    integration_guide = skill_path.parent / "integration/README.md"
-    validation.require(integration_guide.is_file(), f"Missing integration guide: {relative(integration_guide)}")
+    required_references: set[str]
+    if name == "develop-fieldtwin-integration":
+        integration_guide = skill_path.parent / "integration/README.md"
+        validation.require(integration_guide.is_file(), f"Missing integration guide: {relative(integration_guide)}")
+        required_references = DEVELOP_INTEGRATION_REFERENCES
+    elif name == "create-fieldtwin-integration":
+        required_references = CREATE_INTEGRATION_REFERENCES
+    else:
+        validation.errors.append(f"No package validation profile for skill {name!r}")
+        required_references = set()
 
     references_path = skill_path.parent / "references"
     validation.require(references_path.is_dir(), f"Missing references directory: {relative(references_path)}")
-    for filename in sorted(REQUIRED_REFERENCES):
+    for filename in sorted(required_references):
         reference_path = references_path / filename
         validation.require(reference_path.is_file(), f"Missing required reference: {relative(reference_path)}")
         if reference_path.is_file():

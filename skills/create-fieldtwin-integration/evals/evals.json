@@ -1,0 +1,23 @@
+{
+  "skill_name": "create-fieldtwin-integration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Turn my SvelteKit FieldTwin prototype into a deployable integration repository using Docker, Helm, Environment Modules, Tilt, devops.sh, and build-pipeline.js.",
+      "expected_output": "A complete single-path repository scaffold with a program-qualified image name, module-driven Helm values, npm start using Tilt, an external secrets boundary, and validation commands.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "My local integration pod fails because a shared ConfigMap and Secret do not exist, and a worker starts even though local development has no database or provider credentials. Fix the deployment architecture.",
+      "expected_output": "Direct non-secret Helm environment values, no unnecessary ConfigMap, local worker disablement covering all worker resources, no local Secret reference, and local/dev render tests.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Review a FieldTwin integration whose build bot component and Docker image are both named main. Keep build-bot compatibility while making registry names unambiguous.",
+      "expected_output": "A stable main component mapped consistently to a program-qualified OCI repository across Tilt, devops.sh, Helm, docs, and validation.",
+      "files": []
+    }
+  ]
+}

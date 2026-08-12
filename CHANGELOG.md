@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - 2026-08-12
+
+- Added `create-fieldtwin-integration` for repository scaffolding, program-qualified image naming,
+  Docker, Helm, Environment Modules, Tilt, build-bot, secrets, and deployment validation workflows.
+- Generalized package validation and documentation for multiple complementary skills.
+
 ## 0.1.0 - 2026-08-12
 
 - Initial public Agent Skill following the open Agent Skills specification.

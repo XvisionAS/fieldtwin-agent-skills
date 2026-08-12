@@ -9,7 +9,7 @@ Before opening a change:
 3. Never add JWTs, API tokens, customer data, private endpoints, internal repository paths, or unpublished implementation details.
 4. Keep browser examples safe by default: exact origins, pinned source windows, memory-only credentials, and explicit cleanup.
 5. Update the skill metadata version and changelog when installed behavior changes.
-6. Keep the canonical skill in `skills/develop-fieldtwin-integration`; do not duplicate it in an agent-specific wrapper.
-7. Run `python3 scripts/validate_package.py` and `skills-ref validate ./skills/develop-fieldtwin-integration` before publishing.
+6. Keep canonical skills under `skills/<skill-name>`; do not duplicate them in agent-specific wrappers.
+7. Run `python3 scripts/validate_package.py` and `skills-ref validate` for every changed skill before publishing.
 
 Protocol changes should include both positive and negative tests: correct payload/routing, malformed input, wrong origin/source, token refresh, and teardown.

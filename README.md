@@ -2,8 +2,11 @@
 
 Public, portable [Agent Skills](https://agentskills.io/home) for building secure FieldTwin integrations.
 
-This repository currently publishes one skill:
+This repository publishes two complementary skills:
 
+- **Create FieldTwin Integration** — scaffold the application, Docker image, Helm chart,
+  Environment Modules, Tilt workflow, `devops.sh`, build-bot pipeline, secrets boundary, and
+  validation path for a new deployable integration.
 - **Develop FieldTwin Integration** — build, debug, test, and review FieldTwin custom-tab integrations, including iframe lifecycle, API authentication, `postMessage`, pop-out windows, Operation Mode, settings, and protocol tests.
 
 The skill is documentation and instructions only. It has no MCP server or executable runtime, makes no network requests by itself, and does not collect credentials or usage data.
@@ -14,6 +17,8 @@ Use any Agent Skills-compatible installer. The cross-agent `skills` CLI can disc
 
 ```bash
 npx skills add XvisionAS/fieldtwin-agent-skills \
+  --skill create-fieldtwin-integration
+npx skills add XvisionAS/fieldtwin-agent-skills \
   --skill develop-fieldtwin-integration
 ```
 
@@ -21,7 +26,7 @@ For a user-wide, non-interactive installation, name the agent explicitly. For ex
 
 ```bash
 npx skills add XvisionAS/fieldtwin-agent-skills \
-  --skill develop-fieldtwin-integration \
+  --skill create-fieldtwin-integration \
   --global \
   --agent codex \
   --yes
@@ -32,8 +37,8 @@ Replace `codex` with the identifier for another supported client, such as `claud
 GitHub CLI 2.90 or later also supports previewing and installing standard skills:
 
 ```bash
-gh skill preview XvisionAS/fieldtwin-agent-skills develop-fieldtwin-integration
-gh skill install XvisionAS/fieldtwin-agent-skills develop-fieldtwin-integration \
+gh skill preview XvisionAS/fieldtwin-agent-skills create-fieldtwin-integration
+gh skill install XvisionAS/fieldtwin-agent-skills create-fieldtwin-integration \
   --agent codex \
   --scope user
 ```
@@ -43,15 +48,18 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 ## Example prompts
 
 - `Use develop-fieldtwin-integration to build a secure browser bridge for my FieldTwin custom tab.`
+- `Use create-fieldtwin-integration to turn this prototype into a Dockerized Helm integration with Tilt and build-bot support.`
+- `Use create-fieldtwin-integration to scaffold a new SvelteKit integration with modules/localdev, devops.sh, and build-pipeline.js.`
 - `Use develop-fieldtwin-integration to add Operation Mode search, progress, inline actions, and double-click behavior.`
 - `Review this FieldTwin postMessage integration for origin, token, and teardown problems.`
 - `Add a dynamic page manifest and API client to this FieldTwin integration.`
 
 ## Update
 
-Update an installation managed by the `skills` CLI:
+Update installations managed by the `skills` CLI:
 
 ```bash
+npx skills update create-fieldtwin-integration
 npx skills update develop-fieldtwin-integration
 ```
 
@@ -75,6 +83,10 @@ All IDs, origins, assets, tags, and measurements in examples are fictional.
 
 ```text
 skills/
+├── create-fieldtwin-integration/
+│   ├── SKILL.md
+│   ├── evals/evals.json
+│   └── references/
 └── develop-fieldtwin-integration/
     ├── SKILL.md
     ├── integration/README.md
@@ -86,6 +98,7 @@ skills/
 
 ```bash
 python3 scripts/validate_package.py
+skills-ref validate ./skills/create-fieldtwin-integration
 skills-ref validate ./skills/develop-fieldtwin-integration
 ```
 

@@ -1,0 +1,86 @@
+---
+name: create-fieldtwin-integration
+description: Create and scaffold a production-ready FieldTwin external integration repository, including the web application, manifest and dynamic pages, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, converting a prototype into a deployable integration, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+license: ISC
+metadata:
+  author: FutureOn AS
+  version: "0.1.0"
+---
+
+# Create FieldTwin Integrations
+
+Create the smallest complete repository that developers, Tilt, the build bot, Helm, and FieldTwin can all use without maintaining separate deployment paths. Use `develop-fieldtwin-integration` alongside this skill for the browser bridge, manifest protocol, JWT lifecycle, messages, and protocol tests.
+
+Read [references/repository-and-deployment.md](references/repository-and-deployment.md) before editing. Inspect one current integration for local conventions, but do not copy obsolete secrets, generic image names, or required ConfigMaps without confirming they are needed.
+
+## 1. Establish names and boundaries
+
+- Choose a lowercase hyphenated integration slug such as `equipment-insights`.
+- Keep the build-bot component key stable, commonly `main`, while giving every OCI repository a program-qualified name such as `equipment-insights-main`. Never publish a generic `main` image.
+- Define the Helm release, control namespace, runtime namespace, DNS domain, service names, container port, and local forward port once and reuse them.
+- Separate ordinary environment values from credentials. Put non-secret configuration in module-selected Helm `environment` values. Reference an externally managed Secret only for credentials.
+- Do not require a ConfigMap merely to start a pod. Add one only for a real mounted or independently managed configuration artifact.
+
+## 2. Create the repository skeleton
+
+Create the applicable paths from the reference tree. At minimum include:
+
+- the application under `fullstacks/main/` with its own package lock and Dockerfile;
+- a root package with operational aliases;
+- `helm/integration/` as the Kubernetes source of truth;
+- `modules/localdev`, `modules/dev`, and the shared-environment module when used;
+- `Tiltfile`, `devops.sh`, and `build-pipeline.js` at repository root;
+- `.dockerignore`, environment inventory, migrations, and operational documentation when required.
+
+Use the latest stable version of the user-selected framework. For SvelteKit, use Svelte 5, the current SvelteKit release, `adapter-node`, and a Node production server. Keep framework code inside the application directory; keep deployment orchestration at the root.
+
+## 3. Implement the FieldTwin surface
+
+- Serve a stable manifest endpoint and integration page.
+- Add `dynamicPagesUrl` when page availability depends on deployed or tenant-scoped state. Authenticate dynamic-page requests and derive project scope only from verified claims.
+- Implement exact-origin and exact-source `loaded`/`tokenRefresh` handling with the JWT kept in memory.
+- Keep tokens, account IDs, and project IDs out of page URLs, logs, storage, and analytics.
+- Test iframe and pop-out lifecycle, teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
+
+## 4. Build one image consistently
+
+- Use a multi-stage Dockerfile with deterministic dependency installation, application and worker builds, a minimal non-root production stage, a read-only-compatible filesystem, and a health check.
+- Keep the production root filesystem read-only, but make the local development stage writable when Vite, live update, or dependency refresh must write under the application directory.
+- Use the same program-qualified image repository in Tilt, `devops.sh`, Helm values/templates, documentation, and registry examples.
+- Keep the build-bot component key separate from the OCI repository name. `build-pipeline.js` may ask `devops.sh` to build `main`; `devops.sh` maps `main` to `<integration>-main`.
+- Make `npm start` invoke the root Tilt workflow. Provide a distinct command such as `npm run start:app` for running the built Node application directly.
+
+## 5. Make Kubernetes environments explicit
+
+- Render non-secret module parameters directly into pod environment variables through Helm.
+- Keep credential values out of modules, Helm values, Docker build arguments, and source control. Reference a Secret managed by the cluster's approved secret system.
+- Make optional workers and their namespaces, service accounts, RBAC, quotas, and limits conditional on one `worker.enabled` value.
+- Disable credential-dependent workers in local development unless the local module also provisions every dependency. A web/demo mode must not reference missing Secrets or ConfigMaps.
+- Use least-privilege service accounts, no default service-account token for the web pod, restricted pod security, probes, resources, and immutable image tags or digests in shared environments.
+- Keep Helm authoritative. Do not add a competing raw-YAML deployment path.
+
+## 6. Wire local and automated workflows
+
+- Modules select registry, Kubernetes context, namespaces, release, DNS domain, build target, worker state, pull-secret names, and non-secret Helm environment values.
+- Tilt builds the same Dockerfile and image repository as CI, renders the same Helm chart, registers the rendered resource names, and supports live update.
+- `devops.sh` exposes build, push, deploy, render, lint, status, logs, restart, and teardown operations. It creates or copies only resources enabled for the selected environment.
+- `build-pipeline.js` builds each component, pushes it, then deploys. Do not duplicate build logic in the pipeline file.
+- Ensure a stale local shell cannot accidentally enable production-only resources. Derive safe defaults from the selected local module and validate booleans.
+
+## 7. Validate the complete path
+
+Before handoff:
+
+- lint the Helm chart;
+- render every committed module and inspect image names, environment values, Secret/ConfigMap references, replicas, and optional resources;
+- run Kubernetes client-side dry-run on rendered manifests;
+- evaluate the Tiltfile using the local module and confirm the expected image and resources;
+- run format, lint, type checks, tests, and both application and worker production builds;
+- build the Docker image when a daemon is available;
+- confirm `npm start` reaches Tilt and the direct application command remains separate;
+- verify the manifest, dynamic-pages response, FieldTwin lifecycle, and authenticated API boundary;
+- report missing live-cluster, registry, database, or migration validation explicitly.
+
+## Handoff
+
+Report the chosen component-to-image mapping, module behavior, required external Secrets, endpoints, validation results, and exact commands for local start and deployment. Call out any compatibility or migration step for an existing integration.
