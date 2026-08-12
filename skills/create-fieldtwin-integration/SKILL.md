@@ -4,7 +4,7 @@ description: Create and scaffold a production-ready FieldTwin external integrati
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.1.0"
+  version: "0.2.1"
 ---
 
 # Create FieldTwin Integrations
@@ -37,7 +37,15 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 ## 3. Implement the FieldTwin surface
 
 - Serve a stable manifest endpoint and integration page.
+- Make the public manifest cross-origin readable: support `GET` and `OPTIONS`, return JSON, and set
+  `Access-Control-Allow-Origin: *` when the response is credential-free, or echo a validated exact
+  origin when deployment policy requires an allowlist. Test with the actual FieldTwin Admin origin.
 - Add `dynamicPagesUrl` when page availability depends on deployed or tenant-scoped state. Authenticate dynamic-page requests and derive project scope only from verified claims.
+- If FieldTwin fetches dynamic pages from the browser, handle `OPTIONS` and allow `POST`,
+  `Authorization`, and `Content-Type`. Echo only a configured exact FieldTwin origin and send
+  `Vary: Origin`; never use wildcard origin with browser credentials.
+- Treat CORS response headers and iframe CSP `frame-ancestors` as separate controls. Configure and
+  test both through the production server and ingress, not only the framework development server.
 - Implement exact-origin and exact-source `loaded`/`tokenRefresh` handling with the JWT kept in memory.
 - Keep tokens, account IDs, and project IDs out of page URLs, logs, storage, and analytics.
 - Test iframe and pop-out lifecycle, teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
@@ -78,7 +86,8 @@ Before handoff:
 - run format, lint, type checks, tests, and both application and worker production builds;
 - build the Docker image when a daemon is available;
 - confirm `npm start` reaches Tilt and the direct application command remains separate;
-- verify the manifest, dynamic-pages response, FieldTwin lifecycle, and authenticated API boundary;
+- verify manifest GET and OPTIONS from a cross-origin request, dynamic-pages preflight and response,
+  FieldTwin lifecycle, and the authenticated API boundary;
 - report missing live-cluster, registry, database, or migration validation explicitly.
 
 ## Handoff

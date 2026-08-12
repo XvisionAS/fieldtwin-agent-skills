@@ -103,6 +103,32 @@ The chart should render:
 
 Avoid required ConfigMaps for plain environment variables. Use a ConfigMap only when configuration has an independent lifecycle or must be mounted as a file. Never render empty `envFrom` entries.
 
+## FieldTwin HTTP and CORS contract
+
+FieldTwin administrators load a manifest from a different origin. Treat CORS as part of the
+manifest contract rather than a development-server option:
+
+- serve the manifest over HTTPS with `GET`, `Content-Type: application/json`, and an `OPTIONS`
+  response;
+- for a public, credential-free manifest, return `Access-Control-Allow-Origin: *` and allow
+  `GET, OPTIONS` plus the request headers needed by the importer; a wildcard header grant is safe
+  only for this credential-free public endpoint. Otherwise validate and echo an exact origin;
+- verify the headers using a request with the actual FieldTwin Admin `Origin` through the deployed
+  ingress, because an ingress or proxy can alter application response headers.
+
+Dynamic pages are authenticated and need a narrower browser CORS policy:
+
+- allow `POST, OPTIONS` and explicitly allow `Authorization, Content-Type`;
+- echo only an exact configured FieldTwin frontend origin and include `Vary: Origin`;
+- do not add `Access-Control-Allow-Credentials` unless the protocol actually uses browser cookies,
+  and never combine credentialed requests with wildcard origin;
+- keep CORS independent from `Content-Security-Policy: frame-ancestors`: CORS controls browser HTTP
+  access, while `frame-ancestors` controls which origins may embed the integration.
+
+Add server-hook or endpoint tests for manifest GET/preflight, an allowed dynamic-page origin, a
+look-alike rejected origin, required request headers, and an unrelated route that receives no CORS
+grant. Do not rely on Vite's development CORS setting as proof of production behavior.
+
 ## Tilt contract
 
 Tilt should:
@@ -141,6 +167,6 @@ devops.sh deploy
 | Tilt | Evaluation names the expected Dockerfile, OCI repository, and Kubernetes resources. |
 | Application | Format, lint, type checks, tests, web build, and worker build pass. |
 | Container | Image builds and starts as non-root when a Docker daemon is available. |
-| FieldTwin | Manifest loads; trusted `loaded` and `tokenRefresh` work; dynamic pages are authenticated and tenant-scoped. |
+| FieldTwin | Manifest GET/preflight works cross-origin; dynamic-page CORS is exact-origin and permits authorization; trusted `loaded` and `tokenRefresh` work; dynamic pages are authenticated and tenant-scoped. |
 
 Do not mutate a shared or production cluster merely to prove rendering. Deploy only when the user asks or the existing workflow clearly authorizes it.

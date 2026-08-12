@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 - 2026-08-12
+
+- Added production manifest and dynamic-page CORS requirements to both integration skills,
+  including preflight behavior, exact-origin guidance for authenticated endpoints, and validation
+  through the deployed ingress.
+- Clarified that CORS and iframe `frame-ancestors` are independent browser security controls.
+
 ## 0.2.0 - 2026-08-12
 
 - Added `create-fieldtwin-integration` for repository scaffolding, program-qualified image naming,

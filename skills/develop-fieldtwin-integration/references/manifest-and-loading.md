@@ -47,6 +47,24 @@ Common fields:
 
 Request the narrowest access and browser permissions possible. Manifest flags are not substitutes for backend authorization.
 
+## Cross-origin endpoint requirements
+
+FieldTwin Admin normally imports the manifest from a different browser origin. Serve the public,
+credential-free manifest with `GET` and `OPTIONS`, `Content-Type: application/json`, and
+`Access-Control-Allow-Origin: *`. Allow `GET, OPTIONS` and any importer request headers the endpoint
+actually needs. If a manifest response is credentialed, do not use wildcard origin; validate and
+echo an exact configured origin instead.
+
+When the browser calls `dynamicPagesUrl`, handle preflight separately because this endpoint carries
+an integration JWT. Allow `POST, OPTIONS` and explicitly allow `Authorization, Content-Type`. Echo
+only a configured exact FieldTwin frontend origin and include `Vary: Origin`. Do not enable browser
+credentials unless the released contract requires cookies.
+
+Test manifest GET/preflight and dynamic-page preflight through the production server and deployed
+ingress using real `Origin` headers. Development-server CORS is not evidence that the built server
+or ingress preserves these headers. Keep CORS separate from CSP `frame-ancestors`: CORS governs
+cross-origin HTTP reads, while `frame-ancestors` governs iframe embedding.
+
 ## Dynamic pages
 
 Set `dynamicPagesUrl` when the visible tabs depend on user permissions, external configuration, or available workflows. The endpoint accepts an authenticated POST and returns a JSON array.
