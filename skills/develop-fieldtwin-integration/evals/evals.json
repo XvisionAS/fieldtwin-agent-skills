@@ -1,0 +1,35 @@
+{
+  "skill_name": "develop-fieldtwin-integration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a reusable browser bridge for a FieldTwin custom-tab integration. It must initialize from loaded, replace its token on tokenRefresh, work both embedded and popped out, call the current API, and include lifecycle tests.",
+      "expected_output": "A secure bridge and tests using exact origin/source validation, in-memory token replacement, parent/opener routing, current-token API headers, and complete teardown.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Add Operation Mode search to an equipment integration. Return grouped results with child rows, progress, a Font Awesome focus action, and an open command on double-click. Clearing the query must remove old results.",
+      "expected_output": "Documented Operation Search handlers with stable IDs, targeted inline and double-click actions, explicit focus behavior, clear handling, and interaction tests.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Review this FieldTwin postMessage client for origin validation, token handling, multiple tab instances, pop-out behavior, pending replies, and cleanup. Make only the smallest safe changes and add regression tests.",
+      "expected_output": "A focused review or patch that pins an exact trusted origin/source, keeps credentials in memory, targets the correct instance, supports opener/parent, and tears down all asynchronous work.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Create a FieldTwin integration manifest with two dynamic pages, a hidden background worker, explicit Designer and Operation visibility, and pop-out support. Include a secure dynamic-pages endpoint sample.",
+      "expected_output": "A least-privilege manifest, stable dynamic page paths, correct parent/background behavior, and a server sample that verifies the bearer JWT before making authorization decisions.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Publish pressure and temperature channels to FieldTwin Operation Mode. Register metadata, answer viewport-window data requests with transferable buffers, open the panel, and test correlation and teardown.",
+      "expected_output": "A time-series implementation using timeSeriesInfo, getTimeSeriesData, reqId, timeSeriesData, documented stride encoding, transferable buffers, and cleanup tests.",
+      "files": []
+    }
+  ]
+}
