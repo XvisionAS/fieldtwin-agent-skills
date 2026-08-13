@@ -8,7 +8,10 @@ Read [documentation-map.md](documentation-map.md) before using this guide. Deplo
 
 ### Pin the host window and origin
 
-Configure the exact HTTPS origins that are allowed to host the integration. During bootstrap, accept `loaded` only when both conditions hold:
+Configure the exact origins that are allowed to host the integration. Require HTTPS except in an
+explicitly selected local HTTP deployment. That local exception must still name the actual exact
+FieldTwin parent origin and must never accept arbitrary HTTP origins. During bootstrap, accept
+`loaded` only when both conditions hold:
 
 1. `event.origin` is an exact member of the configured allowlist.
 2. `event.source` is the expected `window.parent` for an iframe or `window.opener` for a pop-out.
@@ -17,15 +20,34 @@ After bootstrap, pin that source window and origin. Accept later messages only w
 
 If an integration is deployed to more than one FieldTwin environment, inject the allowlist through deployment configuration. Do not infer an allowed origin from an arbitrary query parameter or from the first message received.
 
+Drive both the application URL scheme and the bridge's HTTP exception from the same deployment TLS
+mode. A local application at `http://integration.local.example` embedded by
+`http://fieldtwin.local.example` needs the latter exact origin in its allowlist. A production or
+shared deployment must reject that HTTP entry even if it is accidentally configured.
+
+Apply the same exact allowlist to the HTTPS page response's CSP `frame-ancestors` directive. Do not
+send `X-Frame-Options: DENY` or `SAMEORIGIN`. If the deployment explicitly selects HTTP-only local
+development, the child response may omit `frame-ancestors`; this does not relax the bridge checks
+above and must not be enabled for shared or production deployments.
+
 ### Keep credentials ephemeral
 
 - Keep the integration JWT in instance memory only.
+- Start bootstrap capture before framework mount. If a later bridge needs a handoff, keep at most a
+  small bounded number of `loaded` candidates in a module closure, never on a global or serializable
+  store. Drain them through the normal trust boundary and erase them immediately.
+- For SvelteKit, install that closure-private capture from a parser-time module in `app.html`.
+  `hooks.client` is asynchronously imported and is not sufficient to win the iframe-load race.
 - Replace it atomically on `tokenRefresh`.
 - Build the `Authorization` header when each API request starts so it uses the current token.
 - Never place the JWT in a URL, browser storage, DOM attribute, log, analytics event, error report, screenshot, or repository.
 - Clear the in-memory reference during teardown and cancel requests that no longer belong to the active integration instance.
 
-For server-rendered dynamic pages, verify the JWT signature and expected issuer, audience, and expiry before using any claim. Merely decoding the JWT is not authentication. Use verified claims only to choose content the caller is already authorized to see.
+For server-rendered dynamic pages, verify the JWT signature, expiry, stable subject and tenant
+claims, and every constraint supported by the issuer profile before using any claim. Modern JWKS
+profiles must pin issuer, audience, and algorithm. Legacy FieldTwin integration tokens may omit
+issuer and audience; support them only through an explicit public-key profile that pins the exact
+key endpoint and returned algorithm. Merely decoding the JWT is not authentication.
 
 ### Validate every external message
 
@@ -74,6 +96,14 @@ Cover at least these cases:
 | Case | Expected result |
 | --- | --- |
 | `loaded` from the configured origin and expected parent | Bootstrap state is stored and the host is pinned |
+| Valid `loaded` posted before framework mount | The early candidate is drained once through normal validation and bootstrap completes |
+| SvelteKit parent posts from iframe `load` before dynamic client imports | Parser-time capture retains the candidate and the page advances |
+| Early `loaded` from a wrong origin or source | The queued candidate is rejected and a later trusted live message can still bootstrap |
+| Account Settings `loaded` without project API fields | Same-origin authenticated calls are available; project API calls fail closed until API context exists |
+| Exact local HTTP parent with explicit local mode | Bootstrap succeeds and pins that exact HTTP origin |
+| Local HTTP `backendUrl` with explicit local mode | Bootstrap succeeds; the backend base path is preserved |
+| HTTP `backendUrl` outside explicit local mode | Bootstrap or API context fails closed |
+| HTTP parent without explicit local mode | Configuration or bootstrap fails closed |
 | `loaded` from a look-alike or unconfigured origin | Message is rejected and no state is stored |
 | Message from the right origin but a different window | Message is rejected |
 | Message from the pinned window but a different origin | Message is rejected |
@@ -83,6 +113,9 @@ Cover at least these cases:
 | Teardown followed by a message | No handler runs and pending work is settled |
 
 Use reserved example domains and synthetic identifiers in fixtures. Never copy a real token or production payload into a test. A useful harness constructs message events with explicit `origin`, `source`, and `data`, then observes only public callbacks and outbound messages.
+
+Also assert that the early queue is bounded, removed after handoff or construction failure, and not
+reachable through public context, globals, storage, logs, or serialized framework state.
 
 ### API tests
 
@@ -122,13 +155,20 @@ Operation Mode interactions need separate assertions because selection, focus, a
 
 Before release, verify the integration in an authorized test environment:
 
-1. Load it in an iframe and, when supported, a pop-out.
+1. Inspect the integration page through ingress: HTTPS has exact `frame-ancestors`, explicit local
+   HTTP has no child iframe-denial header, and neither emits blocking `X-Frame-Options`. Then load it
+   in an iframe and, when supported, a pop-out.
 2. Confirm refresh and remount do not duplicate messages.
 3. Confirm a token refresh is used without reloading the integration.
 4. Exercise read and permitted write calls, readiness, and one recoverable failure.
 5. Exercise ordinary selection, explicit focus, inline actions, double-click, query clearing, filters, panels, and time series that the integration supports.
 6. Inspect browser storage, URLs, console output, and network-error UI for credential leakage.
 7. Close the integration and confirm listeners, requests, and timers stop.
+
+If embedding still fails, classify the browser console error before editing policy. A FieldTwin
+parent `frame-src` error needs a host configuration change. An HTTPS-parent/HTTP-child mixed-content
+error needs HTTPS, an approved proxy, or an explicit local-only browser exception; child CORS and
+`frame-ancestors` changes cannot bypass it.
 
 ## Public sample and release checklist
 

@@ -30,6 +30,12 @@
       "prompt": "Publish pressure and temperature channels to FieldTwin Operation Mode. Register metadata, answer viewport-window data requests with transferable buffers, open the panel, and test correlation and teardown.",
       "expected_output": "A time-series implementation using timeSeriesInfo, getTimeSeriesData, reqId, timeSeriesData, documented stride encoding, transferable buffers, and cleanup tests.",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Debug a SvelteKit FieldTwin Account Settings integration running through local Tilt. The iframe stays on Connecting, local ingress is HTTP, the manifest icon is broken, and the first server request fails after the page finally connects. Fix the complete development path and update regression tests without exposing the integration token.",
+      "expected_output": "A layered diagnosis and implementation covering one mode-aware public origin, manifest and authenticated endpoint CORS, iframe response policy, parser-time loaded capture before SvelteKit imports, exact origin/source validation, Account Settings minimal bootstrap, base-path-safe local HTTP backend handling, the correct FieldTwin server JWT profile, module-to-Helm environment wiring, and ingress-level plus automated verification.",
+      "files": []
     }
   ]
 }

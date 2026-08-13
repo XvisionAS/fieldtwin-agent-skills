@@ -31,6 +31,7 @@ FRONTMATTER_FIELDS = {
 }
 DEVELOP_INTEGRATION_REFERENCES = {
     "bridge-and-api.md",
+    "development-workflow.md",
     "documentation-map.md",
     "manifest-and-loading.md",
     "message-catalog.md",

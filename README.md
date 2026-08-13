@@ -7,7 +7,7 @@ This repository publishes two complementary skills:
 - **Create FieldTwin Integration** — scaffold the application, Docker image, Helm chart,
   Environment Modules, Tilt workflow, `devops.sh`, build-bot pipeline, secrets boundary, and
   validation path for a new deployable integration.
-- **Develop FieldTwin Integration** — build, debug, test, and review FieldTwin custom-tab integrations, including iframe lifecycle, API authentication, `postMessage`, pop-out windows, Operation Mode, settings, and protocol tests.
+- **Develop FieldTwin Integration** — build, run, debug, test, and review FieldTwin custom-tab integrations, including the local Tilt/Helm path, HTTP/HTTPS URL generation, iframe lifecycle, API authentication, `postMessage`, pop-out windows, Operation Mode, settings, and protocol tests.
 
 The skill is documentation and instructions only. It has no MCP server or executable runtime, makes no network requests by itself, and does not collect credentials or usage data.
 
@@ -51,6 +51,7 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 - `Use create-fieldtwin-integration to turn this prototype into a Dockerized Helm integration with Tilt and build-bot support.`
 - `Use create-fieldtwin-integration to scaffold a new SvelteKit integration with modules/localdev, devops.sh, and build-pipeline.js.`
 - `Use develop-fieldtwin-integration to add Operation Mode search, progress, inline actions, and double-click behavior.`
+- `Use develop-fieldtwin-integration to debug a SvelteKit Account Settings iframe that stays on Connecting in local Tilt.`
 - `Review this FieldTwin postMessage integration for origin, token, and teardown problems.`
 - `Add a dynamic page manifest and API client to this FieldTwin integration.`
 
@@ -68,6 +69,7 @@ npx skills update develop-fieldtwin-integration
 The bundled [integration guide](skills/develop-fieldtwin-integration/integration/README.md), focused references, and fictional samples cover:
 
 - integration manifests, dynamic pages, background loading, and pop-outs;
+- the end-to-end local development path through modules, Tilt, Helm, ingress, and FieldTwin;
 - the host-sent `loaded` bootstrap and `tokenRefresh` lifecycle;
 - authenticated FieldTwin API calls without persisting JWTs;
 - exact-origin, exact-source `postMessage` routing;

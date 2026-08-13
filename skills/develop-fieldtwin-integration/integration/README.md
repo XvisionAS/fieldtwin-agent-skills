@@ -4,6 +4,10 @@ This is the public entry point for developing an external FieldTwin integration.
 
 The protocol guidance was verified against the FieldTwin integration guide revision 52 on 2026-08-12. A deployed environment's current documented contract takes precedence when it differs.
 
+For an implementation sequence that covers repository conventions, Environment Modules, Tilt,
+Helm, local HTTP, iframe loading, server JWT profiles, and live diagnosis, use the
+[development workflow](../references/development-workflow.md).
+
 ## What an integration is
 
 A FieldTwin integration is a web application rendered in a custom-tab iframe or, when enabled, a pop-out window. The host and integration communicate with structured-cloneable `window.postMessage` envelopes. The host also provides a short-lived JWT and API context after the page loads.
@@ -23,7 +27,8 @@ Integration page
 
 ## Start with the manifest
 
-Serve a stable HTTPS JSON manifest that requests only the access and browser capabilities the integration needs:
+Serve a stable JSON manifest that requests only the access and browser capabilities the integration
+needs. Require HTTPS outside an explicitly HTTP-only local development mode:
 
 ```json
 {
@@ -46,6 +51,13 @@ Use [manifest-and-loading.md](../references/manifest-and-loading.md) for every s
 
 FieldTwin sends `loaded` after the integration document loads. The integration does not need to announce readiness first.
 
+Register the receiver before the document-load boundary, before a framework mounts or hydrates.
+FieldTwin does not wait for a client readiness handshake, so starting in `onMount`, `useEffect`, or
+SvelteKit's asynchronously imported `hooks.client` can miss the bootstrap. In SvelteKit, load a
+parser-time capture module from `app.html` before the framework body/bootstrap. If the full bridge
+starts later, preserve only a bounded number of early `loaded` candidates in that module closure,
+then revalidate and drain them after the bridge's normal listener is attached.
+
 Before accepting `loaded`:
 
 1. Require `event.origin` to equal an approved FieldTwin frontend origin.
@@ -55,6 +67,12 @@ Before accepting `loaded`:
 5. Pin that exact source window and exact origin for the lifetime of the bridge.
 
 Keep `token` only in instance memory. Replace it atomically when a trusted `tokenRefresh` arrives and build every API `Authorization` header at request time.
+
+Validate only the bootstrap fields the current surface needs. Account Settings may omit project API
+context; accept a trusted token for same-origin authenticated control-plane calls, while keeping the
+FieldTwin project API helper unavailable until `backendUrl` and `APIVersion` are present.
+Validate any supplied `backendUrl` under the same explicit TLS/local scheme policy as the parent
+and preserve its base path when building API URLs.
 
 ```javascript
 const allowedOrigins = new Set(['https://fieldtwin.example'])
@@ -185,6 +203,8 @@ Use [operation-mode.md](../references/operation-mode.md) for search clearing, pr
 Test at least:
 
 - trusted iframe bootstrap and trusted pop-out bootstrap;
+- trusted bootstrap posted before framework mount, with no token exposed by the handoff;
+- Account Settings bootstrap without unused project API fields;
 - rejection of a wrong origin, a wrong source window, and malformed messages;
 - token replacement while requests are in flight and current-token headers on later calls;
 - exact top-level versus `data` payload placement;
@@ -201,6 +221,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Topic | Reference |
 | --- | --- |
 | Source priority, invariants, and public-sample policy | [documentation-map.md](../references/documentation-map.md) |
+| End-to-end implementation, local development, and troubleshooting | [development-workflow.md](../references/development-workflow.md) |
 | Manifest, loading, dynamic pages, and pop-outs | [manifest-and-loading.md](../references/manifest-and-loading.md) |
 | Secure bridge, bootstrap, API access, replies, teardown | [bridge-and-api.md](../references/bridge-and-api.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |

@@ -1,10 +1,13 @@
 # Manifest, loading, dynamic pages, and pop-outs
 
-Use a manifest when administrators should be able to import an integration configuration from a stable HTTPS endpoint. An integration may expose a single static page, dynamic pages, background behavior, or a combination.
+Use a manifest when administrators should be able to import an integration configuration from a
+stable endpoint. Require HTTPS for shared and production environments; an explicit local
+development mode may use HTTP. An integration may expose a single static page, dynamic pages,
+background behavior, or a combination.
 
 ## Static manifest example
 
-Serve a JSON response over HTTPS:
+Serve a JSON response from the environment's configured public origin:
 
 ```json
 {
@@ -55,6 +58,11 @@ credential-free manifest with `GET` and `OPTIONS`, `Content-Type: application/js
 actually needs. If a manifest response is credentialed, do not use wildcard origin; validate and
 echo an exact configured origin instead.
 
+Build `url`, `logo`, `dynamicPagesUrl`, settings URLs, callbacks, and webhook URLs from one exact
+public application origin. The origin scheme must follow the deployment mode: an explicitly
+HTTP-only local ingress produces HTTP URLs, while shared and production deployments require HTTPS.
+Do not hard-code HTTPS in the manifest when the development ingress serves only HTTP.
+
 When the browser calls `dynamicPagesUrl`, handle preflight separately because this endpoint carries
 an integration JWT. Allow `POST, OPTIONS` and explicitly allow `Authorization, Content-Type`. Echo
 only a configured exact FieldTwin frontend origin and include `Vary: Origin`. Do not enable browser
@@ -64,6 +72,29 @@ Test manifest GET/preflight and dynamic-page preflight through the production se
 ingress using real `Origin` headers. Development-server CORS is not evidence that the built server
 or ingress preserves these headers. Keep CORS separate from CSP `frame-ancestors`: CORS governs
 cross-origin HTTP reads, while `frame-ancestors` governs iframe embedding.
+
+## Iframe response policy
+
+For HTTPS, shared, and production deployments, send `Content-Security-Policy: frame-ancestors`
+with only the configured exact FieldTwin frontend origins. Do not send `X-Frame-Options: DENY` or
+`SAMEORIGIN`, because the integration is intentionally embedded cross-origin. Fail closed if the
+production allowlist is absent or invalid.
+
+An explicitly enabled HTTP-only local mode may omit `frame-ancestors` from the child response to
+match the standard local Kubernetes workflow. Keep the remaining CSP directives and keep exact
+origin/source validation in the postMessage bridge. Never infer this relaxation from the request
+host or scheme; enable it only through the same deployment flag that selects local HTTP URLs.
+
+Browser errors identify the owning layer:
+
+- `frame-ancestors` and `X-Frame-Options` on the child response are controlled by the integration;
+- `frame-src` on the parent response is controlled by FieldTwin;
+- HTTPS-parent/HTTP-child mixed-content blocking is controlled by the browser and cannot be fixed
+  by CORS or by relaxing the child's CSP. Use local HTTPS, an approved proxy, or an explicit
+  local-only browser exception.
+
+Inspect the final page response through ingress in both local and HTTPS modes, and complete one
+real iframe load. A direct top-level page load does not validate iframe permission.
 
 ## Dynamic pages
 
@@ -129,6 +160,18 @@ Dynamic pages replace the visible default tab, but the parent definition can sti
 
 FieldTwin can initially load an integration by POST or GET depending on configuration. Modern single-page integrations should treat the trusted host-sent `loaded` message as their runtime bootstrap because the same message path works for iframe reloads and pop-outs.
 
+FieldTwin does not wait for a client readiness event before posting `loaded`. Register a minimal
+message receiver before the document-load boundary, before framework mount or hydration. A
+listener created only in a route/component lifecycle hook—or in SvelteKit's asynchronously imported
+`hooks.client`—can lose the one bootstrap message and leave the page permanently waiting. For
+SvelteKit, load a parser-time capture module from `app.html` before `%sveltekit.body%`.
+
+If the full bridge cannot be created that early, capture only bounded `loaded` candidates in a
+module-private closure. The bridge must attach its normal listener before removing the temporary
+listener, drain each candidate through the same exact-origin, expected-source, and payload
+validation, and erase the queue. Never expose the candidate or token through `window`, framework
+stores, browser storage, the DOM, logs, or hydration data.
+
 Do not render a token, copy it into page state that devtools serializes, or echo it into HTML. Keep only the fields the integration needs.
 
 Typical `loaded` fields include:
@@ -147,6 +190,15 @@ Typical `loaded` fields include:
 | `sessionId` | Current integration instance session. |
 
 Treat any additional user or project fields as sensitive and retain them only when the integration workflow requires them.
+
+The payload depends on the FieldTwin surface. A project page may need `backendUrl`, `APIVersion`,
+project, subproject, and readiness before it can call the FieldTwin API. Account Settings is
+account-scoped and may omit those project API fields. Accept a trusted Account Settings bootstrap
+when the token and the fields that page actually needs are valid; allow same-origin authenticated
+control-plane calls, and make the FieldTwin API helper fail explicitly until backend/API context is
+present. Do not reject the entire bootstrap merely because an unused project field is absent.
+When `backendUrl` is present, accept HTTP only in explicit local mode and preserve a supplied base
+path such as `/backend` when constructing FieldTwin API URLs.
 
 ## Pop-out windows
 

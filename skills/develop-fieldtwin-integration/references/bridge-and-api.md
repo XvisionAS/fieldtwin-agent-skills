@@ -1,6 +1,9 @@
 # Secure bridge, bootstrap lifecycle, and API access
 
-Create one bridge when the integration page mounts and dispose it when the page unmounts. The bridge should own the FieldTwin host window, trusted origin, JWT, and API context so feature code does not duplicate security-sensitive message handling.
+Install bootstrap capture from the earliest browser entrypoint, before the integration framework
+mounts or hydrates. Create one full bridge for the page and dispose it when the page unmounts. The
+bridge should own the FieldTwin host window, trusted origin, JWT, and optional API context so
+feature code does not duplicate security-sensitive message handling.
 
 The examples on this page use fictional `.example` origins. Supply the exact origins for the FieldTwin environments where the integration is installed.
 
@@ -20,6 +23,12 @@ Use `loaded` to initialize only the runtime fields the integration needs:
 | `canEdit` | UI capability hint. The API still enforces authorization. |
 | `APIServerIsReady` | Whether subproject API requests can start. |
 
+Not every surface receives every field. Account Settings can be account-scoped and may provide a
+token without `backendUrl`, `APIVersion`, project, subproject, or stream. Validate fields when they
+are present, require only what the current page needs, and make project API helpers unavailable
+until their backend/API context exists. Same-origin integration control-plane calls can still use
+the trusted in-memory token.
+
 Before accepting `loaded`, require both:
 
 1. `event.origin` is an exact member of a deployment allowlist.
@@ -27,17 +36,63 @@ Before accepting `loaded`, require both:
 
 After accepting it, pin that exact origin and source pair. Every later inbound message and every outbound message must use the pinned pair. Do not infer trust from `document.referrer`, `backendUrl`, a substring match, or a value inside the message.
 
-## Vanilla JavaScript bridge
+## Register before framework mount
 
-This dependency-free bridge consumes `loaded` and `tokenRefresh`, tracks API readiness, and exposes a sender and authenticated API helper. Create it only in a browser lifecycle hook.
+FieldTwin does not wait for a client readiness handshake. A bridge created only by `onMount`,
+`useEffect`, or another component lifecycle can miss `loaded`. SvelteKit's `hooks.client` is also
+dynamically imported and may run after the parent handles the iframe `load` event. Install a small
+parser-time module from `app.html`, before `%sveltekit.body%`, and keep its bounded queue private to
+that module closure. When the full bridge starts, import the same module instance and drain it:
 
 ```javascript
+const MAX_PENDING_LOADED = 8
+const captures = new WeakMap()
+
+export function armEarlyFieldTwinMessages(targetWindow) {
+  if (captures.has(targetWindow)) return
+
+  const messages = []
+  const receive = (event) => {
+    const data = event.data
+    if (!data || typeof data !== 'object' || Array.isArray(data) || data.event !== 'loaded') return
+    messages.push(event)
+    if (messages.length > MAX_PENDING_LOADED) messages.shift()
+  }
+
+  captures.set(targetWindow, { messages, receive })
+  targetWindow.addEventListener('message', receive)
+}
+
+export function takeEarlyFieldTwinMessages(targetWindow) {
+  const capture = captures.get(targetWindow)
+  if (!capture) return []
+
+  targetWindow.removeEventListener('message', capture.receive)
+  captures.delete(targetWindow)
+  return capture.messages.splice(0)
+}
+```
+
+The temporary receiver only collects candidates; it does not trust them. The full bridge must
+attach its listener first, drain each candidate through the same `receive` function, and clear the
+capture on construction failure. Keep this queue in the parser module closure—never on `window`, in
+framework state, browser storage, or hydration data. Test actual browser ordering: the parent posts
+from the iframe `load` callback before SvelteKit's dynamic client imports complete.
+
+## Vanilla JavaScript bridge
+
+This dependency-free bridge consumes `loaded` and `tokenRefresh`, tracks API readiness, and exposes a sender and authenticated API helper. Create it from an early browser-only entrypoint or combine it with the bounded handoff above.
+
+```javascript
+import { takeEarlyFieldTwinMessages } from './early-fieldtwin-messages.js'
+
 const API_VERSION_PATTERN = /^v\d+(?:\.\d+)*$/
 
-function normalizeHttpsOrigin(value) {
+function normalizeHostOrigin(value, allowInsecureHttp) {
   const url = new URL(value)
-  if (url.protocol !== 'https:') {
-    throw new Error('FieldTwin host origins must use HTTPS')
+  if (url.origin !== value ||
+      (url.protocol !== 'https:' && !(allowInsecureHttp && url.protocol === 'http:'))) {
+    throw new Error('FieldTwin host origins must be exact HTTPS origins unless local HTTP mode is enabled')
   }
   return url.origin
 }
@@ -55,31 +110,34 @@ function isExpectedHostWindow(source) {
   return popoutHost !== null && source === popoutHost
 }
 
-function readLoadedState(message) {
+function readLoadedState(message, allowInsecureHttp) {
   if (typeof message.token !== 'string' || message.token.length === 0) {
     return null
   }
-  if (typeof message.backendUrl !== 'string' || typeof message.APIVersion !== 'string') {
-    return null
-  }
-  if (!API_VERSION_PATTERN.test(message.APIVersion)) {
-    return null
+
+  let backendBaseUrl
+  if (message.backendUrl !== undefined) {
+    if (typeof message.backendUrl !== 'string') return null
+    let backendUrl
+    try {
+      backendUrl = new URL(message.backendUrl)
+    } catch {
+      return null
+    }
+    if ((backendUrl.protocol !== 'https:' &&
+         !(allowInsecureHttp && backendUrl.protocol === 'http:')) ||
+        backendUrl.username || backendUrl.password || backendUrl.search || backendUrl.hash) return null
+    backendBaseUrl = backendUrl.href.replace(/\/$/, '')
   }
 
-  let backendUrl
-  try {
-    backendUrl = new URL(message.backendUrl)
-  } catch {
-    return null
-  }
-  if (backendUrl.protocol !== 'https:') {
-    return null
-  }
+  const apiVersion = message.APIVersion
+  if (apiVersion !== undefined &&
+      (typeof apiVersion !== 'string' || !API_VERSION_PATTERN.test(apiVersion))) return null
 
   return {
     token: message.token,
-    backendOrigin: backendUrl.origin,
-    apiVersion: message.APIVersion,
+    ...(backendBaseUrl ? { backendBaseUrl } : {}),
+    ...(apiVersion ? { apiVersion } : {}),
     project: message.project,
     subProject: message.subProject,
     stream: message.stream,
@@ -91,6 +149,7 @@ function readLoadedState(message) {
 
 export function createFieldTwinBridge({
   allowedHostOrigins,
+  allowInsecureHttp = false,
   onReady = () => {},
   onEvent = () => {},
 }) {
@@ -98,7 +157,9 @@ export function createFieldTwinBridge({
     throw new Error('Configure at least one exact FieldTwin host origin')
   }
 
-  const allowedOrigins = new Set(allowedHostOrigins.map(normalizeHttpsOrigin))
+  const allowedOrigins = new Set(
+    allowedHostOrigins.map((origin) => normalizeHostOrigin(origin, allowInsecureHttp)),
+  )
   let hostWindow = null
   let hostOrigin = null
   let state = null
@@ -110,7 +171,7 @@ export function createFieldTwinBridge({
     }
 
     return {
-      backendOrigin: state.backendOrigin,
+      backendBaseUrl: state.backendBaseUrl,
       apiVersion: state.apiVersion,
       project: state.project,
       subProject: state.subProject,
@@ -195,6 +256,9 @@ export function createFieldTwinBridge({
     if (disposed || !state) {
       throw new Error('FieldTwin bridge is not ready')
     }
+    if (!state.backendBaseUrl || !state.apiVersion) {
+      throw new Error('FieldTwin API context is unavailable')
+    }
     if (!state.apiServerIsReady) {
       throw new Error('FieldTwin API server is not ready')
     }
@@ -202,7 +266,7 @@ export function createFieldTwinBridge({
       throw new Error('Use a relative FieldTwin API path')
     }
 
-    const apiRoot = new URL(`/API/${state.apiVersion}/`, state.backendOrigin)
+    const apiRoot = new URL(`${state.backendBaseUrl}/API/${state.apiVersion}/`)
     const endpoint = new URL(path.replace(/^\/+/, ''), apiRoot)
     if (endpoint.origin !== apiRoot.origin || !endpoint.pathname.startsWith(apiRoot.pathname)) {
       throw new Error('API path must stay inside the configured FieldTwin API root')
@@ -231,6 +295,7 @@ export function createFieldTwinBridge({
   }
 
   window.addEventListener('message', receive)
+  for (const event of takeEarlyFieldTwinMessages(window)) receive(event)
 
   return {
     apiFetch,
@@ -267,7 +332,12 @@ bridge = createFieldTwinBridge({
 })
 ```
 
-Configure the allowlist outside the message itself, for example through a deployment-specific build setting. A self-hosted installation should add its own exact host origin rather than weakening the comparison.
+Configure the allowlist outside the message itself, for example through a deployment-specific build
+setting. A self-hosted installation should add its own exact host origin rather than weakening the
+comparison. Require HTTPS by default. If local FieldTwin itself runs at an HTTP origin, enable the
+HTTP exception only from the same explicit local deployment mode that selected an HTTP integration
+origin, and list that exact parent (for example `http://fieldtwin.local.example`). Never infer this
+exception from the incoming message or referrer, and never enable it in shared environments.
 
 ## Authenticated API requests
 

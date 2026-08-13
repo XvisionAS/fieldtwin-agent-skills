@@ -108,6 +108,12 @@ Avoid required ConfigMaps for plain environment variables. Use a ConfigMap only 
 FieldTwin administrators load a manifest from a different origin. Treat CORS as part of the
 manifest contract rather than a development-server option:
 
+- derive one exact public origin from the environment's ingress hostname and TLS mode, then use it
+  for the manifest page, icon, dynamic-page endpoint, OAuth callbacks, webhooks, and worker config;
+- allow an explicit HTTP-only local mode such as Tilt/minikube, but require HTTPS for shared and
+  production environments; switch the ingress SSL redirect and generated scheme together;
+- never force `https://` inside a manifest builder when Helm has selected an HTTP ingress.
+
 - serve the manifest over HTTPS with `GET`, `Content-Type: application/json`, and an `OPTIONS`
   response;
 - for a public, credential-free manifest, return `Access-Control-Allow-Origin: *` and allow
@@ -128,6 +134,63 @@ Dynamic pages are authenticated and need a narrower browser CORS policy:
 Add server-hook or endpoint tests for manifest GET/preflight, an allowed dynamic-page origin, a
 look-alike rejected origin, required request headers, and an unrelated route that receives no CORS
 grant. Do not rely on Vite's development CORS setting as proof of production behavior.
+
+## FieldTwin iframe embedding contract
+
+The integration page is the iframe child. Its production response must permit only the configured
+exact FieldTwin frontend origins with `Content-Security-Policy: frame-ancestors ...`. Do not send
+`X-Frame-Options: DENY` or `X-Frame-Options: SAMEORIGIN`; those legacy values override the intended
+cross-origin embedding behavior in browsers that enforce them.
+
+The standard explicitly enabled HTTP-only local mode may omit `frame-ancestors`, matching existing
+FutureOn local integrations. Keep the rest of the CSP and the application-level exact-origin/source
+checks. HTTPS, shared, and production modes must retain the exact `frame-ancestors` allowlist and
+fail closed when it is unavailable.
+
+Local HTTP changes the parent message origin as well as the child iframe URL. The local module must
+configure the actual exact HTTP FieldTwin parent origin. Permit that HTTP entry in the client bridge
+and authenticated CORS validation only when the same explicit deployment TLS switch selects local
+HTTP. Never derive trust from `event.origin`, `document.referrer`, the request host, or a wildcard;
+shared and production modes must reject HTTP parent origins.
+
+Classify a browser block before changing policy:
+
+- a child response CSP `frame-ancestors` or `X-Frame-Options` error belongs to the integration;
+- a parent response CSP `frame-src` error belongs to the FieldTwin deployment;
+- an HTTPS FieldTwin page refusing an HTTP integration is mixed-content enforcement and cannot be
+  repaired with child CORS or CSP headers. Use local HTTPS, an approved FieldTwin proxy path, or a
+  clearly documented local-only browser exception.
+
+Test the built server through ingress in both modes. Inspect the final integration-page response,
+not only application middleware: local HTTP must have no child iframe-denial header, while HTTPS
+must contain only the configured exact FieldTwin origins. Then load the page in a real FieldTwin
+iframe and confirm the browser console has no iframe-policy error.
+
+## FieldTwin bootstrap contract
+
+FieldTwin posts the initial `loaded` event after the integration document loads and does not wait
+for a client readiness handshake. Install a minimal receiver before the document-load boundary,
+before framework components mount or hydrate. SvelteKit's `hooks.client` belongs to its dynamically
+imported client graph and is not parser-time; a fast iframe can finish loading and receive
+FieldTwin's one-shot post before that hook runs. Load a small module from `app.html` before
+`%sveltekit.body%`, then let the later bridge import and drain that same module instance.
+
+When the full bridge is constructed later, preserve early `loaded` candidates in a bounded
+module-closure queue only. Register the bridge listener first, remove the temporary listener, drain
+every candidate through the same exact-origin, expected-source, and payload validation, then clear
+the queue. Never put the token or queued message on `window`, in a Svelte store, browser storage,
+DOM, logs, or serialized hydration state.
+
+Require only the bootstrap fields the current surface uses. Project pages that call the FieldTwin
+API need a valid `backendUrl`, `APIVersion`, and relevant project scope. Account Settings can be
+account-scoped and may receive only the integration token plus UI hints. Such a page can
+authenticate same-origin control-plane calls with the in-memory token, while its project API
+helper must fail clearly until API context is available.
+
+When `backendUrl` is present, validate its scheme under the same explicit deployment TLS mode as
+the trusted parent. A local HTTP FieldTwin host commonly supplies an HTTP backend URL with a base
+path such as `/backend`; allow it only in explicit local mode and preserve that path. Reject HTTP in
+shared or production mode.
 
 ## Tilt contract
 
@@ -167,6 +230,6 @@ devops.sh deploy
 | Tilt | Evaluation names the expected Dockerfile, OCI repository, and Kubernetes resources. |
 | Application | Format, lint, type checks, tests, web build, and worker build pass. |
 | Container | Image builds and starts as non-root when a Docker daemon is available. |
-| FieldTwin | Manifest GET/preflight works cross-origin; dynamic-page CORS is exact-origin and permits authorization; trusted `loaded` and `tokenRefresh` work; dynamic pages are authenticated and tenant-scoped. |
+| FieldTwin | Manifest GET/preflight works cross-origin; dynamic-page CORS is exact-origin and permits authorization; local HTTP names and accepts only its exact parent origin under the explicit mode flag; HTTPS rejects HTTP parents and uses exact `frame-ancestors`; `loaded` sent before framework mount is recovered and revalidated; Account Settings accepts a minimal trusted bootstrap; `tokenRefresh` works; dynamic pages are authenticated and tenant-scoped. |
 
 Do not mutate a shared or production cluster merely to prove rendering. Deploy only when the user asks or the existing workflow clearly authorizes it.

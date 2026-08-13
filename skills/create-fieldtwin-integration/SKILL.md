@@ -4,7 +4,7 @@ description: Create and scaffold a production-ready FieldTwin external integrati
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.2.1"
+  version: "0.2.5"
 ---
 
 # Create FieldTwin Integrations
@@ -18,6 +18,12 @@ Read [references/repository-and-deployment.md](references/repository-and-deploym
 - Choose a lowercase hyphenated integration slug such as `equipment-insights`.
 - Keep the build-bot component key stable, commonly `main`, while giving every OCI repository a program-qualified name such as `equipment-insights-main`. Never publish a generic `main` image.
 - Define the Helm release, control namespace, runtime namespace, DNS domain, service names, container port, and local forward port once and reuse them.
+- Define one public application origin from the environment's ingress hostname and TLS mode. Derive
+  manifest, icon, dynamic-page, OAuth callback, webhook, and worker URLs from it; never hard-code
+  `https://` into individual URLs. Permit HTTP only in an explicit local development mode.
+- Configure the FieldTwin parent-origin allowlist per environment. The local module must name the
+  actual exact HTTP parent origin used by local FieldTwin, and the bridge/server may accept it only
+  when that same explicit local HTTP mode is enabled. Shared environments remain HTTPS-only.
 - Separate ordinary environment values from credentials. Put non-secret configuration in module-selected Helm `environment` values. Reference an externally managed Secret only for credentials.
 - Do not require a ConfigMap merely to start a pod. Add one only for a real mounted or independently managed configuration artifact.
 
@@ -37,6 +43,8 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 ## 3. Implement the FieldTwin surface
 
 - Serve a stable manifest endpoint and integration page.
+- Generate every manifest URL from the configured public origin so HTTP-only Tilt environments and
+  HTTPS shared environments remain internally consistent.
 - Make the public manifest cross-origin readable: support `GET` and `OPTIONS`, return JSON, and set
   `Access-Control-Allow-Origin: *` when the response is credential-free, or echo a validated exact
   origin when deployment policy requires an allowlist. Test with the actual FieldTwin Admin origin.
@@ -46,6 +54,26 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
   `Vary: Origin`; never use wildcard origin with browser credentials.
 - Treat CORS response headers and iframe CSP `frame-ancestors` as separate controls. Configure and
   test both through the production server and ingress, not only the framework development server.
+- For shared and production HTTPS deployments, allow iframe embedding with CSP `frame-ancestors`
+  set to the configured exact FieldTwin frontend origins. Do not emit `X-Frame-Options: DENY` or
+  `SAMEORIGIN`. An explicitly enabled local HTTP mode may omit the child `frame-ancestors`
+  restriction to match the standard local integration workflow; never carry that relaxation into
+  HTTPS deployments.
+- Diagnose iframe failures by layer: the integration controls `frame-ancestors` and
+  `X-Frame-Options`; FieldTwin controls its parent-page `frame-src`; the browser controls mixed
+  content. Relaxing child response headers cannot make an HTTPS parent embed an HTTP child.
+- Install the `loaded` receiver before the browser reaches the document-load boundary, not merely
+  from a framework client hook. SvelteKit dynamically imports `hooks.client`, so that hook can run
+  after FieldTwin's iframe `load` callback has already posted the one-shot bootstrap. Use a
+  parser-time module from `app.html`, keep its bounded queue in that module's closure, attach the
+  bridge listener before draining it, and revalidate origin, source, and payload.
+- Accept the bootstrap fields required by each page. In particular, an Account Settings page may
+  receive a token without project API fields; it can use that token for an authenticated
+  same-origin control-plane endpoint, while its FieldTwin API helper must remain unavailable until
+  `backendUrl` and `APIVersion` are present.
+- Validate a host-supplied `backendUrl` under the same deployment scheme policy as the parent
+  origin. Exact HTTP is permitted only in explicit local mode; shared and production deployments
+  remain HTTPS-only. Preserve its base path when constructing FieldTwin API URLs.
 - Implement exact-origin and exact-source `loaded`/`tokenRefresh` handling with the JWT kept in memory.
 - Keep tokens, account IDs, and project IDs out of page URLs, logs, storage, and analytics.
 - Test iframe and pop-out lifecycle, teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
@@ -61,6 +89,8 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 ## 5. Make Kubernetes environments explicit
 
 - Render non-secret module parameters directly into pod environment variables through Helm.
+- Make the ingress TLS switch control the public-origin scheme and SSL-redirect behavior together.
+  Inject the same public origin into every web or worker process that generates external URLs.
 - Keep credential values out of modules, Helm values, Docker build arguments, and source control. Reference a Secret managed by the cluster's approved secret system.
 - Make optional workers and their namespaces, service accounts, RBAC, quotas, and limits conditional on one `worker.enabled` value.
 - Disable credential-dependent workers in local development unless the local module also provisions every dependency. A web/demo mode must not reference missing Secrets or ConfigMaps.
@@ -87,7 +117,8 @@ Before handoff:
 - build the Docker image when a daemon is available;
 - confirm `npm start` reaches Tilt and the direct application command remains separate;
 - verify manifest GET and OPTIONS from a cross-origin request, dynamic-pages preflight and response,
-  FieldTwin lifecycle, and the authenticated API boundary;
+  iframe response headers in local and HTTPS modes, FieldTwin lifecycle, and the authenticated API
+  boundary;
 - report missing live-cluster, registry, database, or migration validation explicitly.
 
 ## Handoff

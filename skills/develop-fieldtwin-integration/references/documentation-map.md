@@ -20,6 +20,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 
 | Need | Read |
 | --- | --- |
+| End-to-end development, Tilt/Helm, local HTTP, bootstrap/auth diagnosis | `development-workflow.md` |
 | Static manifest, dynamic pages, placement, background behavior, pop-outs | `manifest-and-loading.md` |
 | Secure `postMessage` bridge, `loaded`, token refresh, API calls, teardown | `bridge-and-api.md` |
 | Common event names and payload placement | `message-catalog.md` |
