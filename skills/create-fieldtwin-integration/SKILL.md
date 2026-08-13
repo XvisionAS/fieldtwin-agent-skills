@@ -1,10 +1,10 @@
 ---
 name: create-fieldtwin-integration
-description: Create and scaffold a production-ready FieldTwin external integration repository, including the web application, manifest and dynamic pages, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, converting a prototype into a deployable integration, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+description: Create and scaffold a production-ready FieldTwin external integration repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, converting a prototype into a deployable integration, or adding the standard FutureOn Kubernetes repository architecture to an integration.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.2.5"
+  version: "0.2.9"
 ---
 
 # Create FieldTwin Integrations
@@ -24,7 +24,7 @@ Read [references/repository-and-deployment.md](references/repository-and-deploym
 - Configure the FieldTwin parent-origin allowlist per environment. The local module must name the
   actual exact HTTP parent origin used by local FieldTwin, and the bridge/server may accept it only
   when that same explicit local HTTP mode is enabled. Shared environments remain HTTPS-only.
-- Separate ordinary environment values from credentials. Put non-secret configuration in module-selected Helm `environment` values. Reference an externally managed Secret only for credentials.
+- Separate ordinary environment values from credentials. Put non-secret configuration in module-selected Helm `environment` values. Reference an externally managed Secret only for deployment bootstrap credentials such as OAuth-session encryption and vault access. Store tenant provider client secrets, webhook signing secrets, and user tokens in the encrypted credential vault; never load them from pod environment variables.
 - Do not require a ConfigMap merely to start a pod. Add one only for a real mounted or independently managed configuration artifact.
 
 ## 2. Create the repository skeleton
@@ -77,6 +77,28 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 - Implement exact-origin and exact-source `loaded`/`tokenRefresh` handling with the JWT kept in memory.
 - Keep tokens, account IDs, and project IDs out of page URLs, logs, storage, and analytics.
 - Test iframe and pop-out lifecycle, teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
+- Put account-wide provider application setup under `accountSettingsUrl` and authorize reads and writes with a verified account-admin claim. Return an exact public DTO containing public identifiers, derived callback/webhook URLs, a revision, and secret-presence booleans only. Keep every secret input empty on reload.
+- Treat an omitted or exactly empty secret field as “preserve the saved value,” while rejecting a
+  nonempty whitespace-only replacement. Secrets are opaque: after only canonicalization explicitly
+  required by the provider, compare bytes with a constant-time primitive or constant-time digest;
+  never trim, case-fold, or Unicode-normalize them. When unchanged, skip vault, JSON, timestamp,
+  and revision writes.
+- For GitHub, use a standard OAuth App user authorization flow rather than a GitHub App
+  installation. Vault the authorized user's token, expose only repositories where that user can
+  administer hooks, and reconcile one normal repository webhook per watch. Verify GitHub's
+  `X-Hub-Signature-256` as an HMAC over the raw body. Request `admin:repo_hook` (or the broader
+  `repo`) when unwatch/disconnect must delete hooks; `write:repo_hook` alone does not cover the
+  complete cleanup lifecycle.
+- For GitLab, accept only an exact deployment-allowlisted HTTPS origin (`https://gitlab.com` or an
+  explicitly approved self-managed origin). Use state plus S256 PKCE, request and verify `api` and
+  `read_repository`, vault the access/refresh-token pair, refresh it with a single-flight atomic
+  replacement, bound project discovery to Maintainer-or-Owner projects, and reconcile project
+  hooks. Persist an explicit versioned GitLab webhook verification profile; never infer a legacy
+  fallback from a missing signature header.
+- Give each FieldTwin account/provider a stable random opaque webhook route. The derived full URL
+  is safe-to-display routing metadata but not authentication; expose no separate raw route-key DTO
+  field. Resolve one account before decrypting its signing secret, authenticate the provider's
+  exact webhook envelope, and keep repository matching within that account.
 
 ## 4. Build one image consistently
 
@@ -91,7 +113,7 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 - Render non-secret module parameters directly into pod environment variables through Helm.
 - Make the ingress TLS switch control the public-origin scheme and SSL-redirect behavior together.
   Inject the same public origin into every web or worker process that generates external URLs.
-- Keep credential values out of modules, Helm values, Docker build arguments, and source control. Reference a Secret managed by the cluster's approved secret system.
+- Keep credential values out of modules, Helm values, Docker build arguments, and source control. Reference a Secret managed by the cluster's approved secret system only for deployment bootstrap credentials. Provider application credentials configured in Account Settings belong in the server-side vault.
 - Make optional workers and their namespaces, service accounts, RBAC, quotas, and limits conditional on one `worker.enabled` value.
 - Disable credential-dependent workers in local development unless the local module also provisions every dependency. A web/demo mode must not reference missing Secrets or ConfigMaps.
 - Use least-privilege service accounts, no default service-account token for the web pod, restricted pod security, probes, resources, and immutable image tags or digests in shared environments.
@@ -119,8 +141,12 @@ Before handoff:
 - verify manifest GET and OPTIONS from a cross-origin request, dynamic-pages preflight and response,
   iframe response headers in local and HTTPS modes, FieldTwin lifecycle, and the authenticated API
   boundary;
+- verify provider Account Settings safe GET/PATCH behavior, admin authorization, empty-secret
+  preservation, whitespace-only rejection, opaque unchanged-secret no-op persistence, vault-only
+  provider/user credentials, GitHub and GitLab OAuth/token lifecycles, per-repository/project hook
+  reconciliation and cleanup, account-keyed routing, and provider-specific webhook verification;
 - report missing live-cluster, registry, database, or migration validation explicitly.
 
 ## Handoff
 
-Report the chosen component-to-image mapping, module behavior, required external Secrets, endpoints, validation results, and exact commands for local start and deployment. Call out any compatibility or migration step for an existing integration.
+Report the chosen component-to-image mapping, module behavior, deployment bootstrap Secrets, Account Settings provider boundary, callback and tenant webhook endpoints, validation results, and exact commands for local start and deployment. Call out any compatibility or migration step for an existing integration.

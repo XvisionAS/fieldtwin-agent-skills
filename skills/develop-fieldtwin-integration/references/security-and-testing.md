@@ -130,6 +130,69 @@ Stub the network boundary and assert:
 
 For a dynamic page endpoint, add server-side tests for a missing token, invalid signature, wrong issuer or audience, expired token, insufficient rights, and the valid least-privilege case.
 
+For provider administration, test the exact safe GET shape and assert that no secret, token,
+placeholder, account ID, credential reference, vault reference, or internal webhook key as a
+separate field can appear. The derived full account-keyed webhook URL is expected safe-to-display
+routing metadata; assert that possession of it never bypasses signature/token verification. Require
+account-administrator authorization before store or vault access. Test PATCH create, omitted and
+raw-length-zero secret preservation, nonempty whitespace-only rejection, one dirty secret merged
+with untouched server values, and an unchanged opaque replacement as a complete no-op. For every
+secret, prove the server never trims, case-folds, or Unicode-normalizes it and compares only exact
+provider-defined canonical bytes through a constant-time primitive or constant-time digest. Test
+stale revision with no mutation, strict unknown/whitespace-only/oversize rejection, and secret-free
+errors. Inspect persisted JSON to prove it holds only public metadata, booleans, routing metadata,
+and opaque references.
+
+For provider connections, test configuration readiness before state mutation. Missing session,
+tenant OAuth setup, or credential-store configuration must produce a sanitized unavailable
+response without creating an intent or cookie. Exercise the full standard GitHub OAuth App flow
+with state and S256 PKCE: exchange, authenticated-user validation, bounded repository pagination,
+returned scope adequate for the advertised lifecycle (`admin:repo_hook` or `repo` when delete is
+required), admin-capability filtering, and server-only user-token storage. Assert
+that production uses a `Secure` `__Host-` cookie, an explicitly selected HTTP-only local mode uses a
+distinct non-`__Host` non-Secure cookie, and request scheme cannot choose between them. Verify
+state replay rejection, provider-configuration revision drift, opaque-only control-plane
+persistence, vault failure, repository-hook create/reconcile/rotate/delete, callback teardown, and
+the distinct `X-Hub-Signature-256` raw-body HMAC. A test with a valid GitLab signature construction
+must not pass GitHub verification.
+
+Exercise the GitLab flow independently. Reject every provider URL except `https://gitlab.com` or an
+exact deployment-allowlisted HTTPS self-managed origin, including HTTP, userinfo, subpaths,
+look-alike hosts, and redirect escapes. Test one-time state, S256 PKCE, authenticated-user
+validation, exact `api read_repository` grant validation, bounded project pagination with
+Maintainer-or-Owner access, and re-authorization checks before hook mutation. Prove that access and
+refresh tokens, expiry, scopes, origin, and user identity are vaulted as one versioned bundle.
+Exercise concurrent refresh, compare-and-swap loss, storage failure after exchange, expiry, and
+revocation; assert that a worker which loses the pre-exchange single-flight claim never calls the
+token endpoint. No result may expose a new access token with an old refresh token or activate a
+non-durable pair.
+
+For webhooks, route by a stable random account/provider key, resolve exactly one configuration,
+decrypt only its secret, authenticate the bounded provider-specific envelope, and resolve
+applications only inside that account. Test unknown/wrong routes, cross-account repository/project
+IDs, signature failure, duplicate delivery, and that global secret scanning or payload-selected
+account scope is impossible. Keep provider verifiers separate:
+
+- GitHub requires a constant-time `X-Hub-Signature-256` HMAC over the unchanged raw body.
+- `gitlab-standard-webhooks-v1` requires the configured `whsec_` signing key, the Standard Webhooks
+  `webhook-id`, `webhook-timestamp`, and `webhook-signature` construction, bounded clock skew,
+  delivery replay rejection, and constant-time comparison of all `v1` signature candidates.
+- `gitlab-legacy-x-gitlab-token-v1` requires an exact constant-time comparison of the plaintext
+  `X-Gitlab-Token`; it is not raw-body HMAC. Test that the persisted profile is explicitly selected
+  from verified instance capability and cannot downgrade because a signature header is absent.
+
+Test the complete managed-hook lifecycle for both providers: idempotent create/reconcile, stored
+provider hook IDs, no adoption of unrelated hooks, secret/profile/URL rotation with a bounded
+old/new verification overlap, and provider-side deletion before unwatch or disconnect discards the
+credential. Simulate insufficient scope, lost role, revoked token, partial multi-hook rotation, and
+delete failure. Each failure must disable unsafe local processing, preserve retryable non-secret
+cleanup state, and report manual remediation rather than silently orphaning a hook.
+
+If an explicit encrypted file credential store exists for single-node development, test reload,
+wrong key, tampering, reference swapping, symlink/path attacks, bounds, file permissions, atomic
+no-overwrite creation, aborts, and absence of plaintext credentials or identifiers at rest. Keep the
+external HTTPS vault as the default profile.
+
 ### Message contract tests
 
 For every supported event, assert the exact event name and whether each field is top-level or nested under `data`. Include correlation identifiers only where the released protocol defines them. Exercise multiple integration instances so a result, filter, panel request, or reply cannot cross instance boundaries.

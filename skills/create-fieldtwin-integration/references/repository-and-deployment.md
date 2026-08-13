@@ -71,7 +71,12 @@ Modules may define:
 - pull-secret names; and
 - non-secret application settings encoded as Helm values.
 
-Modules must not contain credentials. A local module should run without placeholder cluster objects. If it disables the worker, the rendered chart must also omit worker Deployments, worker service accounts, worker RBAC, worker namespaces, build quotas, and credential Secret references.
+Modules must not contain credentials. External Secret references may provide deployment bootstrap
+credentials such as OAuth-session encryption and credential-vault access, but never tenant provider
+client secrets, webhook signing secrets, or user OAuth tokens. A local module should run without
+placeholder cluster objects. If it disables the worker, the rendered chart must also omit worker
+Deployments, worker service accounts, worker RBAC, worker namespaces, build quotas, and credential
+Secret references.
 
 ## Docker contract
 
@@ -99,7 +104,7 @@ The chart should render:
 - optional worker Deployment and only its required service account/RBAC;
 - optional build/runtime namespace resources only when the worker is enabled;
 - probes, resource requests/limits, security contexts, image pull secrets, and labels; and
-- direct environment entries plus an optional credential Secret reference.
+- direct environment entries plus an optional deployment-bootstrap Secret reference.
 
 Avoid required ConfigMaps for plain environment variables. Use a ConfigMap only when configuration has an independent lifecycle or must be mounted as a file. Never render empty `envFrom` entries.
 
@@ -192,6 +197,129 @@ the trusted parent. A local HTTP FieldTwin host commonly supplies an HTTP backen
 path such as `/backend`; allow it only in explicit local mode and preserve that path. Reject HTTP in
 shared or production mode.
 
+## Provider administration and repository-hook contract
+
+Declare provider application setup through the manifest's `accountSettingsUrl`. Require a verified
+FieldTwin account-administrator claim on the server before reading or changing it; a client-side
+edit hint is not authorization. Keep this account-wide setup separate from each user's provider
+authorization and connection status.
+
+Use an exact secret-safe control-plane contract:
+
+- `GET` returns only allowlisted public identifiers, derived callback URLs, the derived full
+  account-keyed webhook URL, an optimistic revision, update time, and one configured boolean per
+  secret. The full opaque webhook URL is safe-to-display routing metadata, but it is not an
+  authenticator;
+- never return a secret, token, masked placeholder, suffix, account identifier, credential or vault
+  reference, or the internal raw webhook route key as a separate DTO field;
+- render secret controls empty on every load and explain that an unchanged empty control preserves
+  the saved value;
+- `PATCH` requires the expected revision and sends only secret controls the user deliberately
+  changed;
+- an omitted field or a raw string whose length is exactly zero preserves the saved value; reject a
+  nonempty whitespace-only, malformed, unknown, or oversized replacement before transformation;
+  and
+- treat every secret as opaque bytes. Apply only canonicalization explicitly required by the
+  provider contract; never trim, case-fold, or Unicode-normalize a secret. Compare the candidate
+  byte-for-byte with a constant-time primitive, or compare fixed-length cryptographic digests in
+  constant time. If unchanged, do not write the vault, account JSON, update time, or revision.
+
+Persist only public provider metadata, secret-presence booleans, stable opaque routing information,
+and opaque vault references in the FieldTwin account JSON document. Persist provider application secret
+bundles and user OAuth tokens only through the credential-vault abstraction. Use an external HTTPS
+vault by default; a deliberately selected single-node development file vault must encrypt and
+authenticate every value with an independent deployment key. Use revision compare-and-swap and
+copy-on-write so a stale editor cannot activate a partial secret bundle. Bind pending OAuth state to
+the account, provider, exact callback, selected provider origin, provider-configuration revision,
+and one-time PKCE verifier. Revoke existing connections when identity-defining OAuth metadata
+changes.
+
+For GitHub, scaffold a standard OAuth App and normal repository webhooks, not a GitHub App
+installation flow. The account administrator supplies the OAuth client ID and client secret through
+Account Settings. A user connects through authorization code, state, and S256 PKCE; the server
+validates the GitHub user, bounds repository pagination, retains only repositories where GitHub
+proves that user may administer hooks, and vaults the user token. Scope for the whole lifecycle:
+`write:repo_hook` covers read/write/ping, while a promised unwatch or disconnect cleanup requires
+`admin:repo_hook` (or the broader `repo`, which is also required when private repository discovery,
+cloning, or content access needs it). Verify the returned grant before activating the connection.
+When a watch is enabled, list and reconcile exactly one application-managed push webhook by stored
+repository and hook IDs plus the exact account webhook URL; do not adopt or modify an unrelated
+hook. Verify `X-Hub-Signature-256` as GitHub's `sha256=<hex>` HMAC-SHA256 over the unmodified raw
+body with constant-time comparison. This GitHub raw-body HMAC is distinct from both GitLab
+verification profiles. Do not request an installation ID, App private key, or installation token.
+
+For GitLab, make the provider origin account-visible public metadata but accept it only when it is
+an exact deployment-allowlisted HTTPS origin: `https://gitlab.com` for SaaS or one explicitly
+approved self-managed origin. Parse and serialize it as an origin; reject userinfo, non-root paths,
+queries, fragments, HTTP, look-alike suffixes, and arbitrary account-supplied hosts. Derive
+`/oauth/authorize`, `/oauth/token`, and `/api/v4` only from that validated origin, pin every provider
+HTTP request to it, and reject cross-origin redirects.
+
+Store the GitLab Application ID as allowlisted public metadata and its Application Secret only in
+the vault; register and send the one exact derived HTTPS callback URL. Use GitLab authorization
+code with one-time state and S256 PKCE. Request and verify both `api` and
+`read_repository`: `api` is required for project and project-hook APIs, while `read_repository`
+permits private repository reads and Git-over-HTTPS. Validate the authenticated user before
+activation. Discover projects with bounded pages/items and a server-side Maintainer-or-Owner
+filter, such as `membership=true&min_access_level=40`; re-check access when a project is selected.
+Vault the access token, refresh token, expiry, granted scopes, provider origin, and provider user ID
+as one versioned connection bundle. GitLab refresh invalidates both old tokens and returns a new
+pair, so serialize refresh per connection and atomically replace the whole vaulted bundle with
+compare-and-swap before making the new access token active. A refresh race or failed persistence
+must fail closed and require retry or reconnection, never leave a mixed token pair.
+
+For each watched GitLab project, list and reconcile one application-managed push hook by stored
+project and hook IDs, exact account webhook URL, event set, TLS verification, and explicitly
+selected verification profile. Persist one of these versioned profiles with the hook record:
+
+- `gitlab-standard-webhooks-v1`: use only when the configured instance supports GitLab signing
+  tokens (introduced in 19.0 behind `webhook_signing_token`, generally available in 19.1). Configure
+  a `whsec_<base64>` signing token encoding a 32-byte key. Require `webhook-id`,
+  `webhook-timestamp`, and `webhook-signature`; enforce a bounded timestamp skew and delivery-ID
+  replay cache; compute HMAC-SHA256 over
+  `{webhook-id}.{webhook-timestamp}.{raw-body}`; base64-encode it as `v1,<signature>`; and compare
+  every received signature candidate in constant time.
+- `gitlab-legacy-x-gitlab-token-v1`: select only for an older or explicitly incompatible
+  self-managed instance. Configure the legacy secret token and compare the plaintext
+  `X-Gitlab-Token` value to the vaulted token in constant time. This profile is weaker because the
+  token is not a signature over the body; do not describe it as HMAC verification.
+
+Do not choose or downgrade a GitLab profile from whichever headers happen to arrive. Verify the
+instance capability before hook creation and persist the choice. If a no-downtime migration needs
+both mechanisms, make a separate explicit, time-bounded migration profile and remove legacy
+acceptance after every managed hook is reconciled. Current profile details were checked against
+the official [GitLab webhook guide](https://docs.gitlab.com/user/project/integrations/webhooks/)
+and [project webhooks API](https://docs.gitlab.com/api/project_webhooks/) on 2026-08-13; re-check the
+configured self-managed version before implementation. Use the official
+[OAuth flow](https://docs.gitlab.com/api/oauth2/), [scope table](https://docs.gitlab.com/integration/oauth_provider/),
+and [Projects API](https://docs.gitlab.com/api/projects/) for the rest of the contract.
+
+Give every FieldTwin account/provider a stable random opaque webhook route. Resolve exactly one
+account from it before decrypting one signing secret, authenticate the bounded provider-specific
+envelope, and match repositories/projects and watches only inside that account. The derived full
+URL may be returned to the authenticated account administrator and sent to the provider, but route
+possession never replaces GitHub or GitLab webhook verification. Never use one global signing
+secret, scan all accounts, expose the internal route key separately, or choose account scope from
+an unverified payload.
+
+Own the complete hook lifecycle. Reconcile on watch enable and provider-secret or webhook-URL
+rotation. Stage a new signing secret, update every managed hook while the required user credential
+and scope still exist, permit only a bounded old/new verification overlap for in-flight delivery,
+then retire the old secret. On unwatch, delete the provider hook before discarding its watch record.
+On disconnect, remove every managed hook before revoking the OAuth connection and vaulted tokens.
+If role or token loss prevents cleanup, disable local processing, retain a non-secret cleanup
+tombstone with provider/project/hook IDs, and surface exact manual remediation; do not silently
+claim success. Provider update APIs can clear secrets: resend GitHub's secret on full hook updates,
+and resend GitLab's selected token whenever its URL/profile is changed.
+
+Treat browser callback and webhook reachability as separate checks. A local browser hostname
+usually needs an approved HTTPS tunnel or shared ingress before either provider can deliver hooks.
+
+Only deployment bootstrap credentials belong in Kubernetes pod environment variables: the OAuth
+session/state encryption key and the selected vault's service credential or independent file-vault
+encryption key. Provider client secrets, signing secrets, and user tokens must never appear in
+Environment Modules, Helm values, ConfigMaps, pod environment, build arguments, or browser state.
+
 ## Tilt contract
 
 Tilt should:
@@ -231,5 +359,9 @@ devops.sh deploy
 | Application | Format, lint, type checks, tests, web build, and worker build pass. |
 | Container | Image builds and starts as non-root when a Docker daemon is available. |
 | FieldTwin | Manifest GET/preflight works cross-origin; dynamic-page CORS is exact-origin and permits authorization; local HTTP names and accepts only its exact parent origin under the explicit mode flag; HTTPS rejects HTTP parents and uses exact `frame-ancestors`; `loaded` sent before framework mount is recovered and revalidated; Account Settings accepts a minimal trusted bootstrap; `tokenRefresh` works; dynamic pages are authenticated and tenant-scoped. |
+| Provider administration | Account-admin authorization precedes access; GET is an exact secret-free DTO containing the full derived account webhook URL but no separate route key; omitted/exactly-empty secrets preserve; whitespace-only replacements fail; opaque unchanged replacements produce no vault or JSON write; stale revisions fail closed; persisted JSON contains no provider or user credential. |
+| GitHub connection | Standard OAuth App user flow validates state/PKCE, user identity, and lifecycle-adequate scopes; vaults the token; bounds admin-capable repositories; reconciles/deletes one managed hook per watch; and verifies the distinct raw-body `X-Hub-Signature-256` HMAC through one account-keyed route. |
+| GitLab connection | Exact allowlisted HTTPS SaaS/self-managed origin; state/S256 PKCE; verified `api read_repository`; atomic vaulted access/refresh rotation; bounded Maintainer-or-Owner project discovery; project-hook reconcile/delete; explicit standard-signed or legacy-token profile; and account-scoped delivery verification. |
+| Hook lifecycle | Enable is idempotent; rotation has bounded old/new overlap; unwatch and disconnect remove provider hooks before credential revocation; partial cleanup remains visible and retryable. |
 
 Do not mutate a shared or production cluster merely to prove rendering. Deploy only when the user asks or the existing workflow clearly authorizes it.

@@ -34,7 +34,19 @@
     {
       "id": 6,
       "prompt": "Debug a SvelteKit FieldTwin Account Settings integration running through local Tilt. The iframe stays on Connecting, local ingress is HTTP, the manifest icon is broken, and the first server request fails after the page finally connects. Fix the complete development path and update regression tests without exposing the integration token.",
-      "expected_output": "A layered diagnosis and implementation covering one mode-aware public origin, manifest and authenticated endpoint CORS, iframe response policy, parser-time loaded capture before SvelteKit imports, exact origin/source validation, Account Settings minimal bootstrap, base-path-safe local HTTP backend handling, the correct FieldTwin server JWT profile, module-to-Helm environment wiring, and ingress-level plus automated verification.",
+      "expected_output": "A layered diagnosis and implementation covering one mode-aware public origin, manifest and authenticated endpoint CORS, iframe response policy, parser-time loaded capture before SvelteKit imports, exact origin/source validation, Account Settings minimal bootstrap, base-path-safe local HTTP backend handling, the correct FieldTwin server JWT profile, provider configuration preflight before mutation, external Secret wiring, explicit local-versus-production callback cookies, credential-vault selection, and ingress-level plus automated verification.",
+      "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "Move GitHub provider setup into FieldTwin Account Settings. Reloading must not reveal any saved secret, resubmitting the exact unchanged secret must not rotate configuration, whitespace-only must be rejected, users connect with their normal GitHub identity, and repository hooks must be removed on unwatch or disconnect.",
+      "expected_output": "An account-admin-authorized DTO that may display the full account-keyed webhook URL but no separate raw route key; exact-empty preservation; opaque byte-for-byte or constant-time-digest comparison without trimming, case folding, or Unicode normalization; unchanged-value no-op persistence; vault-only credentials; a standard GitHub OAuth App state/S256-PKCE flow; bounded admin-capable repository discovery; admin:repo_hook or repo scope adequate for deletion; idempotent hook create/reconcile/rotate/delete with retryable cleanup failure; and distinct raw-body X-Hub-Signature-256 verification.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Implement GitLab.com plus approved self-managed GitLab connections for a FieldTwin deployment integration. Users need repository reads and project-hook management, OAuth tokens expire and rotate, and some older instances only support X-Gitlab-Token. Prevent SSRF, refresh races, signature downgrade, cross-account routing, and orphaned hooks.",
+      "expected_output": "An exact allowlisted HTTPS SaaS/self-managed GitLab origin with origin-pinned endpoints; one-time state and S256 PKCE; verified api and read_repository scopes; vaulted versioned access/refresh bundles with single-flight atomic replacement; bounded Maintainer-or-Owner project discovery; project-hook create/reconcile/rotate/delete; explicitly persisted gitlab-standard-webhooks-v1 Standard Webhooks HMAC/timestamp/replay verification or gitlab-legacy-x-gitlab-token-v1 exact token comparison with no header-driven fallback; safe-to-display account-keyed URL routing that is not authentication; and visible retryable cleanup failures before token revocation.",
       "files": []
     }
   ]

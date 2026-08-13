@@ -4,7 +4,7 @@ description: Develop, run, debug, test, and review FieldTwin external integratio
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.2.6"
+  version: "0.2.9"
 ---
 
 # Develop FieldTwin Integrations
@@ -92,6 +92,23 @@ Trace selection and focus independently. A click may select a resource while a s
 ### 5. Validate observable behavior
 
 Test bootstrap, exact origin/source rejection, token replacement, parent and pop-out routing, exact envelopes, correlation, malformed external input, multiple integration instances, and complete teardown. For Operation Mode, test normal click, double-click, keyboard activation, inline actions, clearing, progress completion, and selection without focus.
+
+For provider administration, expose account-wide setup only from authenticated Account Settings.
+Return public identifiers and secret-presence booleans, never secrets or masked values. Empty or
+omitted secret fields preserve the current value, while nonempty whitespace-only values fail.
+Secrets are opaque: after only provider-defined canonicalization, compare bytes or fixed-length
+digests in constant time; never trim, case-fold, or Unicode-normalize them. Avoid vault,
+persistence, timestamp, and revision writes when unchanged. Store provider secrets and user OAuth
+tokens only behind the credential-vault boundary. Route webhooks through a stable random
+account/provider key; the full derived URL is safe-to-display routing metadata, not authentication,
+and the raw key is not a separate DTO field. Resolve the account before decrypting one signing
+secret. For GitHub, use a standard OAuth App user flow, verify the distinct raw-body
+`X-Hub-Signature-256` HMAC, and reconcile/remove normal repository hooks with scopes adequate for
+cleanup; do not require a GitHub App installation. For GitLab, pin an exact allowlisted HTTPS SaaS
+or self-managed origin, use state/S256 PKCE with `api read_repository`, vault and atomically refresh
+the access/refresh pair, bound discovery to Maintainer-or-Owner projects, reconcile/remove project
+hooks, and persist an explicit versioned Standard Webhooks signature or legacy
+`X-Gitlab-Token` profile without header-driven downgrade.
 
 ## Handoff format
 

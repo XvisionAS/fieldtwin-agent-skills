@@ -1,7 +1,46 @@
 # Changelog
 
+## 0.2.9 - 2026-08-13
+
+- Added a complete GitLab provider contract with exact allowlisted HTTPS SaaS/self-managed origins,
+  state and S256 PKCE, `api read_repository`, atomic vaulted access/refresh rotation, bounded
+  Maintainer project discovery, and project-hook lifecycle reconciliation.
+- Versioned GitLab Standard Webhooks HMAC verification separately from legacy plaintext
+  `X-Gitlab-Token`, kept GitHub's raw-body `X-Hub-Signature-256` construction distinct, and added
+  rotation, unwatch, disconnect, replay, and partial-cleanup requirements.
+- Clarified that full account-keyed webhook URLs are displayable routing metadata rather than
+  authentication, corrected exactly-empty versus whitespace-only secret behavior, and required
+  opaque constant-time secret comparison without trimming, case folding, or Unicode normalization.
+- Expanded create/develop evaluations for both GitHub and GitLab provider, token, webhook, routing,
+  and cleanup lifecycles.
+
+## 0.2.8 - 2026-08-13
+
+- Added the account-scoped provider administration contract: exact safe DTOs, blank secret inputs,
+  configured booleans, dirty-only PATCH, server-side semantic comparison, revision CAS, and no-op
+  persistence when a submitted secret is unchanged.
+- Replaced the GitHub App installation recipe with a standard GitHub OAuth App user flow using
+  state, S256 PKCE, vaulted user tokens, bounded admin-capable repository discovery, and
+  per-repository webhook reconciliation.
+- Added per-tenant opaque webhook routing, server-only signing-secret resolution, and regression
+  requirements for secret non-disclosure, cross-tenant isolation, revision drift, and vault safety.
+
+## 0.2.7 - 2026-08-13
+
+- Added provider readiness validation before intent/state mutation, sanitized unavailable errors,
+  and external Secret wiring requirements for local Tilt as well as shared deployments.
+- Documented production `Secure` `__Host-` callback cookies and the separate, explicitly selected
+  non-Secure host-only cookie required by an HTTP-only local workflow.
+- Added the complete two-stage GitHub App installation/user-OAuth validation path and an optional
+  encrypted single-node file-vault contract with security and regression requirements.
+- Distinguished browser callback reachability from GitHub webhook reachability for local ingress
+  and required exact App URL updates when an HTTPS tunnel is used.
+
 ## 0.2.6 - 2026-08-13
 
+- Updated the creation skill to scaffold Account Settings provider administration, deployment-
+  bootstrap-only Kubernetes Secrets, standard GitHub OAuth user authorization, normal
+  per-repository hooks, tenant-scoped webhook routing, and vault-only provider credentials.
 - Added one end-to-end FieldTwin development workflow connecting repository conventions,
   Environment Modules, Tilt, Helm, program-qualified images, file-backed persistence, public URL
   generation, CORS, iframe policy, Account Settings, dynamic pages, bootstrap, and server auth.
