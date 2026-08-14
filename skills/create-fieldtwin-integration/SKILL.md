@@ -49,6 +49,11 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
   `Access-Control-Allow-Origin: *` when the response is credential-free, or echo a validated exact
   origin when deployment policy requires an allowlist. Test with the actual FieldTwin Admin origin.
 - Add `dynamicPagesUrl` when page availability depends on deployed or tenant-scoped state. Authenticate dynamic-page requests and derive project scope only from verified claims.
+- When the integration participates in FieldTwin automations, declare capabilities with the
+  `automationDescriptor` postMessage after `loaded`, serve the declared `readUrl`/`invokeUrl`
+  endpoints over HTTPS with FieldTwin JWT verification, and signal attribute changes from the
+  integration backend via `POST /automation/event` (see the develop skill's message catalog and
+  "Participate in FieldTwin automations" recipe).
 - If FieldTwin fetches dynamic pages from the browser, handle `OPTIONS` and allow `POST`,
   `Authorization`, and `Content-Type`. Echo only a configured exact FieldTwin origin and send
   `Vary: Origin`; never use wildcard origin with browser credentials.

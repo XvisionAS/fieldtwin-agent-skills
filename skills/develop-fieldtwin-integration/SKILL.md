@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification and API calls, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, or protocol tests.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification and API calls, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.2.9"
+  version: "0.3.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -18,9 +18,9 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/development-workflow.md](references/development-workflow.md) for the end-to-end repository, Environment Module, Tilt, Helm, browser, bootstrap, server-authentication, and live-debug checklist.
 - [references/manifest-and-loading.md](references/manifest-and-loading.md) for manifests, dynamic pages, background behavior, iframe loading, and pop-outs.
 - [references/bridge-and-api.md](references/bridge-and-api.md) for a secure browser bridge, `loaded`, `tokenRefresh`, API calls, replies, and teardown.
-- [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes.
+- [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
-- [references/recipes.md](references/recipes.md) for copy-ready selection, resource-query, settings, notification, and focus recipes.
+- [references/recipes.md](references/recipes.md) for copy-ready selection, resource-query, settings, notification, focus, and automation-participation recipes.
 - [references/security-and-testing.md](references/security-and-testing.md) before implementing message code and before handoff.
 
 When the user's repository also contains an integration guide, read the relevant sections and reconcile them with the current public FieldTwin documentation. A deployed environment's released contract wins over bundled examples. Never infer a new protocol field from naming symmetry.

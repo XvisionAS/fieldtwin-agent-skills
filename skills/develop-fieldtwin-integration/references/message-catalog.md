@@ -383,6 +383,138 @@ an array. Resource attributes and permissions are versioned API contracts, so co
 their released shapes from the current FieldTwin integration documentation. Honor
 `canEdit` in the UI, but always rely on host/API authorization for enforcement.
 
+### Automation declarations
+
+`automationDescriptor` declares the attributes and functions this integration
+exposes to the FieldTwin automation graph. The host derives the integration
+identity from the registered source window, validates every entry, and persists
+the declaration so backend-triggered automation runs can use it after the iframe
+is gone. Send it once after `loaded`, and again whenever the declaration changes -
+the host only writes when the content differs.
+
+```javascript
+sendToHost({
+  event: 'automationDescriptor',
+  attributes: [
+    {
+      id: 'fictional.valveCount',
+      label: 'Fictional valve count',
+      type: 'number',
+      readUrl: 'https://integration.example.com/automation/valve-count'
+    }
+  ],
+  functions: [
+    {
+      id: 'fictional.generateReport',
+      label: 'Generate fictional report',
+      params: [{ id: 'from', type: 'date' }],
+      returns: 'string',
+      invokeUrl: 'https://integration.example.com/automation/generate-report'
+    }
+  ]
+})
+```
+
+Contract rules the host enforces:
+
+- `readUrl` and `invokeUrl` must be `https:` URLs; entries with other schemes are
+  dropped.
+- An entry **without** a URL is authoring-only: it can never be reached by a
+  backend-triggered run, and automations that depend on it run only while a
+  client is open. Declare a URL for anything an unattended automation needs.
+- Attribute `type`, function `params[].type`, and function `returns` must come
+  from the released value-type vocabulary below; entries declaring anything else
+  are dropped.
+- Entry counts and total descriptor size are capped; oversized declarations are
+  rejected with `success: false`.
+
+#### Automation value types
+
+The complete released vocabulary. Declared types describe the JSON the endpoint
+exchanges - the host does not coerce values:
+
+| Type | JSON wire shape | Notes |
+| --- | --- | --- |
+| `string` | string | |
+| `number` | finite number | JSON cannot carry `NaN` or `Infinity` |
+| `boolean` | boolean | |
+| `date` | ISO-8601 string | `'2026-08-14T09:30:00Z'`; prefer UTC |
+| `tags` | array of strings | matches FieldTwin tag arrays |
+| `resource` | `{ id, type }` | `type` is the plural collection name, for example `'wells'` or `'stagedAssets'` |
+| `resources` | array of `{ id, type }` | |
+| `object` | free-form JSON object | run history truncates stored output, keep it small |
+| `any` | anything JSON-serializable | the default when a type is omitted |
+
+Attribute reads must respond with the declared attribute type. Function invokes
+receive `args` values shaped by the declared parameter types and must respond
+with the declared `returns` shape. A function parameter may also declare
+`optional: true`. Do not invent additional type names - undeclared-type entries
+never reach the automation editor.
+
+#### Multiple function outputs
+
+`returns` is either a single type name (one anonymous output; respond with a bare
+JSON value) or an array of named outputs (respond with an object keyed by output
+id). Each named output becomes a separate wireable port in the automation editor,
+so one invocation can feed several downstream nodes:
+
+```javascript
+{
+  id: 'fictional.generateReport',
+  label: 'Generate fictional report',
+  params: [{ id: 'from', type: 'date' }],
+  returns: [
+    { id: 'reportUrl', type: 'string' },
+    { id: 'pageCount', type: 'number' }
+  ],
+  invokeUrl: 'https://integration.example.com/automation/generate-report'
+}
+```
+
+The endpoint for this declaration must respond:
+
+```json
+{ "reportUrl": "https://integration.example.com/reports/fictional.pdf", "pageCount": 12 }
+```
+
+Output ids must be unique within a function and each type must come from the
+vocabulary above. Responding with a non-object when named outputs are declared
+fails the automation run with an explicit error; a missing key yields `undefined`
+downstream.
+
+At run time the automation service POSTs to `readUrl`/`invokeUrl` with a
+short-lived FieldTwin JWT in `Authorization: Bearer` scoped to the automation's
+account. Verify that JWT the same way as any other FieldTwin token before acting.
+The body carries `{ attributeId }` or `{ functionId, args }` plus
+`resource: { id, type }` when the run targets a resource.
+
+### Attribute update signals
+
+Two channels, different purposes - use both:
+
+- `attributeUpdated` (postMessage) refreshes the cached value in **open clients**
+  only. It never starts an automation run.
+- `POST <backendUrl>/automation/event` (webhook, integration JWT in
+  `Authorization`) is what fires attribute-triggered automations, and works with
+  no client open. Body:
+  `{ customTabId, attributeId, scope: { accountId, projectId, subProjectId }, value }`.
+  The scope account must match the account the JWT was issued for.
+
+```javascript
+sendToHost({
+  event: 'attributeUpdated',
+  data: {
+    resourceType: 'stagedAssets',
+    resourceId: 'fictional-asset-001',
+    attributeId: 'fictional.valveCount',
+    value: 42
+  }
+})
+```
+
+Do not fire the webhook from browser code once per open tab - send it from the
+integration backend when the underlying value actually changes.
+
 ## Receiver pattern
 
 The bridge must validate and pin the source window and origin before this dispatcher

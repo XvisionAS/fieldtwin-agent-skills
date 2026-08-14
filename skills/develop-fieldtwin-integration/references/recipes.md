@@ -359,3 +359,61 @@ window.addEventListener('pagehide', disposeIntegration, { once: true })
 ```
 
 Framework integrations should call the same cleanup from their unmount lifecycle. Also clear intervals, observers, and any listeners created outside the bridge.
+
+## Participate in FieldTwin automations
+
+An integration joins the automation graph in three steps. Declare capabilities after `loaded`, serve the declared endpoints from the integration backend, and signal attribute changes through the webhook.
+
+Declare once per session, and re-send only when the declaration changes:
+
+```javascript
+bridge.send({
+  event: 'automationDescriptor',
+  attributes: [
+    {
+      id: 'fictional.inspectionCount',
+      label: 'Fictional inspection count',
+      type: 'number',
+      readUrl: 'https://integration.example.com/automation/inspection-count',
+    },
+  ],
+  functions: [
+    {
+      id: 'fictional.scheduleInspection',
+      label: 'Schedule fictional inspection',
+      params: [
+        { id: 'date', type: 'date' },
+        { id: 'target', type: 'resource', optional: true },
+      ],
+      returns: 'string',
+      invokeUrl: 'https://integration.example.com/automation/schedule-inspection',
+    },
+  ],
+})
+```
+
+Every `type` and `returns` value must come from the released automation value-type vocabulary in the message catalog (`string`, `number`, `boolean`, `date`, `tags`, `resource`, `resources`, `object`, `any`); the host drops entries declaring anything else. A `resource` value travels as `{ id, type }` with the plural collection name.
+
+A function may declare multiple named outputs instead of a single return - `returns: [{ id: 'reportUrl', type: 'string' }, { id: 'pageCount', type: 'number' }]` - and must then respond with an object keyed by output id. Each named output becomes its own wireable port in the FieldTwin automation editor. See the message catalog for the exact response contract.
+
+The automation service calls `readUrl`/`invokeUrl` with POST and a short-lived FieldTwin JWT. Verify the JWT before acting, exactly as for API-bound tokens. Entries without a URL are usable only while a client is open - the FieldTwin editor labels automations that depend on them, and unattended runs fail with an explicit error.
+
+Signal attribute changes from the integration backend, never once per open tab:
+
+```javascript
+await fetch(`${backendUrl}/automation/event`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${integrationJwt}`,
+  },
+  body: JSON.stringify({
+    customTabId,
+    attributeId: 'fictional.inspectionCount',
+    scope: { accountId, subProjectId },
+    value: 17,
+  }),
+})
+```
+
+Optionally mirror the new value into open clients with the `attributeUpdated` postMessage; that call updates UI caches only and never starts a run.

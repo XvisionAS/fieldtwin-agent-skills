@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.3.0 - 2026-08-14
+
+- Documented the FieldTwin automation contract for integrations: the `automationDescriptor`
+  declaration (attributes and functions with https-only `readUrl`/`invokeUrl`, entry and size
+  caps, authoring-only entries without a URL), the short-lived JWT the automation service sends
+  when invoking declared endpoints, and the `POST /automation/event` webhook that fires
+  attribute-triggered automations without an open client.
+- Added the `attributeUpdated` postMessage (client cache refresh only - never starts a run) and
+  a copy-ready "Participate in FieldTwin automations" recipe covering declaration, endpoint
+  serving, and backend-originated webhook signalling.
+- Documented the complete automation value-type vocabulary (`string`, `number`, `boolean`,
+  `date`, `tags`, `resource`, `resources`, `object`, `any`) with JSON wire shapes for attribute
+  types, function parameter types, and function returns; the host drops entries declaring
+  anything outside it.
+- Documented multi-output automation functions: `returns` as an array of unique named
+  `{ id, type }` outputs, the object-keyed response contract, per-output wiring in the
+  automation editor, and the explicit failure when a declared multi-output function responds
+  with a non-object.
+
 ## 0.2.9 - 2026-08-13
 
 - Added a complete GitLab provider contract with exact allowlisted HTTPS SaaS/self-managed origins,

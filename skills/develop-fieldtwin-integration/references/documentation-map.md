@@ -23,9 +23,9 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | End-to-end development, Tilt/Helm, local HTTP, bootstrap/auth diagnosis | `development-workflow.md` |
 | Static manifest, dynamic pages, placement, background behavior, pop-outs | `manifest-and-loading.md` |
 | Secure `postMessage` bridge, `loaded`, token refresh, API calls, teardown | `bridge-and-api.md` |
-| Common event names and payload placement | `message-catalog.md` |
+| Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
-| Resource queries, selection, focus, settings, notifications | `recipes.md` |
+| Resource queries, selection, focus, settings, notifications, automation participation | `recipes.md` |
 | Threat model, review checklist, automated/manual tests | `security-and-testing.md` |
 
 ## Protocol invariants
