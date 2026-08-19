@@ -23,6 +23,7 @@ Operation Mode deliberately mixes top-level and nested fields:
 | Host → integration | `operationSearchDoubleClick` | `integrationId`, `resultId`, optional `action`, and `args` are top-level |
 | Integration → host | `visualFilteringUpdate` | `data.filters` |
 | Host → integration | `visualFilterToggle` | `data.id`, `data.state`, optional `data.subFilterId` |
+| Integration → host | `visualLegendUpdate` | optional `data.title`, `data.position`, `data.items`, and `data.visible` |
 | Integration → host | `contextMenuUpdate` | `data.entries` |
 | Host → integration | `contextMenuAction` | `integrationId`, `action`, `args`, and optional `cursorPosition` are top-level |
 | Integration → host | `openOperationPanel` | `data.integrationId` and `data.path` |

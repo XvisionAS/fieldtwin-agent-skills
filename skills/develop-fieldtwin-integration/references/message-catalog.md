@@ -5,6 +5,13 @@ message has a top-level `event` string, but the rest of the contract intentional
 uses a mixture of top-level fields and a nested `data` object. Preserve each
 envelope exactly; do not move fields merely to make different events look alike.
 
+Resource fields use two distinct vocabularies. A selection/navigation field named
+`type` uses a singular value such as `stagedAsset`; a collection field named
+`resourceType` or `resourceTypes` uses the exact plural camel-case value such as
+`stagedAssets` or `subProjects`. Read
+[integration-to-host-events.md](integration-to-host-events.md) before generating a
+resource request.
+
 This is a practical catalog of the released integration contract, not a substitute
 for the current [FieldTwin integration guide](https://docs.fieldtwin.com/). If a
 deployed FieldTwin release documents a different shape, its released contract wins.
@@ -109,6 +116,7 @@ is not `{ data: { items: [...] } }`:
   data: [
     {
       type: 'stagedAsset',
+      resourceType: 'stagedAssets',
       id: 'asset-fictional-001',
       name: 'Fictional Water Injection Valve'
     }
@@ -272,7 +280,7 @@ sendToHost({
   data: {
     tags: ['VALVE-FICTIONAL-001', 'READY'],
     matchAll: true,
-    resourceTypes: ['stagedAsset'],
+    resourceTypes: ['stagedAssets'],
     focusSelection: false,
     senderId: 'select-tags-fictional-001'
   }
@@ -327,7 +335,7 @@ sendToHost({
   data: {
     items: [
       {
-        resourceType: 'stagedAsset',
+        resourceType: 'stagedAssets',
         id: 'asset-fictional-001'
       }
     ],
@@ -346,7 +354,7 @@ sendToHost({
   event: 'getResourcesByTags',
   data: {
     tags: ['VALVE-FICTIONAL-001'],
-    resourceTypes: ['stagedAsset'],
+    resourceTypes: ['stagedAssets'],
     queryId: 'tags-fictional-001'
   }
 })

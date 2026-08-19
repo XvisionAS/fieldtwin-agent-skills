@@ -2,7 +2,7 @@
 
 This is the public entry point for developing an external FieldTwin integration. It combines the released integration contract with secure, fictional samples that an agent can adapt to a real integration repository.
 
-The protocol guidance was verified against the FieldTwin integration guide revision 52 on 2026-08-12. A deployed environment's current documented contract takes precedence when it differs.
+The protocol guidance was verified against the FieldTwin integration guide revision 58 on 2026-08-19. A deployed environment's current documented contract takes precedence when it differs.
 
 For an implementation sequence that covers repository conventions, Environment Modules, Tilt,
 Helm, local HTTP, iframe loading, server JWT profiles, and live diagnosis, use the
@@ -133,7 +133,7 @@ Common host-to-integration events include:
 | --- | --- |
 | `loaded` | Bootstrap token, API context, project scope, integration identity, and initial state. |
 | `tokenRefresh` | Replace the in-memory JWT. |
-| `selectionChanged` | Notify the integration about a host selection change. |
+| `select` / `unselect` | Notify the integration when the host selection changes or clears. |
 | `operationSearch` | Ask integrations for Operation Mode results or clear existing results. |
 | `operationSearchAction` | Run an integration-defined inline result action. |
 | `operationSearchDoubleClick` | Run an integration-defined double-click action. |
@@ -145,15 +145,16 @@ Common integration-to-host events include:
 | Event | Purpose |
 | --- | --- |
 | `select` | Select graph resources; use `focusSelection: false` for selection only. |
-| `zoomOn` | Explicitly move the camera to one or more resources. |
-| `getResources` | Query resources using documented correlation fields. |
+| `zoomOn` | Explicitly move the camera to one resource. |
+| `getResources` | Query resources by ID using canonical plural `resourceType` values. |
 | `toast` | Show a user notification. |
 | `operationSearchResults` | Publish grouped Operation Mode results and actions. |
 | `operationSearchProgress` | Publish or clear progress for the current search. |
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
 
-Use [message-catalog.md](../references/message-catalog.md) for exact envelopes and [recipes.md](../references/recipes.md) for copy-ready flows.
+Use [message-catalog.md](../references/message-catalog.md) for bidirectional envelopes,
+[integration-to-host-events.md](../references/integration-to-host-events.md) for the complete host-handler matrix and exact resource-type vocabulary, and [recipes.md](../references/recipes.md) for copy-ready flows.
 
 ## Operation Mode sample
 
@@ -172,14 +173,14 @@ bridge.send({
           {
             id: 'equipment:asset-42',
             label: 'Injection pump P-42',
-            linkedGraphResources: [{ type: 'stagedAssets', id: 'asset-42' }],
+            linkedGraphResources: [{ type: 'stagedAsset', id: 'asset-42' }],
             actions: [
               {
                 id: 'focus',
                 label: 'Focus',
                 icon: 'faLocationCrosshairs',
                 action: 'focusResource',
-                args: { type: 'stagedAssets', id: 'asset-42' }
+                args: { type: 'stagedAsset', id: 'asset-42' }
               }
             ],
             doubleClickAction: {
@@ -225,6 +226,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Manifest, loading, dynamic pages, and pop-outs | [manifest-and-loading.md](../references/manifest-and-loading.md) |
 | Secure bridge, bootstrap, API access, replies, teardown | [bridge-and-api.md](../references/bridge-and-api.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
+| Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |
 | Selection, resources, settings, notifications, focus | [recipes.md](../references/recipes.md) |
 | Threat model, review checklist, and protocol tests | [security-and-testing.md](../references/security-and-testing.md) |

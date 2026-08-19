@@ -33,6 +33,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "bridge-and-api.md",
     "development-workflow.md",
     "documentation-map.md",
+    "integration-to-host-events.md",
     "manifest-and-loading.md",
     "message-catalog.md",
     "operation-mode.md",

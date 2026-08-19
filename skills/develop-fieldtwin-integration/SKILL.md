@@ -4,7 +4,7 @@ description: Develop, run, debug, test, and review FieldTwin external integratio
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
 # Develop FieldTwin Integrations
@@ -19,6 +19,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/manifest-and-loading.md](references/manifest-and-loading.md) for manifests, dynamic pages, background behavior, iframe loading, and pop-outs.
 - [references/bridge-and-api.md](references/bridge-and-api.md) for a secure browser bridge, `loaded`, `tokenRefresh`, API calls, replies, and teardown.
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
+- [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
 - [references/recipes.md](references/recipes.md) for copy-ready selection, resource-query, settings, notification, focus, and automation-participation recipes.
 - [references/security-and-testing.md](references/security-and-testing.md) before implementing message code and before handoff.
@@ -85,6 +86,7 @@ Trace selection and focus independently. A click may select a resource while a s
 
 - Use structured-cloneable plain objects with an `event` string.
 - Check whether fields are top-level or nested under `data`; FieldTwin uses both forms.
+- Keep resource vocabularies field-specific: selection/navigation `type` values are singular, while `resourceType` and `resourceTypes` use exact plural collection names such as `stagedAssets` and `subProjects`.
 - Include `customTabId` only where the documented protocol needs it. The host can derive the sending integration from its registered source window.
 - Correlate only with documented fields such as `queryId` or `reqId`. Do not invent a request ID that the host will not echo.
 - Target integration-specific host messages to the instance that produced the data.

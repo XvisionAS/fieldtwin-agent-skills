@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1 - 2026-08-19
+
+- Added a complete integration-to-host event matrix with exact payload placement, reply events,
+  correlation fields, and links to the deeper Operation Mode contracts.
+- Distinguished singular selection/navigation `type` values such as `stagedAsset` from canonical
+  plural collection values such as `stagedAssets` and `subProjects` used by `resourceType` and
+  `resourceTypes` fields.
+- Documented `getResources` aliases, missing-resource behavior, canonical root-resource values,
+  and fully qualified `resourceId:streamId` handling, including the main-stream short-ID fallback.
+- Corrected existing resource-query examples and added an evaluation that rejects `subProject` and
+  `stagedAsset` when used as collection `resourceType` values.
+
 ## 0.3.0 - 2026-08-14
 
 - Documented the FieldTwin automation contract for integrations: the `automationDescriptor`

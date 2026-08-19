@@ -73,11 +73,11 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - the host-sent `loaded` bootstrap and `tokenRefresh` lifecycle;
 - authenticated FieldTwin API calls without persisting JWTs;
 - exact-origin, exact-source `postMessage` routing;
-- common resource, selection, settings, and UI messages;
+- the complete integration-to-host event matrix and exact singular `type` versus plural `resourceType` vocabulary;
 - Operation Search, inline Font Awesome actions, double-click actions, filters, context menus, dynamic panels, and time series;
 - automated and manual protocol testing.
 
-See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for the current product documentation. The bundled protocol guidance was verified against the FieldTwin integration guide revision 52 on 2026-08-12. When a deployed FieldTwin environment differs, its current documented contract takes precedence.
+See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for the current product documentation. The bundled protocol guidance was verified against the FieldTwin integration guide revision 58 on 2026-08-19. When a deployed FieldTwin environment differs, its current documented contract takes precedence.
 
 All IDs, origins, assets, tags, and measurements in examples are fictional.
 

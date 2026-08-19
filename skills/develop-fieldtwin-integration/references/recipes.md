@@ -112,7 +112,7 @@ Request specific resources:
 ```javascript
 const resources = await resourceQueries.getResources([
   {
-    resourceType: 'stagedAsset',
+    resourceType: 'stagedAssets',
     id: 'asset-example-001',
   },
 ])

@@ -2,7 +2,7 @@
 
 Use this page to choose a source before implementing a FieldTwin integration.
 
-This bundle was verified against the FieldTwin integration guide revision 52 on 2026-08-12. Treat that as provenance, not as a promise that every deployment exposes the same revision.
+This bundle was verified against the FieldTwin integration guide revision 58 on 2026-08-19. Treat that as provenance, not as a promise that every deployment exposes the same revision.
 
 ## Source priority
 
@@ -24,6 +24,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | Static manifest, dynamic pages, placement, background behavior, pop-outs | `manifest-and-loading.md` |
 | Secure `postMessage` bridge, `loaded`, token refresh, API calls, teardown | `bridge-and-api.md` |
 | Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
+| Complete integration-to-host event matrix and canonical resource-type values | `integration-to-host-events.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
 | Resource queries, selection, focus, settings, notifications, automation participation | `recipes.md` |
 | Threat model, review checklist, automated/manual tests | `security-and-testing.md` |

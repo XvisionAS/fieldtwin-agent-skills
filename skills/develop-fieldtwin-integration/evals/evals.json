@@ -48,6 +48,12 @@
       "prompt": "Implement GitLab.com plus approved self-managed GitLab connections for a FieldTwin deployment integration. Users need repository reads and project-hook management, OAuth tokens expire and rotate, and some older instances only support X-Gitlab-Token. Prevent SSRF, refresh races, signature downgrade, cross-account routing, and orphaned hooks.",
       "expected_output": "An exact allowlisted HTTPS SaaS/self-managed GitLab origin with origin-pinned endpoints; one-time state and S256 PKCE; verified api and read_repository scopes; vaulted versioned access/refresh bundles with single-flight atomic replacement; bounded Maintainer-or-Owner project discovery; project-hook create/reconcile/rotate/delete; explicitly persisted gitlab-standard-webhooks-v1 Standard Webhooks HMAC/timestamp/replay verification or gitlab-legacy-x-gitlab-token-v1 exact token comparison with no header-driven fallback; safe-to-display account-keyed URL routing that is not authentication; and visible retryable cleanup failures before token revocation.",
       "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Write the exact FieldTwin postMessage calls to fetch a subproject by a fully qualified ID and a staged asset by ID, then select the staged asset without moving the camera. Explain every resource type value and the replies used for correlation.",
+      "expected_output": "A getResources request with data.items using canonical plural collection values subProjects and stagedAssets, a queryId correlated with resources.data.queryId, main-stream resourceId:resourceId behavior explained without falling back for a different stream, and a separate select request using singular type stagedAsset with focusSelection false. It must not use subProject or stagedAsset as resourceType values.",
+      "files": []
     }
   ]
 }
