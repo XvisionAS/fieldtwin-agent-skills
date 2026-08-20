@@ -39,6 +39,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "operation-mode.md",
     "recipes.md",
     "security-and-testing.md",
+    "system-highlighting.md",
 }
 CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
 REQUIRED_REPOSITORY_FILES = {

@@ -26,6 +26,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
 | Complete integration-to-host event matrix and canonical resource-type values | `integration-to-host-events.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
+| Host-side system highlighting, metadata-backed connection bundles, multi-channel flow and direction | `system-highlighting.md` |
 | Resource queries, selection, focus, settings, notifications, automation participation | `recipes.md` |
 | Threat model, review checklist, automated/manual tests | `security-and-testing.md` |
 

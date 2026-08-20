@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification and API calls, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification and API calls, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.3.1"
+  version: "0.3.2"
 ---
 
 # Develop FieldTwin Integrations
@@ -21,6 +21,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
+- [references/system-highlighting.md](references/system-highlighting.md) when host-side Highlight systems must classify metadata-backed connection bundles, render several service channels on one line, or preserve independent flow directions.
 - [references/recipes.md](references/recipes.md) for copy-ready selection, resource-query, settings, notification, focus, and automation-participation recipes.
 - [references/security-and-testing.md](references/security-and-testing.md) before implementing message code and before handoff.
 
@@ -35,6 +36,8 @@ Identify which side owns the behavior before editing:
 - **Protocol change**: add or change an event, field, reply, targeting rule, or interaction. Implement every in-scope side, preserve compatible legacy behavior, update public documentation, and add protocol tests.
 
 Trace selection and focus independently. A click may select a resource while a separate explicit action or double-click moves the camera.
+
+Treat the built-in Highlight systems renderer as host behavior, not as an integration message contract. Metadata-backed connection channels must not be smuggled through `visualFilteringUpdate`: visual filters remain integration-owned tag/filter state unless the released protocol explicitly adds a system-channel payload.
 
 ## Build the integration in this order
 

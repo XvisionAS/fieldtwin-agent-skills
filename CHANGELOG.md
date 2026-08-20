@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.2 - 2026-08-20
+
+- Added host-side Operation Mode guidance for resolving direct connection-kind metadata as stable
+  logical channels on a physical connection, including defaults, project overrides, repeated
+  categories, and an explicit non-recursive constituent scope.
+- Defined per-channel direction precedence and endpoint-relative semantics so one metadata-backed
+  bundle can display Oil and Gas flowing independently without matching customer-defined labels.
+- Documented single-pass lateral-band rendering, segment phase propagation, live metadata
+  invalidation, regeneration/disposal behavior, large-bundle policy, and focused regression tests.
+- Clarified that built-in system highlighting is host-owned and must not overload
+  `visualFilteringUpdate` or silently create a new integration protocol contract.
+
 ## 0.3.1 - 2026-08-19
 
 - Added a complete integration-to-host event matrix with exact payload placement, reply events,

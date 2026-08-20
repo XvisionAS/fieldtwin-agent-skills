@@ -476,6 +476,12 @@ stable within their result. Untrusted names are HTML-escaped before inclusion in
 `html`; action labels remain plain text even though FieldTwin sanitizes displayed
 HTML.
 
+## Host system highlights are not visual filters
+
+Operation Mode's built-in Highlight systems renderer is host-owned. When one physical connection contains several metadata-selected connection definitions, use [system-highlighting.md](system-highlighting.md) to model logical channels, independent directions, flow phases, and multi-band rendering.
+
+Do not overload `visualFilteringUpdate` with those channels. Visual filters remain integration-owned filter state and optional tag highlights; they do not redefine a physical connection as a multi-color bundle.
+
 ## Visual filters
 
 Register or replace the sending integration's filters with `data.filters`:

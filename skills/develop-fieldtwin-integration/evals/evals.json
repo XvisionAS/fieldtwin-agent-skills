@@ -54,6 +54,12 @@
       "prompt": "Write the exact FieldTwin postMessage calls to fetch a subproject by a fully qualified ID and a staged asset by ID, then select the staged asset without moving the camera. Explain every resource type value and the replies used for correlation.",
       "expected_output": "A getResources request with data.items using canonical plural collection values subProjects and stagedAssets, a queryId correlated with resources.data.queryId, main-stream resourceId:resourceId behavior explained without falling back for a different stream, and a separate select request using singular type stagedAsset with focusSelection false. It must not use subProject or stagedAsset as resourceType values.",
       "files": []
+    },
+    {
+      "id": 10,
+      "prompt": "Update FieldTwin Operation Mode system highlighting so a physical Bundle connection can expose Oil and Gas through connection-kind metadata, show both colors at once, and animate each constituent in its own direction. Preserve normal connections, segments, selection outlines, and live metadata edits. Decide whether this needs a new integration message.",
+      "expected_output": "A host-only design or implementation that resolves stable direct metadata-backed logical channels, resolves direction per channel through an existing or explicitly defined host data-model contract without matching display labels or inventing an integration field, computes channel-keyed flow and phase, renders stable lateral bands in one line pass, propagates every channel through segments and regeneration, coalesces metadata invalidation, preserves the single-channel path and outline precedence, adds lifecycle/rendering tests, and explicitly avoids changing postMessage or overloading visualFilteringUpdate.",
+      "files": []
     }
   ]
 }
