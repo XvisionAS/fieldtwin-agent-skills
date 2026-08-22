@@ -55,6 +55,8 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 - `Use develop-fieldtwin-integration to debug a SvelteKit Account Settings iframe that stays on Connecting in local Tilt.`
 - `Review this FieldTwin postMessage integration for origin, token, and teardown problems.`
 - `Add a dynamic page manifest and API client to this FieldTwin integration.`
+- `Build a FieldTwin v1.10 client for account configuration, subproject resources, and batch writes.`
+- `Use the tenant OpenAPI to implement FieldTwin API v2.0 stream reads, filters, and batch CRUD.`
 
 ## Update
 
@@ -72,8 +74,16 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - integration manifests, dynamic pages, background loading, and pop-outs;
 - the end-to-end local development path through modules, Tilt, Helm, ingress, and FieldTwin;
 - the host-sent `loaded` bootstrap and `tokenRefresh` lifecycle;
-- authenticated FieldTwin API calls without persisting JWTs;
+- authenticated FieldTwin API calls without persisting JWTs, including version selection,
+  account/project/subproject routing, readiness, errors, bounded retry, and media-type handling;
+- exhaustive v1.10 account/configuration and subproject endpoint families;
+- v2.0 users/account/project/subproject/workflow stream CRUD, filters, specialized operations,
+  resource ownership, and tenant OpenAPI discovery;
+- v1.10 and v2.0 batch POST/PATCH/DELETE envelopes, ordering, atomicity boundaries, response IDs,
+  and ambiguous-failure recovery;
 - exact-origin, exact-source `postMessage` routing;
+- production HTTP headers for iframe embedding and pop-out opener retention, including CSP,
+  `X-Frame-Options`, COOP/COEP, and the non-standard status of `X-IFrame-Allow`;
 - the complete integration-to-host event matrix and exact singular `type` versus plural `resourceType` vocabulary;
 - Operation Search, inline Font Awesome actions, double-click actions, filters, context menus, dynamic panels, and time series;
 - host-side system highlighting for metadata-backed connection bundles with multi-channel colors and independent flow direction;

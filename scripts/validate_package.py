@@ -30,6 +30,10 @@ FRONTMATTER_FIELDS = {
     "allowed-tools",
 }
 DEVELOP_INTEGRATION_REFERENCES = {
+    "backend-api-batch.md",
+    "backend-api-v1.10.md",
+    "backend-api-v2.0.md",
+    "backend-api.md",
     "bridge-and-api.md",
     "development-workflow.md",
     "documentation-map.md",

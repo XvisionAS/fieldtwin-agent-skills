@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.4.0 - 2026-08-22
+
+- Added a complete FieldTwin backend API guide covering trusted base URL/version selection,
+  integration JWT versus server API-token authentication, gateway-derived scope, readiness,
+  response headers, status handling, bounded retry, and mutation reconciliation.
+- Added a v1.10 catalog for account/configuration, projects, qualified subproject branches,
+  individual layout resources, specialized geometry/schematic operations, and both batch styles.
+- Added a v2.0 guide for tenant OpenAPI discovery, normalized users/account/project/subproject/
+  workflow streams, GET envelopes and filters, supported mutation families, root ownership,
+  specialized endpoints, summary semantics, external parents, and non-JSON/streamed responses.
+- Added shared batch documentation with POST/PATCH/DELETE envelopes, globals precedence,
+  dependency order, one-stream constraints, transaction boundaries, batch correlation, sizing,
+  uncertain-response recovery, and a focused validation matrix.
+- Corrected the bridge API example to use a v1.10 project path with a qualified branch ID and fixed
+  local-HTTP bootstrap parsing to consistently apply the configured scheme policy.
+
+## 0.3.4 - 2026-08-22
+
+- Added the HTTP response contract required by integrations that support both iframe and pop-out
+  modes, including final-response checks through middleware, ingress, reverse proxies, and CDNs.
+- Required the integration document to omit COOP or use `unsafe-none`, prohibited opener-severing
+  `same-origin`/`noopener-allow-popups`, and documented the FieldTwin opener's matching policy.
+- Clarified that `X-IFrame-Allow` and `X-Frame-Allow` are non-standard, while iframe `allow` and
+  `Permissions-Policy` control capabilities rather than embedding or opener retention.
+- Added response-header and real FieldTwin pop-out evaluation cases covering CSP, XFO, COOP/COEP,
+  opener retention, bidirectional messaging, teardown, and proxy-injected conflicts.
+
+## 0.3.3 - 2026-08-22
+
+- Clarified that `postMessage` supports pop-outs while an iframe-only
+  `window.parent.postMessage(...)` sender does not: pop-outs must target their trusted opener.
+- Updated the bridge guidance to resolve parent versus opener during `loaded`, pin the exact source
+  window and origin, and route every outbound message through that pair.
+- Documented fail-closed behavior for direct top-level visits, severed openers, and incompatible
+  opener policy, with focused iframe, pop-out, missing-opener, and outbound-routing tests.
+
 ## 0.3.2 - 2026-08-20
 
 - Added host-side Operation Mode guidance for resolving direct connection-kind metadata as stable

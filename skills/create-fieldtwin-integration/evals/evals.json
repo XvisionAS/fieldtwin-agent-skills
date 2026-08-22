@@ -30,6 +30,12 @@
       "prompt": "Add GitLab.com and approved self-managed GitLab support to the FieldTwin provider scaffold. Users must authorize repository reads and project-hook management, token refresh cannot corrupt a connection, and older self-managed instances may only support X-Gitlab-Token. Include watch, rotation, unwatch, and disconnect behavior.",
       "expected_output": "An exact deployment-allowlisted HTTPS GitLab origin with origin-pinned OAuth/API endpoints; one-time state and S256 PKCE; verified api plus read_repository scopes; a vaulted access/refresh-token bundle with single-flight atomic refresh; bounded membership project discovery at Maintainer or Owner; idempotent project-hook reconciliation and cleanup; an explicit persisted gitlab-standard-webhooks-v1 profile for Standard Webhooks HMAC/timestamp/replay verification or versioned legacy X-Gitlab-Token profile with no header-driven downgrade; safe account-keyed URL routing that is not authentication; and retryable partial-cleanup handling.",
       "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Scaffold the production HTTP-header policy for a FieldTwin integration that can stay embedded or be popped out. Our security middleware defaults to COOP same-origin, the ingress adds X-Frame-Options, and an old chart sets X-IFrame-Allow. Include deployment-level tests.",
+      "expected_output": "A server and ingress contract with exact HTTPS CSP frame-ancestors, no blocking X-Frame-Options, integration-document COOP absent or unsafe-none, no incompatible COOP/COEP cross-origin isolation, no reliance on non-standard X-IFrame-Allow or X-Frame-Allow, final-response assertions after every proxy layer, and a real FieldTwin iframe-plus-pop-out browser test proving opener retention and bidirectional messaging.",
+      "files": []
     }
   ]
 }

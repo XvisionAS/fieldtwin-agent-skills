@@ -4,7 +4,7 @@ description: Create and scaffold a production-ready FieldTwin external integrati
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.2.9"
+  version: "0.3.0"
 ---
 
 # Create FieldTwin Integrations
@@ -64,6 +64,11 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
   `SAMEORIGIN`. An explicitly enabled local HTTP mode may omit the child `frame-ancestors`
   restriction to match the standard local integration workflow; never carry that relaxation into
   HTTPS deployments.
+- Keep the integration document compatible with a cross-origin FieldTwin pop-out. Configure the
+  application server, security middleware, ingress, and CDN so the final response omits
+  `Cross-Origin-Opener-Policy` or sends `unsafe-none`; do not inject `same-origin` or
+  `noopener-allow-popups`. Do not invent or rely on `X-IFrame-Allow`/`X-Frame-Allow`; browsers do
+  not use those headers to allow embedding or retain an opener.
 - Diagnose iframe failures by layer: the integration controls `frame-ancestors` and
   `X-Frame-Options`; FieldTwin controls its parent-page `frame-src`; the browser controls mixed
   content. Relaxing child response headers cannot make an HTTPS parent embed an HTTP child.
@@ -81,7 +86,8 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
   remain HTTPS-only. Preserve its base path when constructing FieldTwin API URLs.
 - Implement exact-origin and exact-source `loaded`/`tokenRefresh` handling with the JWT kept in memory.
 - Keep tokens, account IDs, and project IDs out of page URLs, logs, storage, and analytics.
-- Test iframe and pop-out lifecycle, teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
+- Test iframe and pop-out lifecycle, effective response headers through ingress, opener retention,
+  teardown, malformed input, and token refresh using `develop-fieldtwin-integration`.
 - Put account-wide provider application setup under `accountSettingsUrl` and authorize reads and writes with a verified account-admin claim. Return an exact public DTO containing public identifiers, derived callback/webhook URLs, a revision, and secret-presence booleans only. Keep every secret input empty on reload.
 - Treat an omitted or exactly empty secret field as “preserve the saved value,” while rejecting a
   nonempty whitespace-only replacement. Secrets are opaque: after only canonicalization explicitly

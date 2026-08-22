@@ -2,7 +2,9 @@
 
 This is the public entry point for developing an external FieldTwin integration. It combines the released integration contract with secure, fictional samples that an agent can adapt to a real integration repository.
 
-The protocol guidance was verified against the FieldTwin integration guide revision 58 on 2026-08-19. A deployed environment's current documented contract takes precedence when it differs.
+The message guidance was verified against the FieldTwin integration guide revision 58 on
+2026-08-19; the backend guidance was reconciled with the public API material and current v1.10/v2.0
+contracts on 2026-08-22. A deployed environment's current documented contract takes precedence.
 
 For an implementation sequence that covers repository conventions, Environment Modules, Tilt,
 Helm, local HTTP, iframe loading, server JWT profiles, and live diagnosis, use the
@@ -46,6 +48,14 @@ needs. Require HTTPS outside an explicitly HTTP-only local development mode:
 ```
 
 Use [manifest-and-loading.md](../references/manifest-and-loading.md) for every supported placement and flag, dynamic page endpoints, background instances, GET versus POST loading, and pop-out topology.
+
+The HTML response must support both placements. For HTTPS iframe mode, set CSP `frame-ancestors`
+to the exact FieldTwin origins and omit blocking `X-Frame-Options`. For pop-out mode, omit
+`Cross-Origin-Opener-Policy` or send `unsafe-none` so the cross-origin opener bridge survives.
+Verify the final response through ingress because security middleware or a proxy can inject
+`same-origin` or `noopener-allow-popups`. `X-IFrame-Allow`/`X-Frame-Allow` are non-standard and do
+not make the response compatible; the iframe `allow` attribute controls capabilities, not whether
+embedding or opener messaging works.
 
 ## Bootstrap securely
 
@@ -118,10 +128,52 @@ function receiveFieldTwinMessage(event) {
   }
 }
 
+function sendToFieldTwin(message, transfer = []) {
+  if (!hostWindow || hostWindow.closed || !hostOrigin) {
+    throw new Error('FieldTwin bridge is not ready')
+  }
+
+  hostWindow.postMessage(message, hostOrigin, transfer)
+}
+
 window.addEventListener('message', receiveFieldTwinMessage)
 ```
 
+Always send through the pinned `hostWindow`; do not replace this with
+`window.parent.postMessage(...)`. The parent is FieldTwin while the integration is embedded, but a
+pop-out is top-level and its parent is itself. Its pinned host window is the opener. If a top-level
+integration has no live opener, it has no authenticated FieldTwin bridge and must remain
+disconnected.
+
 For a complete dependency-free bridge, authenticated API helper, reply correlation, API-path validation, and cleanup, use [bridge-and-api.md](../references/bridge-and-api.md).
+
+## Call the backend API
+
+Use `postMessage` to coordinate with the open FieldTwin client and the REST API to read or mutate
+FieldTwin data. Build the API root from the trusted `backendUrl` plus `APIVersion`, preserving any
+backend base path. For an interactive integration, send only
+`Authorization: Bearer <current loaded JWT>`; never place an account API token in browser code.
+
+The two supported API designs are intentionally different:
+
+| v1.10 | v2.0 |
+| --- | --- |
+| Widest current tenant compatibility | Verify the target tenant's live v2 OpenAPI first |
+| Dedicated account/configuration and individual resource routes | One normalized GET/POST/PATCH/DELETE endpoint per users/account/project/subproject/workflow stream |
+| Subproject path includes project ID and qualified `{subProject}:{stream}` | Subproject path uses the qualified ID and the authenticated gateway derives project context |
+| Collection response shapes vary by endpoint | GET returns plural type maps keyed by resource ID |
+| Explicit `/batch` and per-type batch routes | Every stream mutation is a type-keyed batch |
+
+Use the version sent by FieldTwin unless the target tenant explicitly supports and the integration
+selects another contract. Keep a batch inside one stream, create parents before dependent children,
+and do not blindly retry a timed-out POST: it may have committed. Successful PATCH/DELETE can have
+an empty body, while specialized operations can return SVG, files, or chunked data, so parse by
+status and `Content-Type`.
+
+Read [backend-api.md](../references/backend-api.md) for authentication, routing, readiness, errors,
+and retries; [backend-api-v1.10.md](../references/backend-api-v1.10.md) and
+[backend-api-v2.0.md](../references/backend-api-v2.0.md) for their endpoint catalogs; and
+[backend-api-batch.md](../references/backend-api-batch.md) for complete batch envelopes.
 
 ## Preserve the exact message contract
 
@@ -207,6 +259,10 @@ Test at least:
 - trusted bootstrap posted before framework mount, with no token exposed by the handoff;
 - Account Settings bootstrap without unused project API fields;
 - rejection of a wrong origin, a wrong source window, and malformed messages;
+- outbound iframe messages sent to the pinned parent and outbound pop-out messages sent to the
+  pinned opener, with no fallback when an opener is unavailable;
+- final integration-document headers through ingress: exact HTTPS `frame-ancestors`, no blocking
+  `X-Frame-Options`, and COOP absent or `unsafe-none`;
 - token replacement while requests are in flight and current-token headers on later calls;
 - exact top-level versus `data` payload placement;
 - correlation, timeout, late replies, and duplicate replies;
@@ -225,6 +281,10 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | End-to-end implementation, local development, and troubleshooting | [development-workflow.md](../references/development-workflow.md) |
 | Manifest, loading, dynamic pages, and pop-outs | [manifest-and-loading.md](../references/manifest-and-loading.md) |
 | Secure bridge, bootstrap, API access, replies, teardown | [bridge-and-api.md](../references/bridge-and-api.md) |
+| Backend/API auth, routing, readiness, errors, retries | [backend-api.md](../references/backend-api.md) |
+| API v1.10 endpoint catalog and qualified project/subproject paths | [backend-api-v1.10.md](../references/backend-api-v1.10.md) |
+| API v2.0 stream CRUD, filters, resource ownership, specialized endpoints | [backend-api-v2.0.md](../references/backend-api-v2.0.md) |
+| v1.10/v2.0 batch payloads, ordering, atomicity, recovery | [backend-api-batch.md](../references/backend-api-batch.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |

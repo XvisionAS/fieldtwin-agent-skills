@@ -10,6 +10,64 @@ query replies, read [message-catalog.md](message-catalog.md). For Operation Mode
 result, filter, menu, panel, and time-series shapes, also read
 [operation-mode.md](operation-mode.md).
 
+## Transport in an iframe and a pop-out
+
+`postMessage` supports both integration layouts, but `window.parent` does not identify FieldTwin
+in both of them:
+
+| Integration layout | FieldTwin host window |
+| --- | --- |
+| Embedded iframe, where `window.parent !== window` | `window.parent` |
+| Popped-out top-level window, where `window.parent === window` | `window.opener` |
+
+Do not implement `sendToHost` as `window.parent.postMessage(...)`. That sends to FieldTwin only
+while embedded and posts back to the integration itself after pop-out. During the trusted `loaded`
+bootstrap, require `event.source` to match the expected parent or opener and `event.origin` to match
+an exact allowed FieldTwin origin. Pin both values and make every sample on this page send through
+that bridge-owned pair:
+
+```javascript
+let hostWindow = null
+let hostOrigin = null
+
+function expectedHostWindow() {
+  if (window.parent !== window) {
+    return window.parent
+  }
+
+  return window.opener && !window.opener.closed ? window.opener : null
+}
+
+function acceptLoaded(event, allowedOrigins) {
+  const expectedWindow = expectedHostWindow()
+  if (
+    event.data?.event !== 'loaded' ||
+    !expectedWindow ||
+    event.source !== expectedWindow ||
+    !allowedOrigins.has(event.origin)
+  ) {
+    return false
+  }
+
+  hostWindow = expectedWindow
+  hostOrigin = event.origin
+  return true
+}
+
+function sendToHost(message, transfer = []) {
+  if (!hostWindow || hostWindow.closed || !hostOrigin) {
+    throw new Error('FieldTwin bridge is not ready')
+  }
+
+  hostWindow.postMessage(message, hostOrigin, transfer)
+}
+```
+
+Use the complete implementation in [bridge-and-api.md](bridge-and-api.md), which also validates
+payloads, handles token refresh, captures early bootstrap, and tears down state. A pop-out without
+a live opener cannot authenticate its host; keep it disconnected and show a recovery path instead
+of guessing a target.
+
 ## Rules that apply to every request
 
 - Send a structured-cloneable plain object with a top-level `event` string.

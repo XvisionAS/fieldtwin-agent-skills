@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification and API calls, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.3.2"
+  version: "0.4.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -18,6 +18,10 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/development-workflow.md](references/development-workflow.md) for the end-to-end repository, Environment Module, Tilt, Helm, browser, bootstrap, server-authentication, and live-debug checklist.
 - [references/manifest-and-loading.md](references/manifest-and-loading.md) for manifests, dynamic pages, background behavior, iframe loading, and pop-outs.
 - [references/bridge-and-api.md](references/bridge-and-api.md) for a secure browser bridge, `loaded`, `tokenRefresh`, API calls, replies, and teardown.
+- [references/backend-api.md](references/backend-api.md) for API version selection, URL construction, JWT/API-token profiles, authorization, readiness, errors, retries, and response headers.
+- [references/backend-api-v1.10.md](references/backend-api-v1.10.md) for the v1.10 account/configuration and project/subproject endpoint catalog.
+- [references/backend-api-v2.0.md](references/backend-api-v2.0.md) for normalized stream CRUD, GET envelopes and filters, specialized endpoints, and tenant OpenAPI discovery.
+- [references/backend-api-batch.md](references/backend-api-batch.md) for v1.10 and v2.0 POST/PATCH/DELETE batch envelopes, stream ownership, ordering, atomicity boundaries, and recovery.
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
@@ -50,9 +54,20 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 - Configure the integration page's HTTPS response with CSP `frame-ancestors` for those exact
   origins, and do not emit `X-Frame-Options: DENY` or `SAMEORIGIN`. An explicitly enabled local HTTP
   mode may omit only the child `frame-ancestors` restriction; keep message origin/source checks.
+- Make the effective integration-document response compatible with pop-outs. Omit
+  `Cross-Origin-Opener-Policy` or set it to `unsafe-none`; generic security middleware, ingress, or
+  CDN rules must not replace it with `same-origin` or `noopener-allow-popups`, which can sever the
+  cross-origin opener used by the bridge. Inspect both the FieldTwin opener response and the final
+  integration response through ingress.
+- Do not rely on `X-IFrame-Allow` or `X-Frame-Allow`. They are not standard browser response
+  headers. The iframe `allow` attribute and `Permissions-Policy` grant individual capabilities;
+  they do not permit embedding or preserve a pop-out opener.
 - Accept the initial `loaded` message only from an expected `window.parent` or `window.opener` and an allowlisted exact origin.
 - Pin both `event.source` and `event.origin` after bootstrap; reject later messages that do not match both.
 - Send only to the pinned host window and exact origin. Never use `*` for credentials, project data, or normal production messages.
+- Never let feature code send with `window.parent.postMessage(...)`. In a pop-out, `window.parent`
+  is the integration window itself. Route every integration-to-host message through the bridge so
+  the pinned iframe parent or pop-out opener is used consistently.
 
 ### 2. Keep bootstrap state durable and private
 
@@ -74,6 +89,8 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
   exact HTTP only in local mode and preserve any backend base path; never discard `/backend` by
   reducing the trusted URL to its origin.
 - Use `window.opener` in a pop-out and `window.parent` in an iframe through one pinned bridge abstraction.
+- Treat a top-level integration without a live `window.opener` as unbootstrapped. A direct page
+  visit or a popup opened with `noopener` cannot establish the FieldTwin message bridge.
 - Remove listeners and cancel pending work during teardown.
 
 ### 3. Call the FieldTwin API deliberately
@@ -81,9 +98,22 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 - When the page calls the FieldTwin project API, derive `backendUrl`, `APIVersion`, project scope,
   and the current token from trusted bootstrap state.
 - Send `Authorization: Bearer <token>` and let the API enforce resource rights.
+- Preserve a backend base path and keep relative paths inside the selected `/API/{version}/` root.
+- Use the host-supplied version by default. Verify the tenant's live OpenAPI before opting into
+  v2.0; do not silently translate a v1.10 route or payload into v2.
+- In v1.10, qualify subproject branches as `{subProject}:{stream}` and use the dedicated resource
+  or explicit `/batch` contract. In v2.0, choose one users/account/project/subproject/workflow
+  stream and use its normalized type-keyed CRUD envelope.
+- Keep each mutation batch in one stream, create parents before dependent children, and reconcile
+  after an ambiguous network failure instead of blindly retrying POST.
+- Never send gateway-derived `ft-*` context headers. Do not treat the response `ft-batch-id` as an
+  idempotency key.
 - Honor `canEdit` in the integration UI without treating it as a replacement for server authorization.
 - Respect API readiness signals and use bounded backoff rather than tight polling.
-- Surface user-triggered failures with a useful recovery path.
+- Parse by status and response `Content-Type`; successful PATCH/DELETE can have an empty body, and
+  specialized endpoints can return SVG, multipart/file data, or a chunked feed.
+- Surface user-triggered failures with a useful recovery path. Automatically retry only safe reads;
+  a timed-out mutation may already have committed.
 
 ### 4. Preserve exact message shapes
 
@@ -96,7 +126,15 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 
 ### 5. Validate observable behavior
 
-Test bootstrap, exact origin/source rejection, token replacement, parent and pop-out routing, exact envelopes, correlation, malformed external input, multiple integration instances, and complete teardown. For Operation Mode, test normal click, double-click, keyboard activation, inline actions, clearing, progress completion, and selection without focus.
+Test bootstrap, exact origin/source rejection, token replacement, parent and pop-out routing,
+effective document headers through ingress, exact envelopes, correlation, malformed external input,
+multiple integration instances, and complete teardown. Prove a real FieldTwin-opened pop-out retains
+its opener and completes bidirectional messaging; a direct top-level load is not an equivalent
+test. For backend API work, test tenant/version discovery, qualified branch IDs, user-right denial,
+not-ready retry/cancellation, v1.10 endpoint-specific response shapes, v2 filters/root inclusion,
+batch dependency order, returned IDs, empty success bodies, and reconciliation after an ambiguous
+mutation response. For Operation Mode, test normal click, double-click, keyboard activation, inline actions,
+clearing, progress completion, and selection without focus.
 
 For provider administration, expose account-wide setup only from authenticated Account Settings.
 Return public identifiers and secret-presence booleans, never secrets or masked values. Empty or

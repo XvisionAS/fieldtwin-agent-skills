@@ -81,7 +81,7 @@ Use `dynamicPagesUrl` to declare tenant-visible deployed applications. The endpo
 - implement exact-origin authenticated CORS for `POST` and `OPTIONS` with
   `Authorization, Content-Type` allowed and `Vary: Origin` returned.
 
-## 4. Permit the iframe without weakening message trust
+## 4. Permit the iframe and preserve the pop-out opener
 
 For HTTPS deployments, the integration response must use `Content-Security-Policy:
 frame-ancestors` with the exact configured FieldTwin frontend origins. Do not emit
@@ -98,6 +98,29 @@ Classify browser errors before changing policy:
 | Manifest or dynamic-page CORS error | Endpoint or ingress | Fix that endpoint's production preflight/response headers. |
 
 CORS does not grant iframe permission, and iframe headers do not grant cross-origin HTTP access.
+
+The integration page is also the pop-out document when `allowPopout` is enabled. Inspect its final
+response through the same deployed ingress that FieldTwin uses:
+
+- omit `Cross-Origin-Opener-Policy` or set it to `unsafe-none`;
+- reject a generic security preset that injects `Cross-Origin-Opener-Policy: same-origin` or
+  `noopener-allow-popups` on the integration page;
+- do not combine opener-isolating COOP with `Cross-Origin-Embedder-Policy` to make this bridge page
+  cross-origin isolated; and
+- do not treat `X-IFrame-Allow`, `X-Frame-Allow`, the iframe `allow` attribute, CORS, or
+  `Permissions-Policy` as opener controls.
+
+COOP compatibility depends on both documents. The FieldTwin host must use a policy that can retain
+an external popup, and the integration document should remain `unsafe-none`. A host with
+`same-origin` still severs an external integration even when the child is configured correctly.
+
+| Browser failure | Owning layer | Correct action |
+| --- | --- | --- |
+| Pop-out has `window.opener === null` or its opener proxy immediately appears closed | FieldTwin or integration effective COOP, or `noopener` at open time | Inspect both final document responses and the host's `window.open` features; restore compatible opener policies. |
+| `X-IFrame-Allow` is present but the iframe or pop-out still fails | Non-standard/custom header | Diagnose CSP, XFO, COOP, origin/source validation, and the actual platform convention instead. |
+
+Verify both response headers and browser behavior. A header-only test catches proxy injection, while
+only a real FieldTwin-opened pop-out proves that the two effective policies are compatible.
 
 ## 5. Capture `loaded` before SvelteKit starts
 

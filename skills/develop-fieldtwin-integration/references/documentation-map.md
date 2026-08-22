@@ -2,7 +2,9 @@
 
 Use this page to choose a source before implementing a FieldTwin integration.
 
-This bundle was verified against the FieldTwin integration guide revision 58 on 2026-08-19. Treat that as provenance, not as a promise that every deployment exposes the same revision.
+This bundle was verified against the FieldTwin integration guide revision 58 on 2026-08-19 and
+the public API guidance plus current v1.10/v2.0 server contracts on 2026-08-22. Treat those dates as
+provenance, not as a promise that every deployment exposes the same revision.
 
 ## Source priority
 
@@ -23,6 +25,10 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | End-to-end development, Tilt/Helm, local HTTP, bootstrap/auth diagnosis | `development-workflow.md` |
 | Static manifest, dynamic pages, placement, background behavior, pop-outs | `manifest-and-loading.md` |
 | Secure `postMessage` bridge, `loaded`, token refresh, API calls, teardown | `bridge-and-api.md` |
+| Backend/API authentication, version choice, URL safety, readiness, errors | `backend-api.md` |
+| v1.10 account/configuration and subproject endpoint catalog | `backend-api-v1.10.md` |
+| v2.0 stream CRUD, GET filters, resource ownership, specialized endpoints | `backend-api-v2.0.md` |
+| v1.10 and v2.0 batch envelopes, ordering, failure and recovery | `backend-api-batch.md` |
 | Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
 | Complete integration-to-host event matrix and canonical resource-type values | `integration-to-host-events.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
@@ -36,6 +42,13 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 - FieldTwin sends the initial `loaded` event; an integration does not need to announce readiness first.
 - Treat the host origin, source window, JWT, project identifiers, user attributes, and resource payloads as security-sensitive.
 - Keep the JWT only in memory and replace it on `tokenRefresh`.
+- Use the trusted `backendUrl` and `APIVersion`; preserve a backend path and do not silently upgrade
+  a tenant from v1.10 to v2.0.
+- Keep API-token and bearer-JWT authentication mutually exclusive. Browser integrations use the
+  short-lived JWT, never an account API token.
+- v1.10 resource endpoints and v2.0 stream CRUD are different contracts. Do not translate their
+  paths, bodies, or response containers by naming symmetry.
+- A mutation batch belongs to one stream. A response batch ID is correlation, not idempotency.
 - Pin the exact host origin and source window after a trusted bootstrap.
 - Embedded integrations use a parent window; pop-outs use an opener window.
 - Some fields are top-level and others are inside `data`. Preserve the documented shape exactly.

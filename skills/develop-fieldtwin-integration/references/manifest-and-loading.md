@@ -211,4 +211,18 @@ With `allowPopout: true`, the same page can run in two topologies:
 
 Do not choose a target window independently for every message after bootstrap. Accept `loaded` only from an expected parent/opener, then pin the exact `event.source` and `event.origin`. Use that stored pair until teardown or a full re-bootstrap.
 
+`postMessage` remains the transport in both states. What fails in a pop-out is an iframe-only
+sender such as `window.parent.postMessage(...)`: the pop-out is top-level, so its parent is itself.
+Send through the bridge's pinned host window, which is the opener for the pop-out. FieldTwin must
+retain that opener relationship; a direct navigation, `noopener`, or an incompatible
+`Cross-Origin-Opener-Policy` leaves no trusted host and must fail closed.
+
+The integration HTTP server and every response-mutating deployment layer participate in this
+contract. On the integration document, omit `Cross-Origin-Opener-Policy` or send `unsafe-none`.
+Do not let a generic security preset inject `same-origin` or `noopener-allow-popups`. Keep the HTTPS
+`frame-ancestors` allowlist and omit blocking `X-Frame-Options` for iframe mode; these framing
+controls do not preserve the opener. `X-IFrame-Allow` and `X-Frame-Allow` are non-standard and have
+no browser-defined role here, while the iframe `allow` attribute and `Permissions-Policy` control
+individual capabilities rather than framing or opener access.
+
 When the host sends `operationPaneClosed`, stop polling and release work tied to panel visibility. Unmounting the integration should also remove listeners and cancel timers, requests, and pending reply promises.

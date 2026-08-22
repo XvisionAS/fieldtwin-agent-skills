@@ -30,6 +30,25 @@ send `X-Frame-Options: DENY` or `SAMEORIGIN`. If the deployment explicitly selec
 development, the child response may omit `frame-ancestors`; this does not relax the bridge checks
 above and must not be enabled for shared or production deployments.
 
+### Keep the document response compatible with pop-outs
+
+FieldTwin and the integration are normally cross-origin. The popped-out integration therefore
+needs to remain in a browsing-context group that retains its opener. On the integration document,
+omit `Cross-Origin-Opener-Policy` or set it to `unsafe-none`. Do not use `same-origin` or
+`noopener-allow-popups`, and do not enable cross-origin isolation with an opener-isolating COOP plus
+`Cross-Origin-Embedder-Policy`. If the integration genuinely requires cross-origin isolation, the
+opener-based bridge protocol needs an architectural change rather than a header workaround.
+
+The opener's effective policy matters too. FieldTwin may use `unsafe-none` or a compatible
+`same-origin-allow-popups` policy when opening an `unsafe-none` integration, but `same-origin`
+severs an external opener relationship. Validate both final HTML responses rather than assuming
+the integration server alone controls the result.
+
+`X-IFrame-Allow` and `X-Frame-Allow` are not standard response headers, and browsers do not use
+them to permit an iframe or preserve `window.opener`. Likewise, the standard iframe `allow`
+attribute and `Permissions-Policy` control capabilities such as clipboard access. Keep those
+concepts separate from CSP `frame-ancestors`, `X-Frame-Options`, and COOP.
+
 ### Keep credentials ephemeral
 
 - Keep the integration JWT in instance memory only.
@@ -110,12 +129,31 @@ Cover at least these cases:
 | Valid `tokenRefresh` | The in-memory token is replaced and the next request uses it |
 | Malformed or unknown event | No handler side effect occurs |
 | Pop-out bootstrap | The opener is pinned instead of the integration's own top-level window |
+| Outbound request after pop-out bootstrap | The request is posted to the pinned opener and exact origin, never to `window.parent` or the integration itself |
+| Top-level page without a live opener | Bootstrap remains unavailable and outbound sends fail closed |
 | Teardown followed by a message | No handler runs and pending work is settled |
 
 Use reserved example domains and synthetic identifiers in fixtures. Never copy a real token or production payload into a test. A useful harness constructs message events with explicit `origin`, `source`, and `data`, then observes only public callbacks and outbound messages.
 
 Also assert that the early queue is bounded, removed after handoff or construction failure, and not
 reachable through public context, globals, storage, logs, or serialized framework state.
+
+### HTTP response and browser tests
+
+Fetch the integration document through every deployed ingress/proxy path and assert:
+
+- HTTPS CSP contains the exact expected `frame-ancestors` origins;
+- `X-Frame-Options` is absent;
+- enforced `Cross-Origin-Opener-Policy` is absent or exactly `unsafe-none`, with no duplicate or
+  comma-merged conflicting value;
+- no CSP `sandbox` makes the document opaque-origin or blocks its scripts; and
+- the test does not count `X-IFrame-Allow` or `X-Frame-Allow` as evidence of compatibility.
+
+Then run a browser test from the real FieldTwin host. Exercise embedded load, FieldTwin's pop-out
+action, `window.opener` retention, trusted `loaded`, one integration-to-host request, one
+host-to-integration event, close/teardown, and reopening. Repeat against the built production
+server through ingress; a framework development server is not representative when proxies or
+security middleware mutate headers.
 
 ### API tests
 

@@ -140,12 +140,31 @@ Add server-hook or endpoint tests for manifest GET/preflight, an allowed dynamic
 look-alike rejected origin, required request headers, and an unrelated route that receives no CORS
 grant. Do not rely on Vite's development CORS setting as proof of production behavior.
 
-## FieldTwin iframe embedding contract
+## FieldTwin iframe and pop-out document contract
 
 The integration page is the iframe child. Its production response must permit only the configured
 exact FieldTwin frontend origins with `Content-Security-Policy: frame-ancestors ...`. Do not send
 `X-Frame-Options: DENY` or `X-Frame-Options: SAMEORIGIN`; those legacy values override the intended
 cross-origin embedding behavior in browsers that enforce them.
+
+The same HTML document can also be opened as a cross-origin top-level pop-out. Its bridge depends
+on the opener relationship, so the effective document response must not isolate the integration
+into a different browsing-context group. Use this response-header contract:
+
+| Header or policy | Integration document requirement | Why |
+| --- | --- | --- |
+| `Content-Security-Policy: frame-ancestors ...` | Include the exact FieldTwin frontend origins in HTTPS deployments | Permits only approved iframe ancestors; it does not control a top-level pop-out. |
+| `X-Frame-Options` | Omit it; never send `DENY` or `SAMEORIGIN` | Those values block the required cross-origin iframe. |
+| `Cross-Origin-Opener-Policy` | Omit it or send `unsafe-none` | Preserves compatibility with the cross-origin FieldTwin opener. `same-origin` and `noopener-allow-popups` can sever the opener bridge. |
+| `Cross-Origin-Embedder-Policy` | Do not combine it with opener-isolating COOP on the bridge page | Cross-origin isolation and a cross-origin opener bridge are incompatible under this protocol. |
+| CSP `sandbox` | Do not apply an opaque-origin or script-blocking sandbox to the integration document | The bridge needs script execution and an exact non-opaque message origin. |
+| `X-IFrame-Allow` / `X-Frame-Allow` | Do not rely on it | These are not standard browser response headers. A private proxy convention is only additive. |
+| iframe `allow` / `Permissions-Policy` | Grant only capabilities the integration needs | These control features such as clipboard access, not embedding or opener retention. |
+
+The safest integration-document COOP value is `unsafe-none`, including when the FieldTwin host
+uses `same-origin-allow-popups` to retain cross-origin pop-outs. Do not set
+`same-origin-allow-popups` on the cross-origin integration response by symmetry: compatibility is
+determined from both the opener and opened-document policies and origins.
 
 The standard explicitly enabled HTTP-only local mode may omit `frame-ancestors`, matching existing
 FutureOn local integrations. Keep the rest of the CSP and the application-level exact-origin/source
@@ -168,8 +187,15 @@ Classify a browser block before changing policy:
 
 Test the built server through ingress in both modes. Inspect the final integration-page response,
 not only application middleware: local HTTP must have no child iframe-denial header, while HTTPS
-must contain only the configured exact FieldTwin origins. Then load the page in a real FieldTwin
-iframe and confirm the browser console has no iframe-policy error.
+must contain only the configured exact FieldTwin origins. In both modes, assert COOP is absent or
+`unsafe-none`; check that the Node server, framework adapter, security middleware, ingress, reverse
+proxy, and CDN did not append a second conflicting value. Treat `X-IFrame-Allow` as irrelevant to
+this assertion.
+
+Then load the page in a real FieldTwin iframe and pop it out. Confirm the iframe has no embedding
+policy error, the pop-out observes a live `window.opener`, the trusted `loaded` event comes from
+that opener, and a message sent through the pinned bridge reaches FieldTwin. Opening the page
+directly in a new tab does not exercise the pop-out contract.
 
 ## FieldTwin bootstrap contract
 

@@ -36,6 +36,12 @@ Before accepting `loaded`, require both:
 
 After accepting it, pin that exact origin and source pair. Every later inbound message and every outbound message must use the pinned pair. Do not infer trust from `document.referrer`, `backendUrl`, a substring match, or a value inside the message.
 
+`postMessage` works in both layouts; the target window changes. In an embedded integration,
+`window.parent` is the FieldTwin host. In a pop-out, `window.parent === window`, so sending to the
+parent posts back to the integration itself. The FieldTwin host is `window.opener` there. Resolve
+that distinction only while validating `loaded`, then send every later request through the pinned
+`event.source`. Do not let feature code choose between parent and opener for each message.
+
 ## Register before framework mount
 
 FieldTwin does not wait for a client readiness handshake. A bridge created only by `onMount`,
@@ -101,13 +107,12 @@ function isMessage(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value) && typeof value.event === 'string'
 }
 
-function isExpectedHostWindow(source) {
+function getExpectedHostWindow() {
   if (window.parent !== window) {
-    return source === window.parent
+    return window.parent
   }
 
-  const popoutHost = window.opener && !window.opener.closed ? window.opener : null
-  return popoutHost !== null && source === popoutHost
+  return window.opener && !window.opener.closed ? window.opener : null
 }
 
 function readLoadedState(message, allowInsecureHttp) {
@@ -183,16 +188,19 @@ export function createFieldTwinBridge({
   }
 
   function acceptBootstrap(event, message) {
-    if (!allowedOrigins.has(event.origin) || !isExpectedHostWindow(event.source)) {
+    const expectedHostWindow = getExpectedHostWindow()
+    if (!expectedHostWindow ||
+        !allowedOrigins.has(event.origin) ||
+        event.source !== expectedHostWindow) {
       return false
     }
 
-    const nextState = readLoadedState(message)
+    const nextState = readLoadedState(message, allowInsecureHttp)
     if (!nextState) {
       return false
     }
 
-    hostWindow = event.source
+    hostWindow = expectedHostWindow
     hostOrigin = event.origin
     state = nextState
     onReady(getContext())
@@ -217,7 +225,7 @@ export function createFieldTwinBridge({
     }
 
     if (message.event === 'loaded') {
-      const nextState = readLoadedState(message)
+      const nextState = readLoadedState(message, allowInsecureHttp)
       if (nextState) {
         state = nextState
         onReady(getContext())
@@ -242,7 +250,7 @@ export function createFieldTwinBridge({
   }
 
   function send(message, transfer = []) {
-    if (disposed || !hostWindow || !hostOrigin) {
+    if (disposed || !hostWindow || hostWindow.closed || !hostOrigin) {
       throw new Error('FieldTwin bridge is not ready')
     }
     if (!isMessage(message)) {
@@ -339,9 +347,20 @@ HTTP exception only from the same explicit local deployment mode that selected a
 origin, and list that exact parent (for example `http://fieldtwin.local.example`). Never infer this
 exception from the incoming message or referrer, and never enable it in shared environments.
 
+For a pop-out, FieldTwin must open the integration without severing `window.opener`. A directly
+navigated integration page, or one opened with `noopener` or an incompatible
+`Cross-Origin-Opener-Policy`, has no trusted host window and must remain disconnected rather than
+falling back to `window.parent`, `window.top`, a wildcard target, or a guessed origin.
+
 ## Authenticated API requests
 
 `apiFetch` constructs the API root from the trusted `loaded` context and reads the current in-memory token for every request. A request made after `tokenRefresh` therefore uses the new JWT rather than a token captured during initial setup.
+
+The helper intentionally uses the trusted `APIVersion`. Do not make it silently reinterpret a
+v1.10 relative path as v2.0. Read [backend-api.md](backend-api.md) for common authentication,
+readiness, error, and retry behavior; use [backend-api-v1.10.md](backend-api-v1.10.md) or
+[backend-api-v2.0.md](backend-api-v2.0.md) for the selected version and
+[backend-api-batch.md](backend-api-batch.md) for mutations.
 
 Use endpoint paths from the [FieldTwin API documentation](https://api.fieldtwin.com/). This illustrative request uses only fictional identifiers:
 
@@ -352,8 +371,18 @@ async function loadInitialData() {
     return
   }
 
-  const subProjectId = encodeURIComponent(context.subProject)
-  const response = await bridge.apiFetch(`subprojects/${subProjectId}/stagedAssets`)
+  if (context.apiVersion !== 'v1.10' || !context.project) {
+    throw new Error('This example requires FieldTwin API v1.10 project context')
+  }
+
+  const qualifiedId = context.subProject.includes(':')
+    ? context.subProject
+    : `${context.subProject}:${context.stream || context.subProject}`
+  const projectId = encodeURIComponent(context.project)
+  const subProjectId = encodeURIComponent(qualifiedId)
+  const response = await bridge.apiFetch(
+    `${projectId}/subProject/${subProjectId}/stagedAssets`,
+  )
 
   if (!response.ok) {
     throw new Error(`FieldTwin request failed with status ${response.status}`)
@@ -367,10 +396,16 @@ async function loadInitialData() {
 Important API rules:
 
 - Build the `Authorization` header immediately before each request.
+- Use the supplied API version. Verify the tenant's live v2 OpenAPI contract before selecting v2.
+- In v1.10, include the project and qualified `{subProject}:{stream}` in subproject paths. In v2,
+  use the normalized `/subProjects/{qualifiedId}` stream endpoint and type filters.
 - Do not put the JWT in a URL, storage API, log, error report, analytics event, or serialized application state.
 - Treat `canEdit` as a way to disable editing controls, not as authorization. The API remains authoritative.
 - Wait for `APIServerIsReady` or `apiPodIsReady` before subproject API work. Back off when `apiPodIsNotReady` arrives.
 - Keep API paths relative to the trusted backend root so the bearer token cannot be sent to an unrelated origin.
+- Parse success bodies by `Content-Type`; PATCH/DELETE can be empty and specialized endpoints can
+  return SVG, files, or streaming data.
+- Automatically retry only reads. Reconcile an ambiguous mutation before retrying it.
 - Surface user-triggered failures with a useful message and retry path; do not include credentials in the message.
 
 ## Teardown
