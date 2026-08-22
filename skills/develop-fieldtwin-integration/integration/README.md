@@ -173,7 +173,9 @@ status and `Content-Type`.
 Read [backend-api.md](../references/backend-api.md) for authentication, routing, readiness, errors,
 and retries; [backend-api-v1.10.md](../references/backend-api-v1.10.md) and
 [backend-api-v2.0.md](../references/backend-api-v2.0.md) for their endpoint catalogs; and
-[backend-api-batch.md](../references/backend-api-batch.md) for complete batch envelopes.
+[backend-api-batch.md](../references/backend-api-batch.md) for complete batch envelopes. Use
+[api-attributes.md](../references/api-attributes.md) to list the exact fields returned or accepted
+by a version, operation, stream, resource type, and method.
 
 ## Preserve the exact message contract
 
@@ -285,6 +287,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | API v1.10 endpoint catalog and qualified project/subproject paths | [backend-api-v1.10.md](../references/backend-api-v1.10.md) |
 | API v2.0 stream CRUD, filters, resource ownership, specialized endpoints | [backend-api-v2.0.md](../references/backend-api-v2.0.md) |
 | v1.10/v2.0 batch payloads, ordering, atomicity, recovery | [backend-api-batch.md](../references/backend-api-batch.md) |
+| Complete API request/response attributes and lookup commands | [api-attributes.md](../references/api-attributes.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |

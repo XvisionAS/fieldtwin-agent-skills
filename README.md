@@ -81,6 +81,8 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
   resource ownership, and tenant OpenAPI discovery;
 - v1.10 and v2.0 batch POST/PATCH/DELETE envelopes, ordering, atomicity boundaries, response IDs,
   and ambiguous-failure recovery;
+- generated v1.10 operation fields and v2.0 read/write resource schemas, with a narrow command-line
+  lookup that preserves method and stream differences;
 - exact-origin, exact-source `postMessage` routing;
 - production HTTP headers for iframe embedding and pop-out opener retention, including CSP,
   `X-Frame-Options`, COOP/COEP, and the non-standard status of `X-IFrame-Allow`;
@@ -105,7 +107,8 @@ skills/
     ├── SKILL.md
     ├── integration/README.md
     ├── evals/evals.json
-    └── references/
+    ├── references/
+    └── scripts/
 ```
 
 ## Validate a contribution

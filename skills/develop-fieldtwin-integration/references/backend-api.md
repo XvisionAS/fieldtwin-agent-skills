@@ -6,7 +6,9 @@ action uses both.
 
 This reference covers the rules shared by API v1.10 and v2.0. Continue with
 [backend-api-v1.10.md](backend-api-v1.10.md), [backend-api-v2.0.md](backend-api-v2.0.md), and
-[backend-api-batch.md](backend-api-batch.md) for their exact shapes.
+[backend-api-batch.md](backend-api-batch.md) for their exact shapes. Use
+[api-attributes.md](api-attributes.md) for the generated, operation-specific list of every request
+and response field.
 
 ## Choose the deployed contract first
 
@@ -31,6 +33,9 @@ tenant's live contract wins.
 | Multi-type subproject changes | `/batch` | Built into every stream mutation |
 | Consistent GET envelope | Endpoint-dependent | Type maps keyed by resource ID |
 | Exact request/response schemas | Live v1.10 API portal | Tenant OpenAPI document |
+
+The bundled attribute catalogs make the verified source contract searchable offline. The target
+tenant's live portal/OpenAPI still wins when its deployed release differs.
 
 Public sources:
 

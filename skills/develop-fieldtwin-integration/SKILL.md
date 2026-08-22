@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, API attributes or fields, resource schemas, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.4.0"
+  version: "0.5.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -22,6 +22,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/backend-api-v1.10.md](references/backend-api-v1.10.md) for the v1.10 account/configuration and project/subproject endpoint catalog.
 - [references/backend-api-v2.0.md](references/backend-api-v2.0.md) for normalized stream CRUD, GET envelopes and filters, specialized endpoints, and tenant OpenAPI discovery.
 - [references/backend-api-batch.md](references/backend-api-batch.md) for v1.10 and v2.0 POST/PATCH/DELETE batch envelopes, stream ownership, ordering, atomicity boundaries, and recovery.
+- [references/api-attributes.md](references/api-attributes.md) whenever the task asks which fields are readable, accepted by POST/PATCH/DELETE, required, nested, read-only, or stream-specific. Use its query script instead of loading the generated catalogs wholesale.
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
@@ -101,6 +102,9 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 - Preserve a backend base path and keep relative paths inside the selected `/API/{version}/` root.
 - Use the host-supplied version by default. Verify the tenant's live OpenAPI before opting into
   v2.0; do not silently translate a v1.10 route or payload into v2.
+- Before constructing or reviewing a payload, query `references/api-attributes.md` for the exact
+  version, operation, stream, resource type, and method. Never assume that a GET field is writable,
+  that PATCH equals optional POST, or that one v2 stream accepts another stream's resource shape.
 - In v1.10, qualify subproject branches as `{subProject}:{stream}` and use the dedicated resource
   or explicit `/batch` contract. In v2.0, choose one users/account/project/subproject/workflow
   stream and use its normalized type-keyed CRUD envelope.

@@ -90,6 +90,30 @@
       "prompt": "Design a FieldTwin API v2.0 reporting client for account, project, subproject, and workflow data. Use resourceTypes/resourceIds filters, task filters, summary with external parents, schematics, crossings streaming, and document upload. Be explicit about which calls start a subproject pod and how responses are parsed.",
       "expected_output": "Tenant-OAS-driven v2 endpoints with exact stream roots; ID-keyed plural GET maps; resourceTypes precedence and root inclusion; AND task filters with any-match list values; cheap account-side subProject summary with includeIds/noExternalParents and whole-call 502 handling; full subProject GET only for actual layout resources; SVG versus graph schematics parsing; cancellable chunked crossings; multipart upload without a manual boundary; account-side versus pod-backed readiness distinctions; and media-type, external-parent, filtering, authorization, and cleanup tests.",
       "files": []
+    },
+    {
+      "id": 16,
+      "prompt": "List every FieldTwin API v2.0 attribute for stagedAssets in the subProjects stream. Separate GET, POST, and PATCH, include nested paths, required flags, allowed values and calculated/read-only fields, then show a safe create payload without copying GET-only fields.",
+      "expected_output": "A catalog-driven answer that queries v2.0 subProjects/stagedAssets independently for GET, POST, and PATCH; preserves nested [] paths and schema metadata; distinguishes manifest and stream-calculated response fields from Joi write fields; does not infer PATCH from POST; and builds the sample only from the POST schema.",
+      "files": []
+    },
+    {
+      "id": 17,
+      "prompt": "For FieldTwin API v1.10, enumerate the request and successful response attributes of the single staged-asset GET and create operations, including headers, path parameters, nested socket world positions, metadata, and optional fields. Explain inherited v1.9 provenance if present.",
+      "expected_output": "An operation-specific lookup of the effective v1.10 catalog with separate header/path/body/response locations, exact dotted nested paths such as sockets2d.worldPosition.x, explicit optional markers and sourceVersion/inherited provenance, without merging singular and plural endpoints or inventing runtime fields.",
+      "files": []
+    },
+    {
+      "id": 18,
+      "prompt": "Compare the accepted POST attributes for users in FieldTwin API v2.0 when called through the standalone users stream versus as an accounts-stream resource. Also list userRoles.userRights fields and explain dynamic custom-tab rights.",
+      "expected_output": "A per-stream Joi-schema comparison showing standalone user fields such as required mail and license values separately from account-scoped membership fields such as userRoleId, customerId, groups, administrator, assets, and folders; an expanded list of built-in userRights.can... booleans; and the documented open-object convention for canEditTab{customTabId}/canViewTab{customTabId} without fabricated IDs.",
+      "files": []
+    },
+    {
+      "id": 19,
+      "prompt": "List the complete request and successful response attributes for FieldTwin API v2.0 schematics, connectionCrossings, heightSamples, summary, hierarchy, and document upload. Preserve headers, query values, multipart fields, streaming notes, and SVG versus JSON response media types.",
+      "expected_output": "A path-based lookup across the flattened v2 OpenAPI operations with path/header/query/body/response locations; exact allowed values for schematics format, flowDirection and edgeType; crossings body and option headers; height-sample points/depths; summary and hierarchy variants; account/subproject/workflow upload field differences; and distinct image/svg+xml versus application/json response attributes.",
+      "files": []
     }
   ]
 }

@@ -29,6 +29,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | v1.10 account/configuration and subproject endpoint catalog | `backend-api-v1.10.md` |
 | v2.0 stream CRUD, GET filters, resource ownership, specialized endpoints | `backend-api-v2.0.md` |
 | v1.10 and v2.0 batch envelopes, ordering, failure and recovery | `backend-api-batch.md` |
+| Complete readable/writable API field catalog and narrow lookup commands | `api-attributes.md` |
 | Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
 | Complete integration-to-host event matrix and canonical resource-type values | `integration-to-host-events.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
@@ -48,6 +49,8 @@ FieldTwin deployments can differ by release and configuration. If a current docu
   short-lived JWT, never an account API token.
 - v1.10 resource endpoints and v2.0 stream CRUD are different contracts. Do not translate their
   paths, bodies, or response containers by naming symmetry.
+- API fields are operation-specific. Query the attribute catalog and keep GET responses, POST,
+  PATCH, DELETE, and v2 stream variants separate.
 - A mutation batch belongs to one stream. A response batch ID is correlation, not idempotency.
 - Pin the exact host origin and source window after a trusted bootstrap.
 - Embedded integrations use a parent window; pop-outs use an opener window.

@@ -6,7 +6,8 @@ so response containers and singular/plural route aliases are not uniform. The li
 the schema authority.
 
 Read [backend-api.md](backend-api.md) first for authentication, URL safety, readiness, errors, and
-retry rules. Read [backend-api-batch.md](backend-api-batch.md) before a batch mutation.
+retry rules. Read [backend-api-batch.md](backend-api-batch.md) before a batch mutation. Query
+[api-attributes.md](api-attributes.md) for every documented field on a specific v1.10 operation.
 
 ## Public path model
 

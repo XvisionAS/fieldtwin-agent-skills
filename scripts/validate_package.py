@@ -30,6 +30,7 @@ FRONTMATTER_FIELDS = {
     "allowed-tools",
 }
 DEVELOP_INTEGRATION_REFERENCES = {
+    "api-attributes.md",
     "backend-api-batch.md",
     "backend-api-v1.10.md",
     "backend-api-v2.0.md",
@@ -44,6 +45,13 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "recipes.md",
     "security-and-testing.md",
     "system-highlighting.md",
+}
+DEVELOP_INTEGRATION_FILES = {
+    "references/api-attributes-v1.10.json",
+    "references/api-attributes-v2.0.json",
+    "scripts/generate-api-attributes.mjs",
+    "scripts/query-api-attributes.py",
+    "scripts/schema-loader.mjs",
 }
 CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
 REQUIRED_REPOSITORY_FILES = {
@@ -92,15 +100,17 @@ PRIVATE_MARKERS = (
     "api-qa." + "fieldtwin.com",
     "XvisionAS/" + "FieldTwin-Integration-Demo",
     "fieldtwin-" + "codex-plugins",
-    "/Us" + "ers/",
     "/pri" + "vate/",
     "/var/" + "folders/",
-    "C:\\" + "Users\\",
     ".corp" + ".",
     ".internal" + ".",
     "global" + "SessionId",
     "response" + "ToEvent",
     "doNot" + "ProcessMessage",
+)
+PRIVATE_CASE_SENSITIVE_MARKERS = (
+    "/Us" + "ers/",
+    "C:\\" + "Users\\",
 )
 SECRET_PATTERNS = (
     ("private key", re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----")),
@@ -271,6 +281,12 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
         integration_guide = skill_path.parent / "integration/README.md"
         validation.require(integration_guide.is_file(), f"Missing integration guide: {relative(integration_guide)}")
         required_references = DEVELOP_INTEGRATION_REFERENCES
+        for filename in sorted(DEVELOP_INTEGRATION_FILES):
+            required_file = skill_path.parent / filename
+            validation.require(required_file.is_file(), f"Missing required skill file: {relative(required_file)}")
+            if required_file.is_file():
+                validation.require(bool(required_file.read_text(encoding="utf-8").strip()), f"Required skill file is empty: {relative(required_file)}")
+        validate_api_attribute_catalogs(skill_path.parent, validation)
     elif name == "create-fieldtwin-integration":
         required_references = CREATE_INTEGRATION_REFERENCES
     else:
@@ -284,6 +300,54 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
         validation.require(reference_path.is_file(), f"Missing required reference: {relative(reference_path)}")
         if reference_path.is_file():
             validation.require(bool(reference_path.read_text(encoding="utf-8").strip()), f"Required reference is empty: {relative(reference_path)}")
+
+
+def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) -> None:
+    """Check that generated API catalogs retain broad, queryable contract coverage."""
+
+    catalogs: dict[str, dict[str, object]] = {}
+    for version in ("v1.10", "v2.0"):
+        catalog_path = skill_root / "references" / f"api-attributes-{version}.json"
+        try:
+            catalogs[version] = json.loads(catalog_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue
+        except json.JSONDecodeError as error:
+            validation.errors.append(f"Invalid generated catalog {relative(catalog_path)}: {error.msg}")
+
+    v110 = catalogs.get("v1.10")
+    if v110:
+        operations = v110.get("operations", [])
+        validation.require(v110.get("apiVersion") == "v1.10", "v1.10 attribute catalog has the wrong apiVersion")
+        validation.require(not v110.get("unresolvedApiUses"), "v1.10 attribute catalog has unresolved @apiUse definitions")
+        validation.require(isinstance(operations, list) and len(operations) >= 250, "v1.10 attribute catalog lost operation coverage")
+        attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
+        validation.require(len(attributes) >= 7_000, "v1.10 attribute catalog lost field coverage")
+        validation.require(all(attribute.get("path") and attribute.get("location") for attribute in attributes), "v1.10 catalog contains an attribute without path/location")
+
+    v2 = catalogs.get("v2.0")
+    if v2:
+        resources = v2.get("resources", {})
+        streams = v2.get("streams", {})
+        validation.require(v2.get("apiVersion") == "v2.0", "v2 attribute catalog has the wrong apiVersion")
+        validation.require(isinstance(resources, dict) and len(resources) >= 100, "v2 attribute catalog lost readable resource coverage")
+        validation.require(set(streams) == {"users", "accounts", "projects", "subProjects", "workflowTasks"}, "v2 attribute catalog has incomplete stream coverage")
+        read_attributes = [attribute for resource in resources.values() for attribute in resource.get("attributes", [])]
+        write_attributes = [
+            attribute
+            for stream in streams.values()
+            for method in ("post", "patch", "delete")
+            for resource in stream.get(method, {}).values()
+            for attribute in resource.get("attributes", [])
+        ]
+        validation.require(len(read_attributes) >= 1_900, "v2 attribute catalog lost readable field coverage")
+        validation.require(len(write_attributes) >= 2_000, "v2 attribute catalog lost writable field coverage")
+        validation.require(all(attribute.get("path") for attribute in read_attributes + write_attributes), "v2 catalog contains an attribute without a path")
+        operations = v2.get("operations", [])
+        operation_attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
+        validation.require(isinstance(operations, list) and len(operations) >= 32, "v2 attribute catalog lost OpenAPI operation coverage")
+        validation.require(len(operation_attributes) >= 7_000, "v2 attribute catalog lost OpenAPI field coverage")
+        validation.require(all(attribute.get("path") and attribute.get("location") for attribute in operation_attributes), "v2 OpenAPI catalog contains an attribute without path/location")
 
 
 def validate_repository_shape(validation: Validation) -> None:
@@ -346,7 +410,7 @@ def iter_public_text_files() -> list[Path]:
     for path in REPOSITORY_ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
-        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 2_000_000:
+        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 5_000_000:
             files.append(path)
     return sorted(files)
 
@@ -368,6 +432,10 @@ def validate_public_content(validation: Validation) -> None:
 
         for marker in PRIVATE_MARKERS:
             if marker.lower() in lowered:
+                validation.errors.append(f"Private or internal marker {marker!r} found in {relative(path)}")
+
+        for marker in PRIVATE_CASE_SENSITIVE_MARKERS:
+            if marker in text:
                 validation.errors.append(f"Private or internal marker {marker!r} found in {relative(path)}")
 
         for label, pattern in SECRET_PATTERNS:

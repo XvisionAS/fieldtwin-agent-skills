@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0 - 2026-08-22
+
+- Added generated, exhaustive API attribute catalogs: 275 effective v1.10 operations with 7,871
+  documented header/path/query/body/response fields, plus 101 v2.0 readable resource types and
+  every per-stream POST/PATCH/DELETE Joi field.
+- Flattened all 32 v2 OpenAPI operations and 7,299 operation attributes, including standard stream
+  envelopes, request headers and filters, uploads, summaries, hierarchy, crossings, height samples,
+  schematics, and JSON/SVG response variants.
+- Kept v2 response attributes, calculated stream additions, exclusions, and stream-specific write
+  variants separate so GET-only fields are not presented as writable and one stream's schema is
+  not silently reused by another.
+- Added a standard-library lookup command for version, operation, path/group, stream, resource,
+  method, location, and nested field searches without loading multi-megabyte catalogs into context.
+- Added a reproducible generator, built-in user-right expansion, completeness checks in package
+  validation, documentation routing, and evaluation cases for staged assets and user schemas.
+
 ## 0.4.0 - 2026-08-22
 
 - Added a complete FieldTwin backend API guide covering trusted base URL/version selection,

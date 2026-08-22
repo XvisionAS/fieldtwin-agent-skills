@@ -5,7 +5,8 @@ POST/PATCH/DELETE surface, with a small set of specialized endpoints. Use it onl
 that the target tenant exposes the required v2 operations.
 
 Read [backend-api.md](backend-api.md) first and [backend-api-batch.md](backend-api-batch.md) before
-mutations.
+mutations. Query [api-attributes.md](api-attributes.md) for the exact readable and writable fields
+of a stream/resource/method tuple.
 
 ## Availability and live OpenAPI
 

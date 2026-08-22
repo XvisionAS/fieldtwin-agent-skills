@@ -2,6 +2,8 @@
 
 Batch requests reduce round trips and allow related changes to be validated together. They do not
 remove relationship ordering, stream ownership, authorization, or uncertain-response concerns.
+Use [api-attributes.md](api-attributes.md) to validate each item against its version, operation,
+stream, resource type, and method before placing it in a batch envelope.
 
 ## The two batch models
 
