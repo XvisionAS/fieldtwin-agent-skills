@@ -114,6 +114,30 @@
       "prompt": "List the complete request and successful response attributes for FieldTwin API v2.0 schematics, connectionCrossings, heightSamples, summary, hierarchy, and document upload. Preserve headers, query values, multipart fields, streaming notes, and SVG versus JSON response media types.",
       "expected_output": "A path-based lookup across the flattened v2 OpenAPI operations with path/header/query/body/response locations; exact allowed values for schematics format, flowDirection and edgeType; crossings body and option headers; height-sample points/depths; summary and hierarchy variants; account/subproject/workflow upload field differences; and distinct image/svg+xml versus application/json response attributes.",
       "files": []
+    },
+    {
+      "id": 20,
+      "prompt": "List every field an integration can receive in FieldTwin's loaded and tokenRefresh postMessage events. Separate normal Designer/pop-out bootstrap from Account Settings and Project Settings availability, identify sensitive and optional fields, and explain exactly how iframe and pop-out source/target validation differs.",
+      "expected_output": "A postMessage-catalog-driven answer selecting host-to-integration loaded and tokenRefresh variants; complete top-level field tables including token, backend/API/project context, customTabId, rights, theme/CSS, sessions and user fields; surface-dependent optionality rather than fabricated universal fields; JWT sensitivity and atomic replacement; pinned exact event.source/event.origin; parent for iframe, opener for pop-out; and fail-closed behavior without a live opener.",
+      "files": []
+    },
+    {
+      "id": 21,
+      "prompt": "Document FieldTwin's select postMessage in both directions without merging incompatible shapes. Include the host viewport notification, the host Operation Search result-selection message, integration select/selectByTag requests, Roberto part selection, focus behavior, sender correlation, transport-added fields, and a pop-out example.",
+      "expected_output": "Separate catalog queries/sections for the two host select variants and integration select/selectByTag; exact data-array versus data.items placement; singular type versus plural resourceTypes; selectedPartIndices/partIndex; explicit focusSelection false for selection-only; optional senderId plus host-derived customTabId asynchronous echo; sendMessage augmentation; and a bridge send through the pinned opener rather than window.parent or wildcard.",
+      "files": []
+    },
+    {
+      "id": 22,
+      "prompt": "Give me the complete FieldTwin postMessage contract for getResources, getVisibleResources, getResourcesByTags, updateTagsAnnotation, exportToGLTF, and exportToGeoJSON. Include every request/reply field, correlation, missing-resource/error behavior, JSON reply decorators, and the Blob exception.",
+      "expected_output": "Direction/event-specific catalog lookups with complete nested request and host reply fields; canonical plural resource collections and qualified ID behavior; queryId echo only where documented; annotation definitions and superseded/error replies; GeoJSON options and the requirement for queryId to receive JSON; GLTF options and Blob reply with no event/queryId/responseToEvent/doNotProcessMessage; and no invented correlation for uncorrelated operations.",
+      "files": []
+    },
+    {
+      "id": 23,
+      "prompt": "Enumerate all FieldTwin Operation Mode postMessage attributes for search results/progress/actions/double-click, visual filters/legend, context menus, operation panels, time-series metadata/window data/markers, and marker clicks. Distinguish top-level from data fields, instance targeting, recursive limits, transferable buffers, and acknowledgements.",
+      "expected_output": "Narrow catalog lookups covering both directions and each variant; exact top-level search/action/context fields versus nested registration fields; complete recursive search/action/filter/menu shapes and limits; trusted contributing-instance targeting; panel/dynamic path fields; timeSeriesInfo metadata; reqId-correlated getTimeSeriesData/timeSeriesData with stride 2/4 transferred buffers; marker registration/click fields; direct acknowledgement decorators; and iframe/pop-out-neutral envelopes sent through the pinned host window.",
+      "files": []
     }
   ]
 }

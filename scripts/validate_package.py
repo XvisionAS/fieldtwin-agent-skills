@@ -42,6 +42,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "manifest-and-loading.md",
     "message-catalog.md",
     "operation-mode.md",
+    "postmessage-attributes.md",
     "recipes.md",
     "security-and-testing.md",
     "system-highlighting.md",
@@ -49,8 +50,11 @@ DEVELOP_INTEGRATION_REFERENCES = {
 DEVELOP_INTEGRATION_FILES = {
     "references/api-attributes-v1.10.json",
     "references/api-attributes-v2.0.json",
+    "references/postmessage-attributes.json",
     "scripts/generate-api-attributes.mjs",
+    "scripts/generate-postmessage-catalog.mjs",
     "scripts/query-api-attributes.py",
+    "scripts/query-postmessage-attributes.py",
     "scripts/schema-loader.mjs",
 }
 CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
@@ -104,9 +108,6 @@ PRIVATE_MARKERS = (
     "/var/" + "folders/",
     ".corp" + ".",
     ".internal" + ".",
-    "global" + "SessionId",
-    "response" + "ToEvent",
-    "doNot" + "ProcessMessage",
 )
 PRIVATE_CASE_SENSITIVE_MARKERS = (
     "/Us" + "ers/",
@@ -287,6 +288,7 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
             if required_file.is_file():
                 validation.require(bool(required_file.read_text(encoding="utf-8").strip()), f"Required skill file is empty: {relative(required_file)}")
         validate_api_attribute_catalogs(skill_path.parent, validation)
+        validate_postmessage_catalog(skill_path.parent, validation)
     elif name == "create-fieldtwin-integration":
         required_references = CREATE_INTEGRATION_REFERENCES
     else:
@@ -348,6 +350,85 @@ def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) ->
         validation.require(isinstance(operations, list) and len(operations) >= 32, "v2 attribute catalog lost OpenAPI operation coverage")
         validation.require(len(operation_attributes) >= 7_000, "v2 attribute catalog lost OpenAPI field coverage")
         validation.require(all(attribute.get("path") and attribute.get("location") for attribute in operation_attributes), "v2 OpenAPI catalog contains an attribute without path/location")
+
+
+def validate_postmessage_catalog(skill_root: Path, validation: Validation) -> None:
+    """Check broad event, variant, direction, and field coverage in the client protocol catalog."""
+
+    catalog_path = skill_root / "references" / "postmessage-attributes.json"
+    try:
+        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return
+    except json.JSONDecodeError as error:
+        validation.errors.append(
+            f"Invalid generated catalog {relative(catalog_path)}: {error.msg}"
+        )
+        return
+
+    messages = catalog.get("messages", [])
+    validation.require(
+        catalog.get("catalogVersion") == 1,
+        "postMessage attribute catalog has the wrong catalogVersion",
+    )
+    validation.require(
+        isinstance(messages, list) and len(messages) >= 90,
+        "postMessage attribute catalog lost message-variant coverage",
+    )
+    directions = {message.get("direction") for message in messages}
+    validation.require(
+        directions == {"host-to-integration", "integration-to-host"},
+        "postMessage attribute catalog has incomplete direction coverage",
+    )
+    events_by_direction = {
+        direction: {
+            message.get("event")
+            for message in messages
+            if message.get("direction") == direction
+        }
+        for direction in directions
+    }
+    validation.require(
+        len(events_by_direction.get("host-to-integration", set())) >= 45,
+        "postMessage attribute catalog lost host-to-integration event coverage",
+    )
+    validation.require(
+        len(events_by_direction.get("integration-to-host", set())) >= 45,
+        "postMessage attribute catalog lost integration-to-host event coverage",
+    )
+    fields = [field for message in messages for field in message.get("fields", [])]
+    validation.require(
+        len(fields) >= 850,
+        "postMessage attribute catalog lost field coverage",
+    )
+    validation.require(
+        all(
+            message.get("event")
+            and message.get("variant")
+            and message.get("delivery")
+            and isinstance(message.get("fields"), list)
+            for message in messages
+        ),
+        "postMessage catalog contains an incomplete message record",
+    )
+    validation.require(
+        all(
+            field.get("path")
+            and field.get("type")
+            and isinstance(field.get("required"), bool)
+            for field in fields
+        ),
+        "postMessage catalog contains an incomplete field record",
+    )
+    source_coverage = catalog.get("sourceCoverage") or {}
+    validation.require(
+        source_coverage.get("mainDispatchEventCount", 0) >= 40,
+        "postMessage catalog lost main host-dispatch source coverage",
+    )
+    validation.require(
+        not source_coverage.get("undocumentedMainDispatchEvents"),
+        "postMessage catalog has undocumented main host-dispatch events",
+    )
 
 
 def validate_repository_shape(validation: Validation) -> None:

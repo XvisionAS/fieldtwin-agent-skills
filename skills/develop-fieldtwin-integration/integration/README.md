@@ -207,7 +207,9 @@ Common integration-to-host events include:
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
 
-Use [message-catalog.md](../references/message-catalog.md) for bidirectional envelopes,
+Use [postmessage-attributes.md](../references/postmessage-attributes.md) to query every event
+variant, nested field, required flag, surface, delivery path, correlation rule, and reply. Use
+[message-catalog.md](../references/message-catalog.md) for explanatory bidirectional envelopes,
 [integration-to-host-events.md](../references/integration-to-host-events.md) for the complete host-handler matrix and exact resource-type vocabulary, and [recipes.md](../references/recipes.md) for copy-ready flows.
 
 ## Operation Mode sample
@@ -288,6 +290,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | API v2.0 stream CRUD, filters, resource ownership, specialized endpoints | [backend-api-v2.0.md](../references/backend-api-v2.0.md) |
 | v1.10/v2.0 batch payloads, ordering, atomicity, recovery | [backend-api-batch.md](../references/backend-api-batch.md) |
 | Complete API request/response attributes and lookup commands | [api-attributes.md](../references/api-attributes.md) |
+| Complete host-client postMessage attributes and lookup commands | [postmessage-attributes.md](../references/postmessage-attributes.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |

@@ -15,6 +15,9 @@ resource request.
 This is a practical catalog of the released integration contract, not a substitute
 for the current [FieldTwin integration guide](https://docs.fieldtwin.com/). If a
 deployed FieldTwin release documents a different shape, its released contract wins.
+For an exhaustive, searchable list of every host-client event variant and effective
+field, including transport-added reply fields, use
+[postmessage-attributes.md](postmessage-attributes.md).
 
 ## Secure transport assumed by the samples
 

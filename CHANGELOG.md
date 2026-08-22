@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.0 - 2026-08-22
+
+- Added a generated, searchable host-client `postMessage` catalog with 94 message variants, 46
+  distinct host-to-integration events, 47 distinct integration-to-host events, and 878 effective
+  fields, including exact top-level/nested placement, required flags, allowed values, and notes.
+- Kept shared event-name variants separate, including viewport versus Operation Search `select`,
+  normal augmented host sends versus direct replies, bootstrap messages, and binary Blob replies.
+- Covered bootstrap/token lifecycle, API readiness, selections, resource lifecycle and mutations,
+  queries/replies, annotations, exports, settings, modal surfaces, Operation Mode, time series,
+  Project Settings, and released automation supplements.
+- Added a narrow query command for direction, event, variant, category, surface, delivery, and field;
+  documented iframe parent versus pop-out opener routing, trusted source identity, and correlation.
+- Added generator source-coverage checks against the main host dispatcher, package completeness
+  validation, public-guide routing, and evaluation cases for bootstrap, replies, Operation Mode,
+  pop-outs, and surface-specific messages.
+
 ## 0.5.0 - 2026-08-22
 
 - Added generated, exhaustive API attribute catalogs: 275 effective v1.10 operations with 7,871

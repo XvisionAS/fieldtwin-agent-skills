@@ -83,6 +83,8 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
   and ambiguous-failure recovery;
 - generated v1.10 operation fields and v2.0 read/write resource schemas, with a narrow command-line
   lookup that preserves method and stream differences;
+- generated bidirectional host-client `postMessage` event variants and all effective fields, with a
+  narrow lookup for direction, event, variant, surface, delivery, correlation, and replies;
 - exact-origin, exact-source `postMessage` routing;
 - production HTTP headers for iframe embedding and pop-out opener retention, including CSP,
   `X-Frame-Options`, COOP/COEP, and the non-standard status of `X-IFrame-Allow`;

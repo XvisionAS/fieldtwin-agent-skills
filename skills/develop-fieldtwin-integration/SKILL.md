@@ -4,7 +4,7 @@ description: Develop, run, debug, test, and review FieldTwin external integratio
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -23,6 +23,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/backend-api-v2.0.md](references/backend-api-v2.0.md) for normalized stream CRUD, GET envelopes and filters, specialized endpoints, and tenant OpenAPI discovery.
 - [references/backend-api-batch.md](references/backend-api-batch.md) for v1.10 and v2.0 POST/PATCH/DELETE batch envelopes, stream ownership, ordering, atomicity boundaries, and recovery.
 - [references/api-attributes.md](references/api-attributes.md) whenever the task asks which fields are readable, accepted by POST/PATCH/DELETE, required, nested, read-only, or stream-specific. Use its query script instead of loading the generated catalogs wholesale.
+- [references/postmessage-attributes.md](references/postmessage-attributes.md) whenever the task asks which host-client event fields exist, where they are placed, whether they are required, which variant/surface sends them, or how request/reply correlation and pop-out delivery work. Use its query script instead of loading the generated catalog wholesale.
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
@@ -121,6 +122,9 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 
 ### 4. Preserve exact message shapes
 
+- Before constructing or reviewing a message, query `references/postmessage-attributes.md` for the
+  direction, event, variant, surface, and field. Do not merge variants merely because they share an
+  event name; host `select` notifications and Operation Search `select` actions have different shapes.
 - Use structured-cloneable plain objects with an `event` string.
 - Check whether fields are top-level or nested under `data`; FieldTwin uses both forms.
 - Keep resource vocabularies field-specific: selection/navigation `type` values are singular, while `resourceType` and `resourceTypes` use exact plural collection names such as `stagedAssets` and `subProjects`.
