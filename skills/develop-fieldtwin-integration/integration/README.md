@@ -202,7 +202,7 @@ Common integration-to-host events include:
 | `zoomOn` | Explicitly move the camera to one resource. |
 | `getResources` | Query resources by ID using canonical plural `resourceType` values. |
 | `toast` | Show a user notification. |
-| `operationSearchResults` | Publish grouped Operation Mode results and actions. |
+| `operationSearchResults` | Replace this integration's Operation Mode result tree. |
 | `operationSearchProgress` | Publish or clear progress for the current search. |
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
@@ -214,36 +214,39 @@ variant, nested field, required flag, surface, delivery path, correlation rule, 
 
 ## Operation Mode sample
 
-Result rows can define nested items, Font Awesome inline actions, and a separate double-click action. Stable IDs are required for interactive results.
+Results are a flat array; grouping comes from each row's `category` or `tags`, and rows display
+sanitized `html`, not a `label`. The host stamps the sending integration onto the message from its
+registered source window, so do not send `customTabId` or `integrationId` yourself. A row links to
+the graph through `type`/`id` (or `resourceType`/`resourceId`) on the row or in `args`. Rows need a
+non-empty `id` before any inline action is rendered.
 
 ```javascript
 bridge.send({
   event: 'operationSearchResults',
   data: {
-    customTabId: context.customTabId,
     results: [
       {
-        id: 'equipment',
-        label: 'Equipment',
-        items: [
+        id: 'asset-42',
+        category: 'Equipment',
+        html: '<strong>P-42</strong> — Injection pump',
+        action: 'select',
+        args: { type: 'stagedAsset', id: 'asset-42' },
+        noPanel: true,
+        actions: [
           {
-            id: 'equipment:asset-42',
-            label: 'Injection pump P-42',
-            linkedGraphResources: [{ type: 'stagedAsset', id: 'asset-42' }],
-            actions: [
-              {
-                id: 'focus',
-                label: 'Focus',
-                icon: 'faLocationCrosshairs',
-                action: 'focusResource',
-                args: { type: 'stagedAsset', id: 'asset-42' }
-              }
-            ],
-            doubleClickAction: {
-              action: 'openEquipment',
-              args: { equipmentId: 'asset-42' }
-            }
+            id: 'focus',
+            label: 'Focus',
+            icon: 'faLocationCrosshairs',
+            action: 'focusResource',
+            args: { type: 'stagedAsset', id: 'asset-42' }
           }
+        ],
+        doubleClickAction: {
+          action: 'openEquipment',
+          args: { equipmentId: 'asset-42' }
+        },
+        subItems: [
+          { id: 'asset-42:datasheet', icon: 'file', html: 'Datasheet.pdf', noPanel: true }
         ]
       }
     ]
