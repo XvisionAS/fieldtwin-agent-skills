@@ -49,6 +49,7 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 
 - `Use develop-fieldtwin-integration to build a secure browser bridge for my FieldTwin custom tab.`
 - `Use create-fieldtwin-integration to turn this prototype into a Dockerized Helm integration with Tilt and build-bot support.`
+- `Use create-fieldtwin-integration to build a quick single-page FieldTwin integration I can drop on a static host.`
 - `Use create-fieldtwin-integration to scaffold a new SvelteKit integration with modules/localdev, devops.sh, and build-pipeline.js.`
 - `Use develop-fieldtwin-integration to add Operation Mode search, progress, inline actions, and double-click behavior.`
 - `Use develop-fieldtwin-integration to render Oil and Gas system highlights with opposite directions inside one metadata-backed Bundle connection.`

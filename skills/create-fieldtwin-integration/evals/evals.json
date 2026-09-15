@@ -36,6 +36,18 @@
       "prompt": "Scaffold the production HTTP-header policy for a FieldTwin integration that can stay embedded or be popped out. Our security middleware defaults to COOP same-origin, the ingress adds X-Frame-Options, and an old chart sets X-IFrame-Allow. Include deployment-level tests.",
       "expected_output": "A server and ingress contract with exact HTTPS CSP frame-ancestors, no blocking X-Frame-Options, integration-document COOP absent or unsafe-none, no incompatible COOP/COEP cross-origin isolation, no reliance on non-standard X-IFrame-Allow or X-Frame-Allow, final-response assertions after every proxy layer, and a real FieldTwin iframe-plus-pop-out browser test proving opener retention and bidirectional messaging.",
       "files": []
+    },
+    {
+      "id": 7,
+      "prompt": "I want a quick FieldTwin integration that shows the selected asset's attributes in the property panel. Keep it simple, I just want to drop it on our static web host.",
+      "expected_output": "The single-page shape recommended and confirmed with the user before any file is created, then one self-contained index.html plus a static manifest.json using useGET and noURLParams, an in-memory JWT, exact origin and source pinning, no npm, Docker, Helm, or Tilt, and a note on what would force promotion to a full repository.",
+      "files": []
+    },
+    {
+      "id": 8,
+      "prompt": "Build me a single index.html FieldTwin integration. It needs to store our Jira API token so the backend can create issues from a webhook.",
+      "expected_output": "The full-repository shape recommended instead, with the reason stated plainly: a server-side secret, a vault boundary, and an inbound webhook cannot live in a static file. The user is asked to confirm, and the repository scaffold follows only after that.",
+      "files": []
     }
   ]
 }

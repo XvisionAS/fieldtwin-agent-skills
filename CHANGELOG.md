@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 - 2026-09-15
+
+- `create-fieldtwin-integration` now chooses the integration shape before creating any file: a
+  single self-contained `index.html` on a static host, or the full repository with Docker, Helm,
+  Environment Modules, Tilt, and `build-pipeline.js`.
+- The skill recommends one shape from what the integration actually needs, states the reason, and
+  asks the user to confirm. Server-side secrets, OAuth, webhooks, automations, dynamic pages,
+  Account Settings provider administration, persistence, and workers force the repository shape.
+- Documented the single-page rules that differ: `useGET` with `noURLParams` because static hosts
+  reject the default POST loading flow, a static `manifest.json`, a parser-time listener in
+  `<head>`, and the origin/source pinning that becomes the only trust boundary when the host
+  cannot set `frame-ancestors`.
+- Documented promotion from a single page to a repository as a supported path, so the quick shape
+  is not a dead end.
+
 ## 0.6.0 - 2026-08-22
 
 - Added a generated, searchable host-client `postMessage` catalog with 94 message variants, 46

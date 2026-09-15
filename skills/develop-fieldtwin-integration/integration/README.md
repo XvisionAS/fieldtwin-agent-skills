@@ -202,6 +202,7 @@ Common integration-to-host events include:
 | `zoomOn` | Explicitly move the camera to one resource. |
 | `getResources` | Query resources by ID using canonical plural `resourceType` values. |
 | `toast` | Show a user notification. |
+| `displayDocument` | Open a supported URL; optional `data.fileName` overrides only the File Viewer tab label. |
 | `operationSearchResults` | Replace this integration's Operation Mode result tree. |
 | `operationSearchProgress` | Publish or clear progress for the current search. |
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |

@@ -1,17 +1,67 @@
 ---
 name: create-fieldtwin-integration
-description: Create and scaffold a production-ready FieldTwin external integration repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, converting a prototype into a deployable integration, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.3.0"
+  version: "0.4.0"
 ---
 
 # Create FieldTwin Integrations
 
-Create the smallest complete repository that developers, Tilt, the build bot, Helm, and FieldTwin can all use without maintaining separate deployment paths. Use `develop-fieldtwin-integration` alongside this skill for the browser bridge, manifest protocol, JWT lifecycle, messages, and protocol tests.
+Create the smallest thing that works: a single static page when that is enough, otherwise one repository that developers, Tilt, the build bot, Helm, and FieldTwin can all use without maintaining separate deployment paths. Use `develop-fieldtwin-integration` alongside this skill for the browser bridge, manifest protocol, JWT lifecycle, messages, and protocol tests.
 
-Read [references/repository-and-deployment.md](references/repository-and-deployment.md) before editing. Inspect one current integration for local conventions, but do not copy obsolete secrets, generic image names, or required ConfigMaps without confirming they are needed.
+## 0. Choose the integration shape first
+
+Decide this before creating any file, and state the decision to the user. Two shapes:
+
+- **Single page**: one self-contained `index.html` served by any static host. No npm, no build
+  step, no Docker, no Helm, no Tilt. Deploy by copying one file.
+- **Full repository**: the application, Dockerfile, Helm chart, Environment Modules, Tilt,
+  `devops.sh`, and `build-pipeline.js` described in sections 1-7.
+
+Pick the recommendation from what the integration actually needs, then ask the user to confirm it
+in one question with the reason. Proceed with the recommendation if the user does not care.
+
+Recommend **single page** when the integration is a demo, prototype, proof of concept, internal
+tool, or one panel that only reads host events and calls the FieldTwin API with the host-issued
+token, and the user asks for something quick, simple, or easy to deploy.
+
+Recommend **full repository** when any of these is in scope, because none of them can live in a
+static file: a server-side secret or credential vault, an OAuth flow, an inbound webhook, an
+automation `readUrl`/`invokeUrl`, a `dynamicPagesUrl` endpoint, Account Settings provider
+administration, persistence, a background worker, a team deploying through Kubernetes or the build
+bot, or a server-side JWT verification boundary.
+
+When a single-page integration later needs one of those, promote it: re-run this skill for the
+full repository shape and move the existing page into the application. The bridge, message
+handling, and API code carry over unchanged, so starting single-page is not a dead end.
+
+### Building the single-page shape
+
+Everything in `develop-fieldtwin-integration` still applies: exact origin and source pinning, the
+in-memory JWT, `tokenRefresh`, exact message shapes, and teardown. Sections 1-7 below do not.
+
+- Write one `index.html` with inline `<style>` and an inline ES module. Load any library from a
+  pinned CDN `<script src>`. Add a build step only when the user asks for one.
+- Serve it over HTTPS from the static host; use HTTP only in an explicit local development mode.
+- Set `useGET: true` in the manifest. The default POST loading flow needs a server that accepts
+  POST, and static hosts answer it with 405. Add `noURLParams: true` and initialize from the
+  `loaded` event so bootstrap fields stay out of the URL.
+- Ship `manifest.json` as a second static file next to the page, with absolute URLs and
+  `Access-Control-Allow-Origin: *`, or let the administrator enter the page URL directly when the
+  host allows it. A manifest is the only file besides the page itself.
+- Prefer a static host that can set response headers, so CSP `frame-ancestors` can name the exact
+  FieldTwin origins. Where the host cannot set headers, the page is embeddable by anyone; the
+  exact origin and source checks in the bridge are then the only trust boundary, so they are not
+  optional.
+- Register the message listener in the first inline script in `<head>`, before the body, so the
+  one-shot `loaded` event cannot arrive before the listener exists.
+
+Sections 1-7 describe the full-repository shape. Read
+[references/repository-and-deployment.md](references/repository-and-deployment.md) before editing
+it. Inspect one current integration for local conventions, but do not copy obsolete secrets,
+generic image names, or required ConfigMaps without confirming they are needed.
 
 ## 1. Establish names and boundaries
 
@@ -140,7 +190,11 @@ Use the latest stable version of the user-selected framework. For SvelteKit, use
 
 ## 7. Validate the complete path
 
-Before handoff:
+For a single-page integration, validate only what it has: manifest GET and OPTIONS from a
+cross-origin request, `useGET` loading, iframe and pop-out lifecycle, exact origin and source
+rejection, token refresh, the authenticated API boundary, and teardown.
+
+For a full repository, before handoff:
 
 - lint the Helm chart;
 - render every committed module and inspect image names, environment values, Secret/ConfigMap references, replicas, and optional resources;
@@ -160,4 +214,4 @@ Before handoff:
 
 ## Handoff
 
-Report the chosen component-to-image mapping, module behavior, deployment bootstrap Secrets, Account Settings provider boundary, callback and tenant webhook endpoints, validation results, and exact commands for local start and deployment. Call out any compatibility or migration step for an existing integration.
+Report the chosen shape and why it was chosen. For a single page, report the file, the manifest URL, the static host, the header situation, and what would force a promotion to a repository. For a repository, report the chosen component-to-image mapping, module behavior, deployment bootstrap Secrets, Account Settings provider boundary, callback and tenant webhook endpoints, validation results, and exact commands for local start and deployment. Call out any compatibility or migration step for an existing integration.

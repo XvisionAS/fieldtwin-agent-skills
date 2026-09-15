@@ -21,8 +21,10 @@ Treat a peer repository as a convention source, not a template to copy blindly. 
 ConfigMap references, generic image repositories, hard-coded HTTPS URLs, database dependencies the
 integration does not need, and weaker iframe or message policies.
 
-When creating the repository, also use `create-fieldtwin-integration` and its deployment reference.
-Keep these standard entrypoints aligned:
+When starting a new integration, use `create-fieldtwin-integration` first: it chooses between a
+single self-contained `index.html` and a full repository before any file is created. The
+checklist below describes the full-repository shape; a single-page integration keeps only the
+FieldTwin surface, bridge, and API sections. Keep these standard entrypoints aligned:
 
 ```text
 npm start -> Tiltfile -> Dockerfile -> Helm chart -> Kubernetes

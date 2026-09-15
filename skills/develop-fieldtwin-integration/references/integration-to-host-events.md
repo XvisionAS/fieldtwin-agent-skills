@@ -264,7 +264,7 @@ API contract is a better fit than UI-mediated mutations.
 | `getUserSettings` | Event-only | `userSettings.data.settings`. No query correlation field. |
 | `setUserSettings` | `data.settings` object | Merged `userSettings.data.settings`. Serialize competing writes. |
 | `toast` | `data.message`; optional `data.type` of `info`, `success`, `warning`, or `error` | Displays a notification; no direct reply. |
-| `displayDocument` | `data.url`; optional `data.mimeType`, `data.fileType`, and target `data.tabId` | Top-level `displayDocument` result with `success` and `error`. |
+| `displayDocument` | `data.url`; optional `data.mimeType`, `data.fileType`, display-only `data.fileName` tab-label override, and target `data.tabId` | Top-level `displayDocument` result with `success` and `error`. |
 | `createChart` | `data.labels[]`, `data.datasets[]`; optional chart title, type, axes, position, size, and `id` | Top-level `createChart` result with `success`, `chartId`, and `updated` or `error`. |
 | `deleteChart` | `data.id` | Top-level `deleteChart` result with `success`, `chartId`, or `error`. |
 | `updateTagStyles` | `data.tagStyles`; optional `data.requestId` | Top-level `updateTagStyles` result with `success`, `requestId`, or `error`. |

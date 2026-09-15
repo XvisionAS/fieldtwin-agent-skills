@@ -6,7 +6,7 @@ whether a message works in an iframe and a pop-out.
 
 The generated catalog in [postmessage-attributes.json](postmessage-attributes.json) contains 94
 message variants, 46 distinct host-to-integration event names, 47 distinct integration-to-host
-event names, and 878 effective fields. A variant is a distinct wire shape sharing an event name:
+event names, and 879 effective fields. A variant is a distinct wire shape sharing an event name:
 for example, host `select` has separate viewport-selection and Operation Search result-selection
 variants. Direct replies also remain distinct from normal host notifications.
 

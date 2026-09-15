@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "generatedOn": "2026-08-22",
+  "generatedOn": "2026-08-31",
   "protocol": "FieldTwin host client postMessage",
   "transport": {
     "iframeTarget": "window.parent",
@@ -75,7 +75,7 @@
     "integrationToHostVariants": 47,
     "distinctHostToIntegrationEvents": 46,
     "distinctIntegrationToHostEvents": 47,
-    "fields": 878
+    "fields": 879
   },
   "sourceCoverage": {
     "mainDispatchEvents": [
@@ -5484,6 +5484,12 @@
           "type": "string",
           "required": false,
           "description": "MIME-type hint."
+        },
+        {
+          "path": "data.fileName",
+          "type": "string",
+          "required": false,
+          "description": "File Viewer tab-label override; it does not determine the viewer type."
         },
         {
           "path": "data.tabId",
