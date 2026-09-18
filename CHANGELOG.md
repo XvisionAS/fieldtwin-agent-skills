@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 - 2026-09-18
 
 - `updateTagStyles` rules now require a `category`. Users enable or disable whole categories from the
   Operation toolbar's *Integration tag styles* menu, so a rule the host cannot attribute to a category
