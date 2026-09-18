@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- `updateTagStyles` rules now require a `category`. Users enable or disable whole categories from the
+  Operation toolbar's *Integration tag styles* menu, so a rule the host cannot attribute to a category
+  is dropped and counted in the reply's new `ignored` field.
+
 ## 0.7.0 - 2026-09-15
 
 - `create-fieldtwin-integration` now chooses the integration shape before creating any file: a

@@ -267,7 +267,18 @@ API contract is a better fit than UI-mediated mutations.
 | `displayDocument` | `data.url`; optional `data.mimeType`, `data.fileType`, display-only `data.fileName` tab-label override, and target `data.tabId` | Top-level `displayDocument` result with `success` and `error`. |
 | `createChart` | `data.labels[]`, `data.datasets[]`; optional chart title, type, axes, position, size, and `id` | Top-level `createChart` result with `success`, `chartId`, and `updated` or `error`. |
 | `deleteChart` | `data.id` | Top-level `deleteChart` result with `success`, `chartId`, or `error`. |
-| `updateTagStyles` | `data.tagStyles`; optional `data.requestId` | Top-level `updateTagStyles` result with `success`, `requestId`, or `error`. |
+| `updateTagStyles` | `data.tagStyles` with a required `category` on every rule; optional `data.requestId` | Top-level `updateTagStyles` result with `success`, `requestId`, `ignored`, or `error`. |
+
+Every `updateTagStyles` rule must declare `category`, a short human-readable name such as
+`Valve status` or `Inspection`. The category is the unit the user enables or disables from the
+Operation toolbar's *Integration tag styles* menu, so a rule the host cannot attribute to a
+category cannot be controlled and is dropped: a missing, non-string, blank, or over-64-character
+`category` removes that rule while the rest of the message still applies. The reply's `ignored`
+count reports how many rules were dropped, which is the fastest way to notice a missing category
+during development. Group rules by meaning, not one category per rule; at most 64 distinct
+categories are listed per session, and the user's choice persists per category name. Disabling a
+category re-filters the contribution the host already holds, so an integration does not resend
+anything, and `category` never replaces `requestId` as the delivery scope.
 
 For `updateTagsAnnotation` in resource-ID mode, `data.annotations` is keyed by
 resource ID and `data.types` maps each same ID to its canonical plural collection

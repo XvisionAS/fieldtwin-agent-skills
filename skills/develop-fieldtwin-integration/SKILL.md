@@ -131,12 +131,15 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 - Include `customTabId` only where the documented protocol needs it. The host can derive the sending integration from its registered source window.
 - Correlate only with documented fields such as `queryId` or `reqId`. Do not invent a request ID that the host will not echo.
 - Target integration-specific host messages to the instance that produced the data.
+- Declare a `category` on every `updateTagStyles` rule. Users enable or disable whole categories from the Operation toolbar, so an uncategorized rule is dropped; check the reply's `ignored` count and group rules by meaning rather than one category per rule.
 
 ### 5. Validate observable behavior
 
 Test bootstrap, exact origin/source rejection, token replacement, parent and pop-out routing,
 effective document headers through ingress, exact envelopes, correlation, malformed external input,
-multiple integration instances, and complete teardown. Prove a real FieldTwin-opened pop-out retains
+multiple integration instances, and complete teardown. For tag styles, test that an uncategorized rule
+is rejected and reported through `ignored`, and that disabling a category removes exactly that
+category's Roberto outlines and File Viewer styling. Prove a real FieldTwin-opened pop-out retains
 its opener and completes bidirectional messaging; a direct top-level load is not an equivalent
 test. For backend API work, test tenant/version discovery, qualified branch IDs, user-right denial,
 not-ready retry/cancellation, v1.10 endpoint-specific response shapes, v2 filters/root inclusion,

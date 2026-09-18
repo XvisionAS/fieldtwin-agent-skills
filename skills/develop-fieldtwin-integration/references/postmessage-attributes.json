@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "generatedOn": "2026-08-31",
+  "generatedOn": "2026-09-18",
   "protocol": "FieldTwin host client postMessage",
   "transport": {
     "iframeTarget": "window.parent",
@@ -75,7 +75,7 @@
     "integrationToHostVariants": 47,
     "distinctHostToIntegrationEvents": 46,
     "distinctIntegrationToHostEvents": 47,
-    "fields": 879
+    "fields": 881
   },
   "sourceCoverage": {
     "mainDispatchEvents": [
@@ -4287,6 +4287,12 @@
           "description": "Echoed requestTagsInfos correlation ID."
         },
         {
+          "path": "ignored",
+          "type": "number",
+          "required": false,
+          "description": "Rules dropped because their category was missing, invalid, or user-disabled."
+        },
+        {
           "path": "error",
           "type": "string",
           "required": false,
@@ -7126,7 +7132,10 @@
         "event": "updateTagStyles",
         "kind": "direct reply"
       },
-      "notes": [],
+      "notes": [
+        "Every rule must declare data.tagStyles[].category. Users enable or disable whole categories from the Operation toolbar, and rules with a missing, blank, non-string, or over-long category are dropped.",
+        "The updateTagStyles reply carries an ignored count of the rules dropped because their category was missing or user-disabled."
+      ],
       "fields": [
         {
           "path": "event",
@@ -7145,6 +7154,12 @@
           "type": "string",
           "required": false,
           "description": "Tag matching pattern."
+        },
+        {
+          "path": "data.tagStyles[].category",
+          "type": "string",
+          "required": true,
+          "description": "User-toggleable style category (1-64 characters after trimming). A rule without one is ignored."
         },
         {
           "path": "data.tagStyles[].style",
