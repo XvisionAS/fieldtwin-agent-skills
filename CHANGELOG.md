@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1 - 2026-09-23
+
+- Fixed the API failure and cancellation recipe, which called `subprojects/{id}/stagedAssets`
+  without the project ID. That path is not a v1.10 route and is not the v2.0 stream shape. The
+  recipe now uses `v110SubProjectPath` for the project and qualified `{subProject}:{stream}` path.
+
 ## 0.8.0 - 2026-09-18
 
 - `updateTagStyles` rules now require a `category`. Users enable or disable whole categories from the
