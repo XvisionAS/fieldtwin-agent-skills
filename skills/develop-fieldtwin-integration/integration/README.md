@@ -2,8 +2,8 @@
 
 This is the public entry point for developing an external FieldTwin integration. It combines the released integration contract with secure, fictional samples that an agent can adapt to a real integration repository.
 
-The message guidance was reconciled with FieldTwin integration-guide revision 64 and its matching
-host contract on 2026-09-30; backend guidance was reconciled with public API material and v1.10/v2.0
+The message guidance was reconciled with FieldTwin integration-guide revision 65 and its matching
+host contract on 2026-10-01; backend guidance was reconciled with public API material and v1.10/v2.0
 contracts on 2026-08-22. Verify newer messages on the target deployment. Its current documented
 contract takes precedence.
 
@@ -319,3 +319,12 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Threat model, review checklist, and protocol tests | [security-and-testing.md](../references/security-and-testing.md) |
 
 All domains, IDs, tags, assets, coordinates, and measurements in this guide are fictional. Never publish a JWT, API token, customer payload, private endpoint, internal source path, or unpublished protocol field.
+
+## Projector, convertor and raster analysis
+
+Use [processing-services.md](../references/processing-services.md) for exact service HTTP contracts
+and JavaScript examples. Projector comes from trusted `loaded.projectorUrl` and preserves native
+CRS axis order. Convertor and analysis use separately configured URLs and the current bearer JWT.
+Convertor downloads an existing vector file and returns GeoJSON. Analysis reads a band-1 raster
+for profiles, signed difference volumes, heat-map metadata and base64 float32 tiles. These calls
+return directly and do not create FieldTwin resources or start an import job.

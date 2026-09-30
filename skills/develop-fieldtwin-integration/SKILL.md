@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, API attributes or fields, resource schemas, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, projector, convertor, raster analysis, API attributes or fields, resource schemas, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.9.0"
+  version: "0.10.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -19,6 +19,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/manifest-and-loading.md](references/manifest-and-loading.md) for manifests, dynamic pages, background behavior, iframe loading, and pop-outs.
 - [references/bridge-and-api.md](references/bridge-and-api.md) for a secure browser bridge, `loaded`, `tokenRefresh`, API calls, replies, and teardown.
 - [references/backend-api.md](references/backend-api.md) for API version selection, URL construction, JWT/API-token profiles, authorization, readiness, errors, retries, and response headers.
+- [references/processing-services.md](references/processing-services.md) for projector CRS/axis-order transforms, URL-based vector conversion, and raster profile, signed volume, heat-map metadata and float32 tiles; use the separate service authentication and URL rules.
 - [references/backend-api-v1.10.md](references/backend-api-v1.10.md) for the v1.10 account/configuration and project/subproject endpoint catalog.
 - [references/backend-api-v2.0.md](references/backend-api-v2.0.md) for normalized stream CRUD, GET envelopes and filters, specialized endpoints, and tenant OpenAPI discovery.
 - [references/backend-api-batch.md](references/backend-api-batch.md) for v1.10 and v2.0 POST/PATCH/DELETE batch envelopes, stream ownership, ordering, atomicity boundaries, and recovery.
@@ -120,6 +121,11 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
   specialized endpoints can return SVG, multipart/file data, or a chunked feed.
 - Surface user-triggered failures with a useful recovery path. Automatically retry only safe reads;
   a timed-out mutation may already have committed.
+
+For projector, convertor and analysis work, use the [processing-service contracts](references/processing-services.md).
+Keep these calls outside the versioned API root: projector uses `loaded.projectorUrl`, while
+convertor/analysis require configured URLs and the current bearer JWT. Verify native CRS axis order,
+source download access and response validity; an HTTP 200 with no valid raster data is not a measurement.
 
 ### 4. Preserve exact message shapes
 

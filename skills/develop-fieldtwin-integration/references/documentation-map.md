@@ -2,8 +2,8 @@
 
 Use this page to choose a source before implementing a FieldTwin integration.
 
-This bundle's message guidance was reconciled with FieldTwin integration-guide revision 64 and
-the matching host contract on 2026-09-30. Backend/API guidance was verified against the public API
+This bundle's message guidance was reconciled with FieldTwin integration-guide revision 65 and
+the matching host contract on 2026-10-01. Backend/API guidance was verified against the public API
 guidance and v1.10/v2.0 server contracts on 2026-08-22. Treat these dates as provenance, not as a
 promise that every deployment exposes the same revision; verify newer events on the target host.
 
@@ -27,6 +27,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | Static manifest, dynamic pages, placement, background behavior, pop-outs | `manifest-and-loading.md` |
 | Secure `postMessage` bridge, `loaded`, token refresh, API calls, teardown | `bridge-and-api.md` |
 | Backend/API authentication, version choice, URL safety, readiness, errors | `backend-api.md` |
+| Coordinate projection, uploaded vector conversion, raster profiles/volumes/heat maps/tiles | [processing-services.md](processing-services.md) |
 | v1.10 account/configuration and subproject endpoint catalog | `backend-api-v1.10.md` |
 | v2.0 stream CRUD, GET filters, resource ownership, specialized endpoints | `backend-api-v2.0.md` |
 | v1.10 and v2.0 batch envelopes, ordering, failure and recovery | `backend-api-batch.md` |
@@ -39,6 +40,9 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | Host-side system highlighting, metadata-backed connection bundles, multi-channel flow and direction | `system-highlighting.md` |
 | Resource queries, selection, focus, settings, notifications, automation participation | `recipes.md` |
 | Threat model, review checklist, automated/manual tests | `security-and-testing.md` |
+
+Processing-service contracts were verified on 2026-10-01. Service URLs and availability are
+deployment-specific; they are separate from both postMessage and the versioned project API.
 
 ## Protocol invariants
 

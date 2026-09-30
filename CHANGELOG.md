@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.10.0 - 2026-10-01
+
+- Added source-verified projector, convertor and raster-analysis HTTP contracts and JavaScript examples.
+- Documented separate URL discovery/authentication, native CRS axis order, conversion drivers/options,
+  DGN restrictions, download and size limits, busy recovery and independently readable source URLs.
+- Added band-1 raster-space profile, signed difference-volume, heat-map metadata and float32 tile
+  guidance, validity/units, display-mesh limitations and changed-data cache handling.
+- Added service retrieval/application evaluations and routed the skill and public guide to the new
+  processing-services reference; aligned provenance with integration-guide revision 65.
+
 ## 0.9.0 - 2026-09-30
 
 - Reconciled the portable integration guide and references with integration-guide revision 64 and

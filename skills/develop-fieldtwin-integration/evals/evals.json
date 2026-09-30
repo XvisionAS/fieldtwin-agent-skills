@@ -150,6 +150,24 @@
       "prompt": "Use updateTagStyles for valve status in FieldTwin documents and Roberto models. Explain why a successful update can report every rule ignored, how backgroundColor/color/backgroundImage differ, what requestId scopes, and how simultaneous integrations, duplicate patterns, structural children and system isolation affect the result.",
       "expected_output": "Required category with stable meaning and 1-64 trimmed characters; categories start disabled and user choice persists; ignored counts unusable or disabled categories; per-sender full unscoped snapshot with source-isolated clearing; requestId scopes File Viewer and does not replace Roberto contributions; full document CSS versus backgroundColor-preferred/color-fallback static opaque Roberto status outlines without surface recolouring; inline SVG document icon with remote URLs rejected; canonical part identity, generated suffix and structural-child inheritance; system isolation preserved; exact before wildcard, first wildcard and last duplicate exact precedence.",
       "files": []
+    },
+    {
+      "id": 26,
+      "prompt": "Use FieldTwin projector to transform EPSG:4326 points to EPSG:32631. Give URL discovery, auth, point order, optional CRS definitions, operation selection, exact response and failure handling. May I use projector /ogr2ogr for an uploaded DXF?",
+      "expected_output": "Reads processing-services; trusted loaded.projectorUrl, no service JWT, outside /API/version; POST /transform source/target/points, uniform 2/3 values, native EPSG:4326 latitude/longitude; optional source_type/target_type wkt/proj and proj_string; bare tuple array, 403 error/code, 2000-point client batching convention, deployment-dependent grids; file conversion uses convertor rather than an undocumented projector endpoint.",
+      "files": []
+    },
+    {
+      "id": 27,
+      "prompt": "Convert an already uploaded opaque-URL DGN file to GeoJSON from a FieldTwin integration. Include exact request, discovery/auth, supported-format checks, DWG differences, limits, redirect/private-source handling and busy recovery.",
+      "expected_output": "Configure convertor URL explicitly; no loaded.convertorUrl; current RS256 bearer JWT, source download independently authorised; POST /convert JSON url/fileType not multipart, direct GeoJSON not job; GET /formats metadata includes raster drivers; OGR options precision default7 clamp1-15/source_crs/target_crs/simplify/promote_to_multi, DWG ignores them; DGN <=v7 retains OGR_STYLE, v8 422; public/trusted final HTTP(S) source, no redirects, 60s download, input/output256MiB, single conversion, 503 Retry-After1 with bounded backoff.",
+      "files": []
+    },
+    {
+      "id": 28,
+      "prompt": "Read an elevation profile, signed volume and heat map from a COG in a FieldTwin integration. Give exact endpoint/auth/body/results, coordinate/units rules, NoData, display mesh limits, float32 tile decoding and changed-data cache handling.",
+      "expected_output": "Configure analysis URL, no loaded.analysisUrl; current bearerJWT and independently readable source; all4POSTs require rasterUrl not url; band1 raster-space numeric geometry, no reprojection/offsets; profile line{x1,y1,x2,y2}, samples validity and diagnostics.status; volume boundary outerRing/innerRings arrays of{x,y}, already-difference raster B-A, pixel-centre inclusion, signed negativeVolume net=positive+negative, physical units only if metres; mesh offset and display-only sampling12000default, triangulation maybridgeholes; heat metadata notimage, palette label plus customstops; raster-tile bbox width/height formatfloat32, 4096clamp1024default, base64-float32-le row-major decode+length+NoData, returned bbox/original geotransform; HTTP200 nonok/empty unusable and422errors; DELETE/cache bodyurl and CORSDELETElimitation.",
+      "files": []
     }
   ]
 }

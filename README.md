@@ -59,6 +59,8 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 - `Build a FieldTwin v1.10 client for account configuration, subproject resources, and batch writes.`
 - `Use the tenant OpenAPI to implement FieldTwin API v2.0 stream reads, filters, and batch CRUD.`
 
+- `Use develop-fieldtwin-integration to transform coordinates, convert a DGN/DXF file, and read raster profiles and difference volumes.`
+
 ## Update
 
 Update installations managed by the `skills` CLI:
@@ -94,9 +96,11 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - host-side system highlighting for metadata-backed connection bundles with multi-channel colors and independent flow direction;
 - walking/swimming water-current requests and depth-profile snapshots, numerical limits, ownership,
   acknowledgement, time changes, and iframe/pop-out cleanup;
+- projector CRS/axis-order transforms, URL-based vector conversion, and raster profiles, signed
+  difference volumes, heat-map metadata and float32 tiles;
 - automated and manual protocol testing.
 
-See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for current product documentation. Bundled message guidance was reconciled with integration-guide revision 64 and the matching host contract on 2026-09-30. Verify newer events on the target deployment; its current documented contract takes precedence.
+See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for current product documentation. Bundled message guidance was reconciled with integration-guide revision 65 and the matching host contract on 2026-10-01. Verify newer events on the target deployment; its current documented contract takes precedence.
 
 All IDs, origins, assets, tags, and measurements in examples are fictional.
 

@@ -43,6 +43,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "message-catalog.md",
     "operation-mode.md",
     "postmessage-attributes.md",
+    "processing-services.md",
     "recipes.md",
     "security-and-testing.md",
     "system-highlighting.md",
