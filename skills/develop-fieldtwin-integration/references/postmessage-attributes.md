@@ -4,9 +4,9 @@ Use this reference when a task asks which fields a FieldTwin host or integration
 side owns a message, whether a field is top-level or under `data`, how a response is correlated, or
 whether a message works in an iframe and a pop-out.
 
-The generated catalog in [postmessage-attributes.json](postmessage-attributes.json) contains 94
-message variants, 46 distinct host-to-integration event names, 47 distinct integration-to-host
-event names, and 879 effective fields. A variant is a distinct wire shape sharing an event name:
+The generated catalog in [postmessage-attributes.json](postmessage-attributes.json) contains 97
+message variants, 48 distinct host-to-integration event names, 48 distinct integration-to-host
+event names, and 904 effective fields. A variant is a distinct wire shape sharing an event name:
 for example, host `select` has separate viewport-selection and Operation Search result-selection
 variants. Direct replies also remain distinct from normal host notifications.
 

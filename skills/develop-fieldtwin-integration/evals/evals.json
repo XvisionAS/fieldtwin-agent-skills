@@ -138,6 +138,18 @@
       "prompt": "Enumerate all FieldTwin Operation Mode postMessage attributes for search results/progress/actions/double-click, visual filters/legend, context menus, operation panels, time-series metadata/window data/markers, and marker clicks. Distinguish top-level from data fields, instance targeting, recursive limits, transferable buffers, and acknowledgements.",
       "expected_output": "Narrow catalog lookups covering both directions and each variant; exact top-level search/action/context fields versus nested registration fields; complete recursive search/action/filter/menu shapes and limits; trusted contributing-instance targeting; panel/dynamic path fields; timeSeriesInfo metadata; reqId-correlated getTimeSeriesData/timeSeriesData with stride 2/4 transferred buffers; marker registration/click fields; direct acknowledgement decorators; and iframe/pop-out-neutral envelopes sent through the pinned host window.",
       "files": []
+    },
+    {
+      "id": 24,
+      "prompt": "My FieldTwin sea-model integration runs in an iframe or pop-out. How do I send depth-varying currents to walkers and divers, answer the host when walking starts, change simulation time, clear my contribution, and handle acknowledgement/errors? Give exact event/field locations, numerical limits, coordinates/units, sender ownership, interaction between two integrations, lifecycle, and correlation.",
+      "expected_output": "Catalog-driven waterCurrentRequest, integration waterCurrentUpdate and direct reply variants; required data.stations with optional label, CRS x/y, true-depth z in metres and east/north/up in m/s; 0-1000 stations, 1-200 samples, finite numbers and inclusive per-component ±10; omitted/null up zero, any depth order, linear clamped depth interpolation and inverse-square station weighting; trusted registered source identity; latest accepted nonempty sender wins without blending, invalid updates preserve priority, empty clear restores another field then manual current; replacement snapshots on time change without timestamp or invented IDs; exact success/error and reply decorators; pinned parent/opener bridge; embedded close cleanup and explicit clear-before-pop-out-close limitation.",
+      "files": []
+    },
+    {
+      "id": 25,
+      "prompt": "Use updateTagStyles for valve status in FieldTwin documents and Roberto models. Explain why a successful update can report every rule ignored, how backgroundColor/color/backgroundImage differ, what requestId scopes, and how simultaneous integrations, duplicate patterns, structural children and system isolation affect the result.",
+      "expected_output": "Required category with stable meaning and 1-64 trimmed characters; categories start disabled and user choice persists; ignored counts unusable or disabled categories; per-sender full unscoped snapshot with source-isolated clearing; requestId scopes File Viewer and does not replace Roberto contributions; full document CSS versus backgroundColor-preferred/color-fallback static opaque Roberto status outlines without surface recolouring; inline SVG document icon with remote URLs rejected; canonical part identity, generated suffix and structural-child inheritance; system isolation preserved; exact before wildcard, first wildcard and last duplicate exact precedence.",
+      "files": []
     }
   ]
 }

@@ -38,6 +38,8 @@ origin with `*` when sending credentials, project data, or production messages.
 | Host → integration | `projectData` | project snapshot is under `data` |
 | Host → integration | `requestInfo` | requested items are under `data.items` |
 | Host → integration | `viewBox` | bounds are under `data.viewBox` |
+| Host → integration | `waterCurrentRequest` | event-only broadcast when walking starts, plus normal transport fields |
+| Host → integration | `waterCurrentUpdate` | direct reply with top-level `success` and optional `error` |
 | Host → integration | `visibleResources` | resources and `queryId` are under `data` |
 | Host → integration | `resources` | resources and `queryId` are under `data` |
 | Host → integration | `resourcesByTags` | grouped results, `queryId`, and any error are under `data` |
@@ -48,6 +50,7 @@ origin with `*` when sending credentials, project data, or production messages.
 | Integration → host | `getResourcesByTags` | tags, type filter, and `queryId` are under `data` |
 | Integration → host | `zoomAt` / `zoomOn` | focus parameters are under `data` |
 | Integration → host | `toast` | notification type and text are under `data` |
+| Integration → host | `waterCurrentUpdate` | `data.stations`, optional `data.label`; empty stations clear only this sender |
 | Integration → host | `getProjectData` / `getViewBox` / `clearSelection` | event-only request |
 
 Operation Mode adds several intentionally different envelopes. See
@@ -56,6 +59,9 @@ Operation Mode adds several intentionally different envelopes. See
 `contextMenuAction` carry their fields at the top level, while search results,
 progress, filter registration, context-menu registration, panel navigation, and
 time-series payloads use `data`.
+
+Read [water-current.md](water-current.md) for walking/swimming depth profiles, numerical limits,
+project coordinates, true depths, ownership, sampling, time changes, and pop-out cleanup.
 
 ## Host → integration
 

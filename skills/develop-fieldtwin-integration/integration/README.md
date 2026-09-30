@@ -2,9 +2,10 @@
 
 This is the public entry point for developing an external FieldTwin integration. It combines the released integration contract with secure, fictional samples that an agent can adapt to a real integration repository.
 
-The message guidance was verified against the FieldTwin integration guide revision 58 on
-2026-08-19; the backend guidance was reconciled with the public API material and current v1.10/v2.0
-contracts on 2026-08-22. A deployed environment's current documented contract takes precedence.
+The message guidance was reconciled with FieldTwin integration-guide revision 64 and its matching
+host contract on 2026-09-30; backend guidance was reconciled with public API material and v1.10/v2.0
+contracts on 2026-08-22. Verify newer messages on the target deployment. Its current documented
+contract takes precedence.
 
 For an implementation sequence that covers repository conventions, Environment Modules, Tilt,
 Helm, local HTTP, iframe loading, server JWT profiles, and live diagnosis, use the
@@ -193,6 +194,7 @@ Common host-to-integration events include:
 | `operationSearchDoubleClick` | Run an integration-defined double-click action. |
 | `visualFilterToggle` | Notify the owning integration that a filter changed. |
 | `getTimeSeriesData` | Request samples for a registered series and viewport window. |
+| `waterCurrentRequest` | A walk successfully starts; answer with a current snapshot if available. |
 
 Common integration-to-host events include:
 
@@ -207,6 +209,20 @@ Common integration-to-host events include:
 | `operationSearchProgress` | Publish or clear progress for the current search. |
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
+| `waterCurrentUpdate` | Replace or clear this integration's water current for walking and swimming. |
+
+Water current is a walking/swimming feature in Designer and Presenter, including Operation Mode.
+Send `data.stations` with project-CRS `x`/`y` and true-depth profiles (`z` in metres, `east`/`north`/`up`
+in m/s); do not exaggerate the depth. The most recently accepted integration field wins without
+blending. Empty stations clear only the sender, and invalid input preserves its previous field.
+See [water-current.md](../references/water-current.md) for every field and limit, exact replies,
+time changes, and the explicit-clear requirement before closing a pop-out.
+
+`updateTagStyles` rules require a user-toggleable `category`; categories start disabled. Roberto
+uses `style.backgroundColor`, falling back to `style.color`, for status outlines rather than surface
+recolouring. A `data.requestId` update targets a File Viewer and does not replace model contributions.
+See [integration-to-host-events.md](../references/integration-to-host-events.md) for category,
+snapshot, pattern-priority, and inline-SVG rules.
 
 Use [postmessage-attributes.md](../references/postmessage-attributes.md) to query every event
 variant, nested field, required flag, surface, delivery path, correlation rule, and reply. Use
@@ -296,6 +312,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Complete API request/response attributes and lookup commands | [api-attributes.md](../references/api-attributes.md) |
 | Complete host-client postMessage attributes and lookup commands | [postmessage-attributes.md](../references/postmessage-attributes.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
+| Walking/swimming water-current snapshots, limits, ownership, and replies | [water-current.md](../references/water-current.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |
 | Selection, resources, settings, notifications, focus | [recipes.md](../references/recipes.md) |

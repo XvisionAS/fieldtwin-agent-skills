@@ -46,6 +46,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "recipes.md",
     "security-and-testing.md",
     "system-highlighting.md",
+    "water-current.md",
 }
 DEVELOP_INTEGRATION_FILES = {
     "references/api-attributes-v1.10.json",

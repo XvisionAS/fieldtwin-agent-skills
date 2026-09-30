@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "generatedOn": "2026-09-18",
+  "generatedOn": "2026-09-30",
   "protocol": "FieldTwin host client postMessage",
   "transport": {
     "iframeTarget": "window.parent",
@@ -70,12 +70,12 @@
     "binaryReplyException": "A Blob response has no event or JSON reply decorators."
   },
   "counts": {
-    "messages": 94,
-    "hostToIntegrationVariants": 47,
-    "integrationToHostVariants": 47,
-    "distinctHostToIntegrationEvents": 46,
-    "distinctIntegrationToHostEvents": 47,
-    "fields": 881
+    "messages": 97,
+    "hostToIntegrationVariants": 49,
+    "integrationToHostVariants": 48,
+    "distinctHostToIntegrationEvents": 48,
+    "distinctIntegrationToHostEvents": 48,
+    "fields": 904
   },
   "sourceCoverage": {
     "mainDispatchEvents": [
@@ -118,10 +118,11 @@
       "updateTagsAnnotation",
       "visualFilteringUpdate",
       "visualLegendUpdate",
+      "waterCurrentUpdate",
       "zoomAt",
       "zoomOn"
     ],
-    "mainDispatchEventCount": 41,
+    "mainDispatchEventCount": 42,
     "undocumentedMainDispatchEvents": []
   },
   "messages": [
@@ -4690,6 +4691,129 @@
       ]
     },
     {
+      "direction": "host-to-integration",
+      "event": "waterCurrentRequest",
+      "variant": "walk-start-current-request",
+      "category": "walking",
+      "delivery": "sendMessage",
+      "summary": "Requests a current snapshot when a walk successfully starts.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "none",
+      "reply": {
+        "event": "waterCurrentUpdate",
+        "kind": "optional integration snapshot"
+      },
+      "notes": [
+        "Broadcast to loaded integration instances. Integrations with no current ignore it.",
+        "No request ID or time field; verify support on the target deployment."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "isFrameActive",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the target iframe or pop-out is currently active.",
+          "suppliedBy": "host transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host transport"
+        },
+        {
+          "path": "APIServerIsReady",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the active subproject API pod is ready.",
+          "suppliedBy": "host transport"
+        },
+        {
+          "path": "APIVersion",
+          "type": "string",
+          "required": true,
+          "description": "Current FieldTwin API version, for example v1.10.",
+          "suppliedBy": "host transport"
+        },
+        {
+          "path": "siblingAPIServerAreReady",
+          "type": "object<string, boolean>",
+          "required": true,
+          "description": "Readiness by sibling subproject ID.",
+          "suppliedBy": "host transport"
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "waterCurrentUpdate",
+      "variant": "waterCurrentUpdate-reply",
+      "category": "walking",
+      "delivery": "directReply",
+      "summary": "Acknowledges acceptance or refusal of the sending integration current snapshot.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "responseToEvent only; no per-update request ID",
+      "reply": null,
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "success",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the field was replaced or cleared."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "required": false,
+          "description": "Validation or registration failure; the previous field stays in place."
+        },
+        {
+          "path": "doNotProcessMessage",
+          "type": "boolean",
+          "required": true,
+          "description": "Prevents the host from reprocessing its own reply.",
+          "suppliedBy": "host reply transport",
+          "constant": true
+        },
+        {
+          "path": "responseToEvent",
+          "type": "string",
+          "required": true,
+          "description": "The integration request event that produced this direct reply.",
+          "suppliedBy": "host reply transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host reply transport"
+        }
+      ]
+    },
+    {
       "direction": "integration-to-host",
       "event": "attributeUpdated",
       "variant": "client-cache-refresh",
@@ -7134,7 +7258,11 @@
       },
       "notes": [
         "Every rule must declare data.tagStyles[].category. Users enable or disable whole categories from the Operation toolbar, and rules with a missing, blank, non-string, or over-long category are dropped.",
-        "The updateTagStyles reply carries an ignored count of the rules dropped because their category was missing or user-disabled."
+        "Categories start disabled; the user must enable them. The ignored count includes unusable categories and disabled categories.",
+        "Unscoped messages replace only this sender snapshot; empty unscoped tagStyles clear it. Other integration contributions are preserved.",
+        "Roberto outlines are static and opaque and leave surface materials unchanged; non-color CSS fields are File Viewer-only.",
+        "Canonical part tags/full names match, including generated suffixes and inherited structural-child matches. Shared display aliases do not match. System isolation remains authoritative.",
+        "Exact patterns win over wildcards; first matching wildcard wins; later duplicate exact patterns replace earlier ones."
       ],
       "fields": [
         {
@@ -7171,85 +7299,85 @@
           "path": "data.tagStyles[].style.color",
           "type": "string",
           "required": false,
-          "description": "color style value."
+          "description": "Document text and fallback Roberto status-outline color."
         },
         {
           "path": "data.tagStyles[].style.backgroundColor",
           "type": "string",
           "required": false,
-          "description": "backgroundColor style value."
+          "description": "Document background and preferred Roberto status-outline color."
         },
         {
           "path": "data.tagStyles[].style.backgroundImage",
           "type": "string",
           "required": false,
-          "description": "backgroundImage style value."
+          "description": "Encoded inline SVG document icon; remote image URLs are rejected."
         },
         {
           "path": "data.tagStyles[].style.backgroundRepeat",
           "type": "string",
           "required": false,
-          "description": "backgroundRepeat style value."
+          "description": "backgroundRepeat File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.backgroundPosition",
           "type": "string",
           "required": false,
-          "description": "backgroundPosition style value."
+          "description": "backgroundPosition File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.backgroundSize",
           "type": "string",
           "required": false,
-          "description": "backgroundSize style value."
+          "description": "backgroundSize File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.border",
           "type": "string",
           "required": false,
-          "description": "border style value."
+          "description": "border File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.borderRadius",
           "type": "string",
           "required": false,
-          "description": "borderRadius style value."
+          "description": "borderRadius File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.fontWeight",
           "type": "string",
           "required": false,
-          "description": "fontWeight style value."
+          "description": "fontWeight File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.fontStyle",
           "type": "string",
           "required": false,
-          "description": "fontStyle style value."
+          "description": "fontStyle File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.fontSize",
           "type": "string",
           "required": false,
-          "description": "fontSize style value."
+          "description": "fontSize File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.textDecoration",
           "type": "string",
           "required": false,
-          "description": "textDecoration style value."
+          "description": "textDecoration File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.padding",
           "type": "string",
           "required": false,
-          "description": "padding style value."
+          "description": "padding File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.margin",
           "type": "string",
           "required": false,
-          "description": "margin style value."
+          "description": "margin File Viewer style value."
         },
         {
           "path": "data.tagStyles[].style.opacity",
@@ -7261,7 +7389,7 @@
           "path": "data.requestId",
           "type": "string",
           "required": false,
-          "description": "Echoed requestTagsInfos request ID."
+          "description": "Echoed requestTagsInfos request ID; scopes File Viewer delivery without replacing Roberto contributions."
         }
       ]
     },
@@ -7406,6 +7534,99 @@
           "type": "boolean",
           "required": false,
           "description": "false clears the legend."
+        }
+      ]
+    },
+    {
+      "direction": "integration-to-host",
+      "event": "waterCurrentUpdate",
+      "variant": "water-current-snapshot",
+      "category": "walking",
+      "delivery": "integrationSend",
+      "summary": "Replaces or clears the sending integration instance water current for walking and swimming.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "none; acknowledgements identify only the request event class",
+      "reply": {
+        "event": "waterCurrentUpdate",
+        "kind": "direct reply"
+      },
+      "notes": [
+        "Sender identity comes from the registered source window; do not supply customTabId or integrationId.",
+        "Latest accepted nonempty integration field wins; fields from different integrations are never blended. Clearing restores the previous remaining field, then the manual current.",
+        "Invalid updates preserve the previous field and priority. Send a new snapshot when simulation time changes; there is no time dimension.",
+        "Linear depth interpolation, clamped beyond endpoints, with inverse-square horizontal station weighting. At a station its own profile wins; one station is horizontally uniform.",
+        "Embedded-tab closure clears its field. The verified host does not clear a pop-out field on unregistration; explicitly clear before an integration-controlled pop-out close."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data",
+          "type": "object",
+          "required": true,
+          "description": "Complete current snapshot."
+        },
+        {
+          "path": "data.label",
+          "type": "string",
+          "required": false,
+          "description": "Display label in the walk controls; defaults to an empty string."
+        },
+        {
+          "path": "data.stations",
+          "type": "array<object>",
+          "required": true,
+          "description": "Zero to 1,000 stations; empty clears only this sender."
+        },
+        {
+          "path": "data.stations[].x",
+          "type": "number",
+          "required": true,
+          "description": "Finite easting in the project CRS, like resource positions."
+        },
+        {
+          "path": "data.stations[].y",
+          "type": "number",
+          "required": true,
+          "description": "Finite northing in the project CRS."
+        },
+        {
+          "path": "data.stations[].profile",
+          "type": "array<object>",
+          "required": true,
+          "description": "One to 200 samples; any depth order is accepted."
+        },
+        {
+          "path": "data.stations[].profile[].z",
+          "type": "number",
+          "required": true,
+          "description": "Finite true depth in metres, negative below sea level; do not exaggerate it."
+        },
+        {
+          "path": "data.stations[].profile[].east",
+          "type": "number",
+          "required": true,
+          "description": "Finite eastward velocity in m/s, from -10 to 10 inclusive."
+        },
+        {
+          "path": "data.stations[].profile[].north",
+          "type": "number",
+          "required": true,
+          "description": "Finite northward velocity in m/s, from -10 to 10 inclusive."
+        },
+        {
+          "path": "data.stations[].profile[].up",
+          "type": "number|null",
+          "required": false,
+          "description": "Finite upward velocity in m/s, from -10 to 10 inclusive; omitted or null defaults to zero."
         }
       ]
     },

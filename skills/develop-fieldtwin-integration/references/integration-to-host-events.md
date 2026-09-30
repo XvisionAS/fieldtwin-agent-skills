@@ -268,10 +268,16 @@ API contract is a better fit than UI-mediated mutations.
 | `createChart` | `data.labels[]`, `data.datasets[]`; optional chart title, type, axes, position, size, and `id` | Top-level `createChart` result with `success`, `chartId`, and `updated` or `error`. |
 | `deleteChart` | `data.id` | Top-level `deleteChart` result with `success`, `chartId`, or `error`. |
 | `updateTagStyles` | `data.tagStyles` with a required `category` on every rule; optional `data.requestId` | Top-level `updateTagStyles` result with `success`, `requestId`, `ignored`, or `error`. |
+| `waterCurrentUpdate` | `data.stations[]` with CRS `x`/`y` and depth `profile[]`; optional `data.label` | Top-level `waterCurrentUpdate` result with `success` and optional `error`; no request ID. |
+
+For walking/swimming current, read [water-current.md](water-current.md). The host broadcasts
+`waterCurrentRequest` when a walk starts; the sender's latest complete snapshot replaces its field,
+and empty stations clear only that sender. Check the documented pop-out cleanup limitation.
 
 Every `updateTagStyles` rule must declare `category`, a short human-readable name such as
 `Valve status` or `Inspection`. The category is the unit the user enables or disables from the
-Operation toolbar's *Integration tag styles* menu, so a rule the host cannot attribute to a
+Operation toolbar's *Integration tag styles* menu. Categories start disabled; the user must enable
+one before its rules affect the view. A rule the host cannot attribute to a
 category cannot be controlled and is dropped: a missing, non-string, blank, or over-64-character
 `category` removes that rule while the rest of the message still applies. The reply's `ignored`
 count reports how many rules were dropped, which is the fastest way to notice a missing category
@@ -279,6 +285,22 @@ during development. Group rules by meaning, not one category per rule; at most 6
 categories are listed per session, and the user's choice persists per category name. Disabling a
 category re-filters the contribution the host already holds, so an integration does not resend
 anything, and `category` never replaces `requestId` as the delivery scope.
+
+An unscoped update replaces this source's entire tag-style snapshot while preserving other
+integrations' contributions. Empty unscoped `tagStyles` clear this source's model contribution.
+File Viewer text uses the full supported CSS style; Roberto uses `style.backgroundColor` (falling
+back to `style.color`) for static, opaque status outlines and leaves surface materials unchanged.
+Other CSS properties are File Viewer-only. `data.requestId` scopes delivery to the requesting File
+Viewer and does not replace any model contribution. Viewport Settings can hide outlines without
+discarding the snapshot or changing document styling.
+
+Roberto matches canonical part tags/full names, including generated identifier suffixes and tags
+recovered from `modelpart_` names. Structural children inherit their parent's match until they have
+their own tag or functional location. Shared display names and broad search aliases do not match,
+and integration outlines never reveal or enable selection of parts hidden by system isolation.
+Exact patterns win over wildcards; the first matching wildcard wins, and later duplicate exact
+patterns replace earlier ones. `style.backgroundImage` accepts encoded inline SVG icons positioned
+outside the document tag's left edge; remote image URLs are rejected.
 
 For `updateTagsAnnotation` in resource-ID mode, `data.annotations` is keyed by
 resource ID and `data.types` maps each same ID to its canonical plural collection

@@ -92,9 +92,11 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - the complete integration-to-host event matrix and exact singular `type` versus plural `resourceType` vocabulary;
 - Operation Search, inline Font Awesome actions, double-click actions, filters, context menus, dynamic panels, and time series;
 - host-side system highlighting for metadata-backed connection bundles with multi-channel colors and independent flow direction;
+- walking/swimming water-current requests and depth-profile snapshots, numerical limits, ownership,
+  acknowledgement, time changes, and iframe/pop-out cleanup;
 - automated and manual protocol testing.
 
-See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for the current product documentation. The bundled protocol guidance was verified against the FieldTwin integration guide revision 58 on 2026-08-19. When a deployed FieldTwin environment differs, its current documented contract takes precedence.
+See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for current product documentation. Bundled message guidance was reconciled with integration-guide revision 64 and the matching host contract on 2026-09-30. Verify newer events on the target deployment; its current documented contract takes precedence.
 
 All IDs, origins, assets, tags, and measurements in examples are fictional.
 

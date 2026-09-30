@@ -2,9 +2,10 @@
 
 Use this page to choose a source before implementing a FieldTwin integration.
 
-This bundle was verified against the FieldTwin integration guide revision 58 on 2026-08-19 and
-the public API guidance plus current v1.10/v2.0 server contracts on 2026-08-22. Treat those dates as
-provenance, not as a promise that every deployment exposes the same revision.
+This bundle's message guidance was reconciled with FieldTwin integration-guide revision 64 and
+the matching host contract on 2026-09-30. Backend/API guidance was verified against the public API
+guidance and v1.10/v2.0 server contracts on 2026-08-22. Treat these dates as provenance, not as a
+promise that every deployment exposes the same revision; verify newer events on the target host.
 
 ## Source priority
 
@@ -32,6 +33,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | Complete readable/writable API field catalog and narrow lookup commands | `api-attributes.md` |
 | Complete bidirectional postMessage event/field catalog and narrow lookup commands | `postmessage-attributes.md` |
 | Common event names and payload placement, automation descriptors and attribute webhooks | `message-catalog.md` |
+| Walking/swimming water current, depth profiles, limits, ownership, acknowledgement, clearing | `water-current.md` |
 | Complete integration-to-host event matrix and canonical resource-type values | `integration-to-host-events.md` |
 | Operation Search, actions, filters, menus, panels, time series | `operation-mode.md` |
 | Host-side system highlighting, metadata-backed connection bundles, multi-channel flow and direction | `system-highlighting.md` |

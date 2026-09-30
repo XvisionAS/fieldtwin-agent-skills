@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.0 - 2026-09-30
+
+- Reconciled the portable integration guide and references with integration-guide revision 64 and
+  its matching host contract, while preserving deployment-specific version checks.
+- Added `waterCurrentRequest`, `waterCurrentUpdate`, and the direct acknowledgement to the
+  searchable message catalog, with exact field placement, limits, units, sampling, ownership,
+  replacement/clear rules, time changes, and uncorrelated success/error handling.
+- Documented embedded-tab cleanup and the host's pop-out cleanup limitation: explicitly clear
+  the contribution before an integration-controlled pop-out close.
+- Updated tag-style guidance for category defaults, Roberto status outlines, canonical part
+  matching, snapshot ownership, File Viewer request scope, and safe inline SVG backgrounds.
+- Added reference-retrieval evaluation scenarios for water current and current tag styling;
+  aligned the develop skill's metadata version with this release.
+
 ## 0.8.0 - 2026-09-18
 
 - `updateTagStyles` rules now require a `category`. Users enable or disable whole categories from the
