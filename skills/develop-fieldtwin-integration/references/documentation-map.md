@@ -4,7 +4,7 @@ Use this page to choose a source before implementing a FieldTwin integration.
 
 This bundle's message guidance was reconciled with FieldTwin integration-guide revision 65 and
 the matching host contract on 2026-10-01. Backend/API guidance was verified against the public API
-guidance and v1.10/v2.0 server contracts on 2026-08-22. Treat these dates as provenance, not as a
+guidance and v1.10/v2.0 server contracts on 2026-11-13. Treat these dates as provenance, not as a
 promise that every deployment exposes the same revision; verify newer events on the target host.
 
 ## Source priority
@@ -12,7 +12,8 @@ promise that every deployment exposes the same revision; verify newer events on 
 1. The contract documented for the FieldTwin environment the user is integrating with.
 2. Current public FieldTwin documentation:
    - [FieldTwin documentation center](https://docs.fieldtwin.com/)
-   - [FieldTwin API documentation](https://api.fieldtwin.com/)
+   - [FieldTwin API v2.0 reference](https://api.fieldtwin.com/) and
+     [v1.10 reference](https://api-1-10.fieldtwin.com/)
    - [FieldTwin Admin integration configuration](https://docs.fieldtwin.com/admin/b_integrations/)
 3. The user's working integration code, tests, and captured messages.
 4. These bundled references and fictional samples.
@@ -55,7 +56,10 @@ deployment-specific; they are separate from both postMessage and the versioned p
 - Keep API-token and bearer-JWT authentication mutually exclusive. Browser integrations use the
   short-lived JWT, never an account API token.
 - v1.10 resource endpoints and v2.0 stream CRUD are different contracts. Do not translate their
-  paths, bodies, or response containers by naming symmetry.
+  paths, bodies, or response containers by naming symmetry. To migrate deliberately, use the
+  `upgrade-fieldtwin-integration` skill and its endpoint mapping.
+- A v2.0 `200` is not proof of effect: an unrecognised query key filters a stream GET, and an
+  unknown type or field in a batch body is dropped.
 - API fields are operation-specific. Query the attribute catalog and keep GET responses, POST,
   PATCH, DELETE, and v2 stream variants separate.
 - Message fields are direction-, event-, variant-, surface-, and delivery-specific. Query the

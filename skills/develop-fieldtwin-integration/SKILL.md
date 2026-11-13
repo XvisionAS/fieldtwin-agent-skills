@@ -4,7 +4,7 @@ description: Develop, run, debug, test, and review FieldTwin external integratio
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.10.0"
+  version: "0.11.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -104,7 +104,13 @@ Treat the built-in Highlight systems renderer as host behavior, not as an integr
 - Send `Authorization: Bearer <token>` and let the API enforce resource rights.
 - Preserve a backend base path and keep relative paths inside the selected `/API/{version}/` root.
 - Use the host-supplied version by default. Verify the tenant's live OpenAPI before opting into
-  v2.0; do not silently translate a v1.10 route or payload into v2.
+  v2.0; do not silently translate a v1.10 route or payload into v2. When the task is to move
+  existing v1.x calls to v2.0, use the `upgrade-fieldtwin-integration` skill: it carries the
+  endpoint mapping, and FieldTwin 9.0 still reports v1.10 in `loaded`, so the switch is a
+  deliberate configuration choice.
+- In v2.0, do not treat `200` as proof of effect. Build stream GET queries from named keys,
+  because an unrecognised key acts as a filter, and read writes back, because unknown types and
+  fields are dropped.
 - Before constructing or reviewing a payload, query `references/api-attributes.md` for the exact
   version, operation, stream, resource type, and method. Never assume that a GET field is writable,
   that PATCH equals optional POST, or that one v2 stream accepts another stream's resource shape.

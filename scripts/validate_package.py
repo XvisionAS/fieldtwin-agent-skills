@@ -60,6 +60,12 @@ DEVELOP_INTEGRATION_FILES = {
     "scripts/schema-loader.mjs",
 }
 CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
+UPGRADE_INTEGRATION_REFERENCES = {
+    "behavior-changes.md",
+    "endpoint-mapping.md",
+    "reads-and-envelope.md",
+    "writes-and-batches.md",
+}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
     "CHANGELOG.md",
@@ -293,6 +299,8 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
         validate_postmessage_catalog(skill_path.parent, validation)
     elif name == "create-fieldtwin-integration":
         required_references = CREATE_INTEGRATION_REFERENCES
+    elif name == "upgrade-fieldtwin-integration":
+        required_references = UPGRADE_INTEGRATION_REFERENCES
     else:
         validation.errors.append(f"No package validation profile for skill {name!r}")
         required_references = set()
@@ -349,7 +357,7 @@ def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) ->
         validation.require(all(attribute.get("path") for attribute in read_attributes + write_attributes), "v2 catalog contains an attribute without a path")
         operations = v2.get("operations", [])
         operation_attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
-        validation.require(isinstance(operations, list) and len(operations) >= 32, "v2 attribute catalog lost OpenAPI operation coverage")
+        validation.require(isinstance(operations, list) and len(operations) >= 50, "v2 attribute catalog lost OpenAPI operation coverage")
         validation.require(len(operation_attributes) >= 7_000, "v2 attribute catalog lost OpenAPI field coverage")
         validation.require(all(attribute.get("path") and attribute.get("location") for attribute in operation_attributes), "v2 OpenAPI catalog contains an attribute without path/location")
 
@@ -493,7 +501,8 @@ def iter_public_text_files() -> list[Path]:
     for path in REPOSITORY_ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
-        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 5_000_000:
+        # The limit must stay above the largest generated catalog so it is still scanned.
+        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 8_000_000:
             files.append(path)
     return sorted(files)
 

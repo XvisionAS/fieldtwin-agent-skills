@@ -31,6 +31,8 @@ python3 scripts/query-api-attributes.py --version v2.0 --stream subProjects --re
 python3 scripts/query-api-attributes.py --version v2.0 --stream accounts --resource users --method post
 python3 scripts/query-api-attributes.py --version v2.0 --list-operations
 python3 scripts/query-api-attributes.py --version v2.0 --path /schematics --method post
+python3 scripts/query-api-attributes.py --version v2.0 --path /users/whoami
+python3 scripts/query-api-attributes.py --version v2.0 --path /resources --method get --location query
 python3 scripts/query-api-attributes.py --version v1.10 --resource stagedAsset --method get --list-operations
 python3 scripts/query-api-attributes.py --version v1.10 --path /stagedAsset/:stagedAssetId --method get
 python3 scripts/query-api-attributes.py --version v1.10 --group StagedAssets --field initialState
@@ -123,6 +125,13 @@ node scripts/generate-api-attributes.mjs --source /path/to/FieldTwin
 ```
 
 The generator executes schema construction without starting services or connecting to data
-stores. Review the summary counts, query representative root/related resources in every stream,
+stores. Source modules that start runtime services are replaced by `scripts/schema-loader.mjs`,
+which copies the schema declarations it needs from the module's own text. When the generator
+fails on a missing export or module after a source change, run it with
+`FIELDTWIN_SCHEMA_LOADER_TRACE=1` to see which modules are intercepted, then add or remove the
+matching loader entry.
+
+Review the summary counts, compare the v2 operation list with the tenant's
+`/API/v2.0/documentation/oas3.json`, query representative root/related resources in every stream,
 and run the package validator. Commit both generated JSON files with the source documentation or
 schema change so the skill never describes a newer or older contract than its catalogs.

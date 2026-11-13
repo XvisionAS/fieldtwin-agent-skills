@@ -168,6 +168,18 @@
       "prompt": "Read an elevation profile, signed volume and heat map from a COG in a FieldTwin integration. Give exact endpoint/auth/body/results, coordinate/units rules, NoData, display mesh limits, float32 tile decoding and changed-data cache handling.",
       "expected_output": "Configure analysis URL, no loaded.analysisUrl; current bearerJWT and independently readable source; all4POSTs require rasterUrl not url; band1 raster-space numeric geometry, no reprojection/offsets; profile line{x1,y1,x2,y2}, samples validity and diagnostics.status; volume boundary outerRing/innerRings arrays of{x,y}, already-difference raster B-A, pixel-centre inclusion, signed negativeVolume net=positive+negative, physical units only if metres; mesh offset and display-only sampling12000default, triangulation maybridgeholes; heat metadata notimage, palette label plus customstops; raster-tile bbox width/height formatfloat32, 4096clamp1024default, base64-float32-le row-major decode+length+NoData, returned bbox/original geotransform; HTTP200 nonok/empty unusable and422errors; DELETE/cache bodyurl and CORSDELETElimitation.",
       "files": []
+    },
+    {
+      "id": 29,
+      "prompt": "Build a FieldTwin API v2.0 read helper for a custom tab. It must return only the name and tags of the visible connections in the current subproject, and callers can pass extra options through to the query string. A colleague passed includeMetaData=false and got an empty result with no error. Explain what happened and make the helper safe.",
+      "expected_output": "A stream GET on /API/v2.0/subProjects/{qualified ID} with resourceTypes=connections, attributes=name,tags and the attribute-value filter visible=true, built with URLSearchParams from named keys. Explains that every query key other than resourceTypes, resourceIds, attributes, at, limit, after and sortOrder is an attribute-value filter, so a passed-through key filters the response to nothing while still answering 200; the helper accepts filters only through an explicit argument and does not forward arbitrary options. Uses the no-metadata header for that intent, states that id is always returned, that an unknown resource type answers 422, and that a missing type key means not returned rather than empty.",
+      "files": []
+    },
+    {
+      "id": 30,
+      "prompt": "A server-side job with an account API token needs the account ID to call FieldTwin API v2.0 account endpoints, and it must fail fast when the token cannot administer the account. Then it creates two well types with stable IDs from our ERP and renames one project. Show the requests and how to tell that each write really happened.",
+      "expected_output": "GET /API/v2.0/users/whoami with the token header only, reading the credential type and the one account the token is scoped to, and checking admin rights there before any write; the account ID goes in the URL and another account answers 403. POST /API/v2.0/accounts/{accountId} with wellTypes items carrying client-chosen id values, handling 409 for an ID that already exists. PATCH /API/v2.0/projects/{projectId} with the projects type keyed by ID and updatedBy, which an API token must send or get 422. POST answers ID arrays and PATCH answers {}, and unknown types or fields are dropped while still answering 200, so each write is confirmed by comparing the returned IDs and reading the resources back by ID. No blind POST retry after a timeout.",
+      "files": []
     }
   ]
 }

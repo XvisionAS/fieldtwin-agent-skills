@@ -52,7 +52,7 @@ back from one branch to another.
 
 ## Discover the exact released surface
 
-- Browse [the public FieldTwin API portal](https://api.fieldtwin.com/).
+- Browse [the public FieldTwin API v1.10 reference](https://api-1-10.fieldtwin.com/).
 - On a tenant, `GET /API/v1.10/route-list` returns its account and subproject route/method list when
   an API process is available.
 - Use the endpoint-specific request and response schema from that tenant release.

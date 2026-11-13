@@ -1,12 +1,16 @@
 # FieldTwin API v2.0
 
 API v2.0 normalizes FieldTwin data around event-stream roots. Each root has one GET and one batch
-POST/PATCH/DELETE surface, with a small set of specialized endpoints. Use it only after verifying
-that the target tenant exposes the required v2 operations.
+POST/PATCH/DELETE surface, with a small set of specialized endpoints. It is available from
+FieldTwin 9.0, served next to v1.10. Use it only after verifying that the target tenant exposes the
+required v2 operations.
 
 Read [backend-api.md](backend-api.md) first and [backend-api-batch.md](backend-api-batch.md) before
 mutations. Query [api-attributes.md](api-attributes.md) for the exact readable and writable fields
 of a stream/resource/method tuple.
+
+This reference describes the v2.0 contract. To move existing v1.10 calls to it, use the
+`upgrade-fieldtwin-integration` skill, which carries the endpoint-by-endpoint mapping.
 
 ## Availability and live OpenAPI
 
@@ -20,7 +24,11 @@ GET {backendUrl}/API/v2.0/documentation/oas3.json
 The documentation endpoints can be public while data routes require authentication. Some older
 pre-release material used a different OAS path; prefer the path advertised by the deployed
 documentation page. Do not infer support from the version number alone: check the operation and
-schema in the live OAS document.
+schema in the live OAS document. The public [API v2.0 reference](https://api.fieldtwin.com/) shows
+the current release; a tenant on an earlier 9.x build can lack its newest operations.
+
+Operations added after the 9.0.0 release, which a 9.0.0 tenant does not serve: the three `/logs`
+endpoints, `PUT /accounts/{accountId}/customTabs/manifest`, and the `include-assets` header.
 
 ## Stream roots
 
@@ -33,10 +41,12 @@ schema in the live OAS document.
 | Workflow tasks | `/API/v2.0/workflowTasks` | Workflow tasks, comments, and task documents visible in scope |
 
 The authenticated gateway confirms that path IDs belong to the credential's account/project
-scope. Do not set context headers yourself.
+scope. Do not set context headers yourself. The account ID in the path must be the account the
+credential belongs to; any other ID gets `403`. `GET /users/whoami` reports that account.
 
 Users and workflow tasks have one logical root route without a path ID. Account, project, and
-subproject routes require the root ID.
+subproject routes require the root ID. A subproject ID keeps the `{id}:{streamId}` form; a bare ID
+means the default stream of that subproject.
 
 ## Uniform CRUD meanings
 
@@ -44,11 +54,12 @@ subproject routes require the root ID.
 | --- | --- | --- |
 | `GET` | Read selected stream resources | Response maps plural resource types to ID-keyed objects |
 | `POST` | Create supported resources in the selected stream | Body has per-type `{ items, globals?, totalNumberOfItems? }`; response maps types to created ID arrays |
-| `PATCH` | Partially update supported resources in the selected stream | Body has per-type ID-keyed patches plus optional `globals`; normally empty `200` body |
-| `DELETE` | Delete supported resources from the selected stream | Body maps types to ID arrays; normally empty `200` body |
+| `PATCH` | Partially update supported resources in the selected stream | Body has per-type ID-keyed patches plus optional `globals`; `200` with `{}` |
+| `DELETE` | Delete supported resources from the selected stream | Body maps types to ID arrays; `200` with an empty body |
 
 This is not REST CRUD on the root path object alone. The URL chooses a stream; the body chooses
-which resource types inside that stream to mutate.
+which resource types inside that stream to mutate. No mutation returns the changed resources:
+read them back by ID.
 
 ## GET response envelope
 
@@ -77,8 +88,18 @@ which resource types inside that stream to mutate.
 ```
 
 Every top-level collection name is plural and every collection is an object keyed by resource ID.
-Relationships normally remain IDs rather than expanded resources. The root resource appears under
-its own plural resource type when included by filtering.
+The root resource appears under its own plural resource type when included by filtering.
+
+Rules that hold for every stream:
+
+- Relationships are IDs, never expanded resources. A to-many relationship is an array of IDs.
+- `lastModified` is returned by default; the v1.10 `include-last-modified` header is ignored. An
+  `attributes` projection drops it unless it is named, and resources that are not stored as
+  events do not have it.
+- Nulls are omitted: an unset field is absent, not `null`.
+- A missing type key is normal, not an error. A filtered read leaves a type out when nothing
+  matched, while an unfiltered read keeps its empty types. Iterate an absent type as empty.
+  Rights and filters can also remove data, so absence does not prove that resources were deleted.
 
 For subprojects:
 
@@ -87,16 +108,23 @@ For subprojects:
   standalone `metaDatumValues` collection;
 - staged-asset sockets can be calculated/augmented;
 - connections can include sampled geometry when requested;
-- foreign resources are sanitized and identified by the released response contract.
+- backdrop (parent) resources sit in the same type maps with `isForeign: true`, and each carries
+  `getFrom` and `getFromSubProject` links to the v2.0 stream of its own subproject. Send
+  `no-foreign: true` to leave them out.
 
 ## GET filtering
 
 The generic stream GET supports:
 
 - `resourceTypes`: comma-separated plural resource-type names;
-- `resourceIds`: comma-separated IDs.
+- `resourceIds`: comma-separated IDs;
+- `attributes`: comma-separated attribute names that define each resource's complete output
+  shape. `id` is always kept and unknown names are ignored; every other field that is not named
+  is dropped, including relationships, computed fields such as `lastModified`, and `metaData`;
+- `at`: a point in time (`latest`, a Unix time or an ISO date) on stream reads that support it;
+- attribute-value filters: any other query key, described below.
 
-Build both with `URLSearchParams`:
+Build them with `URLSearchParams`:
 
 ```javascript
 const query = new URLSearchParams({
@@ -109,7 +137,7 @@ const path = `subProjects/${encodeURIComponent(qualifiedId)}?${query}`
 
 Rules:
 
-1. An unknown `resourceTypes` value is rejected with `400`.
+1. An unknown `resourceTypes` value is rejected with `422` and a message naming the invalid types.
 2. When `resourceTypes` is present, only those types are considered.
 3. `resourceIds` then filters resources inside that selected set.
 4. Without `resourceTypes`, `resourceIds` searches all filterable types in the stream.
@@ -125,9 +153,25 @@ Filtering covers the resources augmented into each stream, including account pro
 project subprojects/connection configuration, subproject layout relationships, users by ID, and
 workflow task relationships.
 
+### Attribute-value filters
+
+Every query key that is not `resourceTypes`, `resourceIds`, `attributes`, `at`, `limit`, `after`
+or `sortOrder` is treated as an attribute-value filter:
+
+```text
+GET /API/v2.0/subProjects/{id}?resourceTypes=connections&visible=true
+```
+
+- Values within one key are combined with OR; different keys are combined with AND.
+- A metadata value is filtered with `metaData|{definitionId}=value`, on the subprojects stream
+  only. Any other stream answers `422`.
+- An unrecognised key does not fail. It filters the response, often down to nothing. Never
+  forward an arbitrary or legacy query string to a stream GET; build the query from named keys.
+
 ### Workflow task filters
 
-`GET /API/v2.0/workflowTasks` also accepts:
+`GET /API/v2.0/workflowTasks` applies these as attribute-value filters, some with their own
+matching rule:
 
 | Query | Type | Match |
 | --- | --- | --- |
@@ -142,7 +186,8 @@ workflow task relationships.
 | `subProject` | subproject ID | Owning subproject; normalized to its qualified main-stream form where needed |
 
 Different provided filters are combined with AND. Values within `assignedUsers`,
-`linkedResources`, and `tags` use any-match semantics.
+`linkedResources`, and `tags` use any-match semantics. A malformed filter value matches nothing;
+it does not answer `400`. v1.10 called the `linkedResources` filter `resources`.
 
 ## GET option headers by stream
 
@@ -153,10 +198,14 @@ Send only the options documented for that stream:
 | Users | `basic`, `include-visibility-settings` |
 | Accounts | None on the generic stream GET |
 | Projects | `basic` |
-| Subprojects | `no-foreign`, `no-metadata`, `no-intermediary`, `raw-intermediary`, `sample-every`, `only-active` |
+| Subprojects | `no-foreign`, `no-metadata`, `no-intermediary`, `raw-intermediary`, `sample-every`, `only-active`, `include-assets` |
 | Workflow tasks | None on the generic stream GET |
 
-Special endpoints define their own headers and query parameters.
+`basic: true` replaces the v1.10 `/users/basic` and `/{projectId}/basic` routes.
+`include-assets: true` adds top-level `assets` and `virtualAssets` maps holding the definitions of
+the returned staged assets, so one request resolves a staged asset's `asset` ID; it was added
+after 9.0.0. The same headers apply to a stream's `/resources` and `/resources/count` endpoints. Special endpoints define their
+own headers and query parameters.
 
 ## Supported mutation resource types
 
@@ -180,12 +229,22 @@ Common POST families:
 - metadata definitions (`metaData`), metadata links, groups, and group links;
 - virtual assets and custom tabs;
 - connection definitions (`connections`), connection types, connection segment types, connectors;
-- well, well-bore, well-bore-segment, layer, reservoir, point-cloud, shape, and annotation types;
+- well, well-bore, well-bore-segment, layer, reservoir, point-cloud, Gaussian-splat, shape, and
+  annotation types;
 - staged-asset statuses and ArcGIS Online portals.
 
-PATCH supports the account root (`accounts`) plus most account-owned families. Some association
-resources that can be created/deleted are not patchable; check OAS. DELETE supports child projects
-and the deletable account-owned resources, but not the account root itself.
+PATCH supports the account root (`accounts`) plus most account-owned families, and
+`designTypeByAssetsCategories`, the account matrix that v1.10 exposed as
+`allowedConnectionTypes`. The workflow task template links and group links can be created and
+deleted but not patched. DELETE supports child projects, `documentRevisions` and the deletable
+account-owned resources, but not the account root itself and not `userRoles`.
+
+`users` on the account stream is account membership: POST needs `mail` and `userRoleId` and sends
+the invitation, and DELETE removes the user from the account and its projects without deleting
+the user. Organisation-level user records are the separate users stream.
+
+`connections` here are connection definitions. The connections drawn in a layout are `connections`
+on the subproject stream.
 
 ### Project stream
 
@@ -194,7 +253,7 @@ Common POST families:
 - child root: `subProjects`;
 - project metadata definitions/links/groups/group links and virtual assets;
 - connection definitions/types and resource type definitions for connections, wells, bores,
-  segments, connectors, layers, reservoirs, point clouds, and shapes.
+  segments, connectors, layers, reservoirs, point clouds, Gaussian splats, shapes, and annotations.
 
 PATCH supports the project root (`projects`), child `subProjects`, and the project-owned
 configuration families exposed by OAS. DELETE removes child subprojects and deletable project
@@ -206,11 +265,16 @@ POST:
 
 - `stagedAssets`, `connections`, `connectionSegments`;
 - `wells`, `wellBores`, `wellBoreSegments`;
-- `layers`, `overlays`, `customCosts`, `shapes`, `annotations`, `documents`.
+- `layers`, `overlays`, `customCosts`, `shapes`, `annotations`, `documents`;
+- `reservoirs`, `pointClouds`, `gaussianSplats`, `sceneModels`.
 
-PATCH additionally exposes the root `subProjects` resource. DELETE exposes the layout resources,
-but not the root subproject itself. Create/delete the subproject root through its owning project
-stream.
+PATCH additionally exposes the root `subProjects` resource. DELETE exposes the layout resources
+and `documentRevisions`, but not the root subproject itself. Create/delete the subproject root
+through its owning project stream.
+
+Children name their parent in the body: `wellBores` require `well`, `connectionSegments` require
+`connection`, and `wellBoreSegments` require `wellBore`. Every ID in this stream is generated by
+the server; a client-supplied `id` is dropped.
 
 ### Workflow-task stream
 
@@ -220,8 +284,9 @@ POST/PATCH/DELETE:
 - `workflowComments`;
 - `documents` linked to workflow tasks.
 
-The workflow task root is intentionally mutable in this stream because the endpoint represents the
-shared workflow-task stream rather than one task ID path.
+DELETE additionally accepts `documentRevisions`. The workflow task root is intentionally mutable
+in this stream because the endpoint represents the shared workflow-task stream rather than one
+task ID path.
 
 ## Root ownership examples
 
@@ -253,6 +318,8 @@ Authorization: Bearer <JWT>
 }
 ```
 
+Sending a stream's own root to its own `DELETE` is refused with `403`.
+
 Patch the existing root from its own stream:
 
 ```http
@@ -273,9 +340,16 @@ Authorization: Bearer <JWT>
 
 | Method/path | Purpose |
 | --- | --- |
+| `GET /users/whoami` | Which credential arrived (`jwt`, `apiToken` or `delegated`), the account it is scoped to, and its role and rights per account and project. |
+| `GET /{stream}/{id}/resources` | Every resource of a stream as one flat list, whole or paged with `limit` (1 to 1000), `after` and `sortOrder`; the last page has no `paging.after`. `/users/resources` and `/workflowTasks/resources` take no ID. |
+| `GET /{stream}/{id}/resources/count` | Resource counts by type for the same filters. |
+| `GET /accounts/{accountId}/summary` | Account size as counts: projects, subprojects, members and catalogues. |
+| `GET /accounts/{accountId}/logs`, `GET /projects/{projectId}/logs`, `GET /subProjects/{id}/logs` | Changes saved to the stream, paged, oldest first by default; narrow with `from`, `to`, `category`, `name` and `resourceId`. Account logs need account admin rights. Added after 9.0.0. |
+| `PUT /accounts/{accountId}/customTabs/manifest` | Create a custom tab from an integration manifest file or a `{ "url": ... }` body; answers `{ "customTabs": ["ID"] }`, or `409` for a duplicate ID. Added after 9.0.0. |
 | `PUT /accounts/{accountId}/documents` | Upload a file and create an account document. |
 | `PUT /subProjects/{id}/documents` | Upload a file and create a subproject document. |
 | `PUT /workflowTasks/{taskId}/documents` | Upload a file and create a task document. |
+| `GET /subProjects/{id}/loadingStatus` | Loading and readiness state as a `200` body, including layer progress. The sibling `isReady` uses the state as its HTTP status. |
 | `GET /accounts/{accountId}/vendorAttributes` | Account, ancestor, project, and subproject vendor attributes visible in scope. |
 | `GET /projects/{projectId}/vendorAttributes` | Project vendor attributes. |
 | `GET /subProjects/{id}/vendorAttributes` | Subproject vendor attributes without loading the full layout pod. |
@@ -287,8 +361,11 @@ Authorization: Bearer <JWT>
 | `POST /subProjects/{id}/connectionCrossings` | Detect crossings; supports calculation and optional streaming headers. |
 | `POST /subProjects/{id}/schematics` | Generate SVG by default or topology JSON with `?format=graph`. |
 
-Document uploads use multipart form data. Let the browser set its `Content-Type` boundary. Use the
-live OAS document for field names and response schemas.
+Document uploads use multipart form data and are limited to 50 MB per request. Let the browser set
+its `Content-Type` boundary. Use the live OAS document for field names and response schemas.
+
+The chunked crossing feed that v1.10 exposed as `connectionCrossings/v2` is the same
+`connectionCrossings` endpoint with the header `stream: true`.
 
 ### Schematics media types
 
@@ -377,13 +454,16 @@ bridge whose trusted context says `v1.10`.
 ## v2 validation checklist
 
 - Fetch the tenant OAS document and confirm every required operation/schema.
-- Keep plural resource type names exact and reject unknown requested types locally.
-- Test `resourceTypes`, `resourceIds`, their precedence, and root inclusion.
+- Keep plural resource type names exact and reject unknown requested types locally; the API
+  answers `422` for them.
+- Test `resourceTypes`, `resourceIds`, `attributes`, their precedence, and root inclusion.
+- Confirm no unintended query key reaches a stream GET, where it would act as a filter.
 - Test plain and qualified subproject IDs, including parents.
-- Confirm GET containers are type maps keyed by IDs.
+- Confirm GET containers are type maps keyed by IDs, with relationships as IDs and unset fields
+  absent.
 - Create/delete child roots through the parent stream.
-- Keep every mutation in one stream and use the returned ID arrays.
-- Handle empty PATCH/DELETE success bodies.
+- Keep every mutation in one stream, use the returned ID arrays, and read results back.
+- Handle the `{}` PATCH body and the empty DELETE body.
 - Parse SVG, JSON, multipart, and chunked endpoints by media type.
 - Use summary without waiting for a layout pod; use the full GET only when data is needed.
 - Treat external-parent `502` as a failed complete result.

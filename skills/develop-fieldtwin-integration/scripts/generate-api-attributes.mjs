@@ -528,21 +528,15 @@ async function generateV2Catalog() {
   console.log = () => undefined
   let apiDocument
   try {
+    // The builder reads the events manifest through fetch, which is stubbed above, and then
+    // assembles the same document the API serves at /API/v2.0/documentation/oas3.json.
     const apiDocModule = await importSource(
       'backends',
       'fieldtwinapi',
-      'utils',
+      'apiDoc',
       'buildApiDoc.js'
     )
-    await apiDocModule.buildAPIDocResponsesSchemas()
-    const paths = {}
-    apiDocModule.addRootPath('users', paths, { noParameters: true })
-    apiDocModule.addRootPath('accounts', paths)
-    apiDocModule.addRootPath('projects', paths)
-    apiDocModule.addRootPath('subProjects', paths)
-    apiDocModule.addRootPath('workflowTasks', paths, { noParameters: true })
-    apiDocModule.addCustomPaths(paths)
-    apiDocModule.buildAPIDocRequestPath(paths)
+    await apiDocModule.buildApiDoc()
     apiDocument = apiDocModule.oas3
   } finally {
     globalThis.fetch = originalFetch

@@ -360,9 +360,12 @@ The helper intentionally uses the trusted `APIVersion`. Do not make it silently 
 v1.10 relative path as v2.0. Read [backend-api.md](backend-api.md) for common authentication,
 readiness, error, and retry behavior; use [backend-api-v1.10.md](backend-api-v1.10.md) or
 [backend-api-v2.0.md](backend-api-v2.0.md) for the selected version and
-[backend-api-batch.md](backend-api-batch.md) for mutations.
+[backend-api-batch.md](backend-api-batch.md) for mutations. On FieldTwin 9.0 the `loaded` event
+still reports v1.10, so an integration that moves to v2.0 selects it through its own
+configuration and migrates each call with the `upgrade-fieldtwin-integration` skill.
 
-Use endpoint paths from the [FieldTwin API documentation](https://api.fieldtwin.com/). This illustrative request uses only fictional identifiers:
+Use endpoint paths from the FieldTwin API reference for the selected version:
+[v1.10](https://api-1-10.fieldtwin.com/) or [v2.0](https://api.fieldtwin.com/). This illustrative request uses only fictional identifiers:
 
 ```javascript
 async function loadInitialData() {

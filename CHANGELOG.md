@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.11.0 - 2026-11-13
+
+- Added the `upgrade-fieldtwin-integration` skill for moving an integration, script, or server
+  client from FieldTwin API v1.x to v2.0: an eight-step workflow from inventory to rollback, the
+  complete v1.10 to v2.0 endpoint mapping, read and write migration references with fictional
+  before-and-after examples, behaviour changes, the calls that stay on v1.10, and ten evaluations.
+- Regenerated both API attribute catalogs from the FieldTwin 9.0 contract: 304 effective v1.10
+  operations with 9,512 fields, and 50 v2.0 operations, 112 readable resource types and every
+  per-stream write schema. New v2.0 coverage includes `whoami`, paged `/resources` and
+  `/resources/count` on every stream, `/logs`, account `/summary`, `loadingStatus`,
+  `customTabs/manifest`, and the reservoir, point-cloud, Gaussian-splat and scene-model types.
+- Repaired the catalog generator for the current source layout. It now builds the OpenAPI
+  document through the single builder entry point, and its module loader copies schema
+  declarations from the source text instead of carrying hand-maintained copies, with a trace
+  switch for diagnosing intercepted modules.
+- Corrected v2.0 guidance in `develop-fieldtwin-integration`: an unknown `resourceTypes` value
+  answers `422`, not `400`; unknown batch types and fields are dropped silently instead of being
+  rejected; PATCH answers `{}`; v2.0 ships with FieldTwin 9.0 beside v1.10.
+- Documented v2.0 `attributes`, attribute-value filters and the leftover-parameter trap, the
+  metadata filter, envelope rules for relationships, nulls, `lastModified` and backdrop
+  resources, client-chosen IDs, `updatedBy` for API tokens, whole-batch `422` rejection, the
+  account-ID and own-root `403` rules, and which operations were added after 9.0.0.
+- Pointed every "do not translate v1.10 to v2.0" rule at the new skill, split the public API
+  reference links by version, added two develop-skill evaluations, and raised the validator's
+  v2.0 operation threshold and scanned-file size limit so the larger catalog stays checked.
+
 ## 0.10.0 - 2026-10-01
 
 - Added source-verified projector, convertor and raster-analysis HTTP contracts and JavaScript examples.
