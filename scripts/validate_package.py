@@ -46,6 +46,7 @@ DEVELOP_INTEGRATION_REFERENCES = {
     "processing-services.md",
     "recipes.md",
     "security-and-testing.md",
+    "shared-views.md",
     "system-highlighting.md",
     "water-current.md",
 }

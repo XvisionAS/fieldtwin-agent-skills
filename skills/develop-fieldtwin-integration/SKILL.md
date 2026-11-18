@@ -1,10 +1,10 @@
 ---
 name: develop-fieldtwin-integration
-description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, projector, convertor, raster analysis, API attributes or fields, resource schemas, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
+description: Develop, run, debug, test, and review FieldTwin external integrations embedded as custom-tab iframes. ALWAYS use for FieldTwin manifests, Account Settings, dynamic pages, local Tilt or Kubernetes integration debugging, HTTP/HTTPS URL generation, HTTP server or ingress response headers, CSP frame-ancestors, X-Frame-Options, X-IFrame-Allow, COOP/COEP, iframe policy, loaded or tokenRefresh lifecycle, FieldTwin JWT verification, REST backend API calls, projector, convertor, raster analysis, API attributes or fields, resource schemas, v1.10 or v2.0 routes, OpenAPI, batch CRUD, parent/opener postMessage events, customTabId routing, pop-outs, Operation Mode, Operate shared views, integration settings, automation descriptors and attribute webhooks, or protocol tests. Also use for FieldTwin Operation Mode's built-in system highlighting when work involves metadata-backed connection bundles, simultaneous system lanes or colors, per-channel flow direction, graph continuity, or multi-channel connection rendering.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.10.0"
+  version: "0.11.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -27,6 +27,7 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/postmessage-attributes.md](references/postmessage-attributes.md) whenever the task asks which host-client event fields exist, where they are placed, whether they are required, which variant/surface sends them, or how request/reply correlation and pop-out delivery work. Use its query script instead of loading the generated catalog wholesale.
 - [references/message-catalog.md](references/message-catalog.md) for common host-to-integration and integration-to-host envelopes, including automation descriptors and attribute update signals.
 - [references/water-current.md](references/water-current.md) for `waterCurrentRequest` / `waterCurrentUpdate`, depth profiles, limits, ownership, sampling, replies, and iframe/pop-out cleanup.
+- [references/shared-views.md](references/shared-views.md) for Operate shared views: the `supportShareView` opt-in, `shareViewCapture` / `shareViewState` / `shareViewRestore`, size limits, versioned state, and restore timing.
 - [references/integration-to-host-events.md](references/integration-to-host-events.md) for the complete integration-to-host event matrix, canonical resource-type values, accepted aliases, replies, and `getResources` qualified-ID rules.
 - [references/operation-mode.md](references/operation-mode.md) for search, progress, inline actions, double-click, filters, context menus, panels, and time series.
 - [references/system-highlighting.md](references/system-highlighting.md) when host-side Highlight systems must classify metadata-backed connection bundles, render several service channels on one line, or preserve independent flow directions.

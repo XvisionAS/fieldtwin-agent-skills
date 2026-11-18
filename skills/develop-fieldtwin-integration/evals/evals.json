@@ -168,6 +168,12 @@
       "prompt": "Read an elevation profile, signed volume and heat map from a COG in a FieldTwin integration. Give exact endpoint/auth/body/results, coordinate/units rules, NoData, display mesh limits, float32 tile decoding and changed-data cache handling.",
       "expected_output": "Configure analysis URL, no loaded.analysisUrl; current bearerJWT and independently readable source; all4POSTs require rasterUrl not url; band1 raster-space numeric geometry, no reprojection/offsets; profile line{x1,y1,x2,y2}, samples validity and diagnostics.status; volume boundary outerRing/innerRings arrays of{x,y}, already-difference raster B-A, pixel-centre inclusion, signed negativeVolume net=positive+negative, physical units only if metres; mesh offset and display-only sampling12000default, triangulation maybridgeholes; heat metadata notimage, palette label plus customstops; raster-tile bbox width/height formatfloat32, 4096clamp1024default, base64-float32-le row-major decode+length+NoData, returned bbox/original geotransform; HTTP200 nonok/empty unusable and422errors; DELETE/cache bodyurl and CORSDELETElimitation.",
       "files": []
+    },
+    {
+      "id": 29,
+      "prompt": "My FieldTwin video integration should reopen the same video at the same time when an Operate user shares their view. How do I opt in, which messages do I handle, and what should I store?",
+      "expected_output": "Set supportShareView true on the integration or dynamic page (pages inherit and override, default false; each open supporting page is asked and restored separately with data.pageId = page path); Operation Mode only, loaded panels/pop-outs asked, not hidden background copies. Handle shareViewCapture data.requestId and answer via the pinned bridge with shareViewState {requestId, state}; state null/omitted means nothing to save; host waits up to 5 s per instance in parallel and leaves out late/invalid answers while still sharing; only the asked window may answer. State is plain JSON ≤64 KiB, max 16 integrations, keyed by integration ID or <integrationId>-dynamic-<path>. Always include a version and check it on restore; store IDs/time, never JWT or signed URLs. shareViewRestore data.state arrives once right after loaded, before data is ready: keep it, apply when loaded, validate as untrusted, skip inaccessible IDs, do not move the camera.",
+      "files": []
     }
   ]
 }

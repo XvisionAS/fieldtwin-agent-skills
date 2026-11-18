@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "generatedOn": "2026-09-30",
+  "generatedOn": "2026-11-18",
   "protocol": "FieldTwin host client postMessage",
   "transport": {
     "iframeTarget": "window.parent",
@@ -70,12 +70,12 @@
     "binaryReplyException": "A Blob response has no event or JSON reply decorators."
   },
   "counts": {
-    "messages": 97,
-    "hostToIntegrationVariants": 49,
-    "integrationToHostVariants": 48,
-    "distinctHostToIntegrationEvents": 48,
-    "distinctIntegrationToHostEvents": 48,
-    "fields": 904
+    "messages": 107,
+    "hostToIntegrationVariants": 55,
+    "integrationToHostVariants": 52,
+    "distinctHostToIntegrationEvents": 54,
+    "distinctIntegrationToHostEvents": 52,
+    "fields": 943
   },
   "sourceCoverage": {
     "mainDispatchEvents": [
@@ -91,8 +91,10 @@
       "deleteResources",
       "displayDocument",
       "displayTimeSeries",
+      "displayTimeline",
       "exportToGLTF",
       "exportToGeoJSON",
+      "getAllDeepTags",
       "getCostQuery",
       "getProjectData",
       "getResourceAttributesBulk",
@@ -108,11 +110,13 @@
       "select",
       "selectByTag",
       "setUserSettings",
+      "shareViewState",
       "timeSeriesData",
       "timeSeriesInfo",
       "timeSeriesMarkers",
       "toast",
       "updateResource",
+      "updateResourceColors",
       "updateResources",
       "updateTagStyles",
       "updateTagsAnnotation",
@@ -122,7 +126,7 @@
       "zoomAt",
       "zoomOn"
     ],
-    "mainDispatchEventCount": 42,
+    "mainDispatchEventCount": 46,
     "undocumentedMainDispatchEvents": []
   },
   "messages": [
@@ -210,6 +214,64 @@
           "required": true,
           "description": "Readiness by sibling subproject ID.",
           "suppliedBy": "host transport"
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "allDeepTags",
+      "variant": "getAllDeepTags-reply",
+      "category": "reply",
+      "delivery": "directReply",
+      "summary": "Returns the de-duplicated tags of the current scene.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "data.queryId",
+      "reply": null,
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.tags[]",
+          "type": "string",
+          "required": true,
+          "description": "Effective resource tags, operator tags and tags parsed from loaded Roberto part names, original spelling preserved."
+        },
+        {
+          "path": "data.queryId",
+          "type": "string",
+          "required": false,
+          "description": "Echoed query ID."
+        },
+        {
+          "path": "doNotProcessMessage",
+          "type": "boolean",
+          "required": true,
+          "description": "Prevents the host from reprocessing its own reply.",
+          "suppliedBy": "host reply transport",
+          "constant": true
+        },
+        {
+          "path": "responseToEvent",
+          "type": "string",
+          "required": true,
+          "description": "The integration request event that produced this direct reply.",
+          "suppliedBy": "host reply transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host reply transport"
         }
       ]
     },
@@ -1760,6 +1822,64 @@
           "type": "string|null",
           "required": true,
           "description": "Failure reason, or null on success."
+        },
+        {
+          "path": "doNotProcessMessage",
+          "type": "boolean",
+          "required": true,
+          "description": "Prevents the host from reprocessing its own reply.",
+          "suppliedBy": "host reply transport",
+          "constant": true
+        },
+        {
+          "path": "responseToEvent",
+          "type": "string",
+          "required": true,
+          "description": "The integration request event that produced this direct reply.",
+          "suppliedBy": "host reply transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host reply transport"
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "displayTimeline",
+      "variant": "displayTimeline-reply",
+      "category": "reply",
+      "delivery": "directReply",
+      "summary": "Reports whether the Timeline Viewer opened.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "responseToEvent only",
+      "reply": null,
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "success",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the viewer opened or was revealed."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "required": false,
+          "description": "Why it could not open, for example the timeline-viewer module is not enabled."
         },
         {
           "path": "doNotProcessMessage",
@@ -3468,6 +3588,145 @@
     },
     {
       "direction": "host-to-integration",
+      "event": "shareViewCapture",
+      "variant": "shared-view-capture-request",
+      "category": "operation-mode",
+      "delivery": "targetedDirect",
+      "summary": "Asks a supportShareView instance for its state while the user shares an Operate view.",
+      "surfaces": [
+        "designer",
+        "pop-out"
+      ],
+      "correlation": "data.requestId",
+      "reply": {
+        "event": "shareViewState",
+        "kind": "integration answer; the host waits up to 5 seconds"
+      },
+      "notes": [
+        "Operation Mode only. Sent to supporting panels the user has open in the side panel or popped out; closed panels and hidden background copies are not asked.",
+        "Posted directly to that integration window with its exact origin: no host transport fields, and never forwarded to an application embedding FieldTwin.",
+        "Each supporting dynamic page is asked separately and saves its own state; a page supportShareView overrides the integration value.",
+        "A missing, late or invalid answer leaves this integration out of the shared view; sharing still succeeds and the user is warned."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.requestId",
+          "type": "string",
+          "required": true,
+          "description": "Opaque request ID to echo in shareViewState."
+        },
+        {
+          "path": "data.pageId",
+          "type": "string",
+          "required": false,
+          "description": "Path of the dynamic page being asked; absent for a static integration."
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "shareViewRestore",
+      "variant": "shared-view-restore",
+      "category": "operation-mode",
+      "delivery": "targetedDirect",
+      "summary": "Returns the state this integration saved, when a shared Operate view is opened.",
+      "surfaces": [
+        "designer",
+        "pop-out"
+      ],
+      "correlation": "none",
+      "reply": null,
+      "notes": [
+        "Sent once per page load, right after loaded, usually before the integration has loaded its own data: keep it and apply it when ready.",
+        "Opening the shared view also opens the side panels whose state it carries, when the recipient may use them.",
+        "States can be older than the running integration release; check the state version before applying it."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.state",
+          "type": "unknown (JSON)",
+          "required": true,
+          "description": "The state sent in shareViewState, unchanged and uninterpreted by the host."
+        },
+        {
+          "path": "data.pageId",
+          "type": "string",
+          "required": false,
+          "description": "Path of the dynamic page the state belongs to; absent for a static integration."
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "shareViewState",
+      "variant": "shareViewState-reply",
+      "category": "operation-mode",
+      "delivery": "directReply",
+      "summary": "Acknowledges a shared-view state answer.",
+      "surfaces": [
+        "designer",
+        "pop-out"
+      ],
+      "correlation": "responseToEvent only",
+      "reply": null,
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "success",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the answer matched a pending request from this window."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "required": false,
+          "description": "Unknown or expired request."
+        },
+        {
+          "path": "doNotProcessMessage",
+          "type": "boolean",
+          "required": true,
+          "description": "Prevents the host from reprocessing its own reply.",
+          "suppliedBy": "host reply transport",
+          "constant": true
+        },
+        {
+          "path": "responseToEvent",
+          "type": "string",
+          "required": true,
+          "description": "The integration request event that produced this direct reply.",
+          "suppliedBy": "host reply transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host reply transport"
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
       "event": "siblingApiPodIsNotReady",
       "variant": "api-readiness",
       "category": "lifecycle",
@@ -4250,6 +4509,64 @@
           "required": true,
           "description": "Readiness by sibling subproject ID.",
           "suppliedBy": "host transport"
+        }
+      ]
+    },
+    {
+      "direction": "host-to-integration",
+      "event": "updateResourceColors",
+      "variant": "updateResourceColors-reply",
+      "category": "reply",
+      "delivery": "directReply",
+      "summary": "Acknowledges a tag color snapshot.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "responseToEvent only",
+      "reply": null,
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "success",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the snapshot was applied."
+        },
+        {
+          "path": "error",
+          "type": "string",
+          "required": false,
+          "description": "Validation failure; the previous snapshot stays in place."
+        },
+        {
+          "path": "doNotProcessMessage",
+          "type": "boolean",
+          "required": true,
+          "description": "Prevents the host from reprocessing its own reply.",
+          "suppliedBy": "host reply transport",
+          "constant": true
+        },
+        {
+          "path": "responseToEvent",
+          "type": "string",
+          "required": true,
+          "description": "The integration request event that produced this direct reply.",
+          "suppliedBy": "host reply transport"
+        },
+        {
+          "path": "isOperation",
+          "type": "boolean",
+          "required": true,
+          "description": "Whether the FieldTwin host is in Operation Mode.",
+          "suppliedBy": "host reply transport"
         }
       ]
     },
@@ -5631,6 +5948,33 @@
     },
     {
       "direction": "integration-to-host",
+      "event": "displayTimeline",
+      "variant": "timeline-display",
+      "category": "ui",
+      "delivery": "integrationSend",
+      "summary": "Opens the project Timeline Viewer; requires the timeline-viewer module.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "none",
+      "reply": {
+        "event": "displayTimeline",
+        "kind": "direct reply"
+      },
+      "notes": [],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        }
+      ]
+    },
+    {
+      "direction": "integration-to-host",
       "event": "displayTimeSeries",
       "variant": "panel-display",
       "category": "operation-mode",
@@ -5847,6 +6191,41 @@
           "type": "boolean",
           "required": false,
           "description": "Export binary GLB when true."
+        }
+      ]
+    },
+    {
+      "direction": "integration-to-host",
+      "event": "getAllDeepTags",
+      "variant": "deep-tag-enumeration",
+      "category": "query",
+      "delivery": "integrationSend",
+      "summary": "Enumerates resource, operator and loaded Roberto model-part tags in the scene.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "data.queryId",
+      "reply": {
+        "event": "allDeepTags",
+        "kind": "direct reply"
+      },
+      "notes": [
+        "Does not load models: tags of parts not yet loaded are absent."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.queryId",
+          "type": "string",
+          "required": false,
+          "description": "Echoed in allDeepTags."
         }
       ]
     },
@@ -6746,6 +7125,48 @@
     },
     {
       "direction": "integration-to-host",
+      "event": "shareViewState",
+      "variant": "shared-view-state",
+      "category": "operation-mode",
+      "delivery": "integrationSend",
+      "summary": "Answers shareViewCapture with this instance view state.",
+      "surfaces": [
+        "designer",
+        "pop-out"
+      ],
+      "correlation": "data.requestId",
+      "reply": {
+        "event": "shareViewState",
+        "kind": "direct reply"
+      },
+      "notes": [
+        "Only the window that received the request can answer it; sender identity comes from the registered source window.",
+        "The host stores states keyed by integration ID, or <integrationId>-dynamic-<path> for a dynamic page, and sends each back with shareViewRestore.",
+        "Store identifiers and positions with a version number, never credentials or signed URLs; the recipient may lack access to some of them."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.requestId",
+          "type": "string",
+          "required": true,
+          "description": "requestId from shareViewCapture."
+        },
+        {
+          "path": "data.state",
+          "type": "unknown (JSON)|null",
+          "required": false,
+          "description": "JSON of at most 64 KiB, ideally { version, ... }; omit or send null when there is nothing to save."
+        }
+      ]
+    },
+    {
+      "direction": "integration-to-host",
       "event": "timeSeriesData",
       "variant": "series-window-reply",
       "category": "operation-mode",
@@ -7050,6 +7471,48 @@
           "type": "string",
           "required": false,
           "description": "Custom project-tree path."
+        }
+      ]
+    },
+    {
+      "direction": "integration-to-host",
+      "event": "updateResourceColors",
+      "variant": "tag-color-snapshot",
+      "category": "annotation",
+      "delivery": "integrationSend",
+      "summary": "Replaces the sending integration temporary tag colors for connection and wellbore bodies.",
+      "surfaces": [
+        "designer",
+        "presenter",
+        "pop-out"
+      ],
+      "correlation": "none",
+      "reply": {
+        "event": "updateResourceColors",
+        "kind": "direct reply"
+      },
+      "notes": [
+        "Clear the contribution with data: { colors: {}, blackenUnmatched: false }; closing the integration clears it too.",
+        "Sender identity comes from the registered source window. Invalid messages leave the previous snapshot intact; nothing is saved."
+      ],
+      "fields": [
+        {
+          "path": "event",
+          "type": "string",
+          "required": true,
+          "description": "Exact case-sensitive event discriminator."
+        },
+        {
+          "path": "data.colors",
+          "type": "object<string, string>",
+          "required": true,
+          "description": "Complete tag to #RGB or #RRGGBB snapshot for this integration."
+        },
+        {
+          "path": "data.blackenUnmatched",
+          "type": "boolean",
+          "required": false,
+          "description": "Colors unmatched connections and wellbores black; defaults to true."
         }
       ]
     },

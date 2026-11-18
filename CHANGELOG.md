@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.0 - 2026-11-18
+
+- Added Operate shared views: the `supportShareView` integration and dynamic-page flag, the
+  `shareViewCapture` / `shareViewState` / `shareViewRestore` messages, the 5-second capture wait,
+  64 KiB / 16-integration limits, integration-ID keys, and restore timing after `loaded`. Each dynamic
+  page opts in, is asked separately, and receives its `pageId` in both host messages.
+- Documented that integrations must version their state and validate it on restore, since shared
+  links outlive releases.
+- Brought the postMessage catalog back in line with the host dispatcher by adding `getAllDeepTags`,
+  `updateResourceColors`, and `displayTimeline` with their replies; aligned provenance with
+  integration-guide revision 66.
+
 ## 0.10.0 - 2026-10-01
 
 - Added source-verified projector, convertor and raster-analysis HTTP contracts and JavaScript examples.

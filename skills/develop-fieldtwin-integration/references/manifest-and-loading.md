@@ -34,6 +34,7 @@ Common fields:
 | `tabPosition` | `bottom`, `property-panel`, `hidden`, `global`, or `main-toolbar-dialog`. |
 | `showInDesigner` | Availability outside Operation Mode, including Designer and Presenter. Defaults to `true`. |
 | `showInOperation` | Availability in Operation Mode. Defaults to `true`. |
+| `supportShareView` | Saves and restores this integration's state in Operate shared views. Defaults to `false`; dynamic pages can override it. See [shared-views.md](shared-views.md). |
 | `resourceTypes` | Resource types relevant to a property-panel integration. |
 | `projectWideAccess` | Requests project-wide API scope when the administrator allows it. Prefer least privilege. |
 | `projectAllFromUser` | Requests access across user-visible projects. Use only when the workflow genuinely needs it. |
@@ -128,6 +129,7 @@ Page fields:
 | `tabPosition` | No | Page override, then manifest value, then `bottom`. |
 | `showInDesigner` | No | Page override, then manifest value, then `true`. |
 | `showInOperation` | No | Page override, then manifest value, then `true`. |
+| `supportShareView` | No | Page override, then manifest value, then `false`. |
 
 The endpoint receives `Authorization: Bearer <integration JWT>`. Verify the JWT before using claims to choose pages. Never put the JWT or personal identifiers into `iframeUrl` query parameters.
 

@@ -195,6 +195,7 @@ Common host-to-integration events include:
 | `visualFilterToggle` | Notify the owning integration that a filter changed. |
 | `getTimeSeriesData` | Request samples for a registered series and viewport window. |
 | `waterCurrentRequest` | A walk successfully starts; answer with a current snapshot if available. |
+| `shareViewCapture` / `shareViewRestore` | Operate shared views: answer with this instance's state, or restore a saved one. |
 
 Common integration-to-host events include:
 
@@ -210,6 +211,7 @@ Common integration-to-host events include:
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
 | `waterCurrentUpdate` | Replace or clear this integration's water current for walking and swimming. |
+| `shareViewState` | Answer `shareViewCapture` with `data.requestId` and a versioned `data.state`. |
 
 Water current is a walking/swimming feature in Designer and Presenter, including Operation Mode.
 Send `data.stations` with project-CRS `x`/`y` and true-depth profiles (`z` in metres, `east`/`north`/`up`
@@ -217,6 +219,11 @@ in m/s); do not exaggerate the depth. The most recently accepted integration fie
 blending. Empty stations clear only the sender, and invalid input preserves its previous field.
 See [water-current.md](../references/water-current.md) for every field and limit, exact replies,
 time changes, and the explicit-clear requirement before closing a pop-out.
+
+Integrations that set `supportShareView` are asked for their state when a user shares an Operate
+view, and receive it with `shareViewRestore` right after `loaded` when the view is opened. Put a
+`version` in every state and check it on restore; links outlive releases. See
+[shared-views.md](../references/shared-views.md).
 
 `updateTagStyles` rules require a user-toggleable `category`; categories start disabled. Roberto
 uses `style.backgroundColor`, falling back to `style.color`, for status outlines rather than surface
@@ -313,6 +320,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Complete host-client postMessage attributes and lookup commands | [postmessage-attributes.md](../references/postmessage-attributes.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
 | Walking/swimming water-current snapshots, limits, ownership, and replies | [water-current.md](../references/water-current.md) |
+| Operate shared views: opt-in, capture/restore messages, versioned state | [shared-views.md](../references/shared-views.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |
 | Selection, resources, settings, notifications, focus | [recipes.md](../references/recipes.md) |
