@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0 - 2026-11-19
+
+- Added Vibe Deploy guidance to `create-fieldtwin-integration`: the static and Node.js shapes it
+  builds without a Dockerfile, the runtime contract (`PORT`, read-only filesystem, FieldTwin
+  origins in environment variables and `/__vibe/config.json`), and deploying from an agent with a
+  per-application deploy token and status polling.
+
 ## 0.11.0 - 2026-11-18
 
 - Added Operate shared views: the `supportShareView` integration and dynamic-page flag, the
