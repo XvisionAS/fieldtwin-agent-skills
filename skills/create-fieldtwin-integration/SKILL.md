@@ -1,10 +1,10 @@
 ---
 name: create-fieldtwin-integration
-description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation, deploying or updating a static integration on a FieldTwin instance that hosts integrations. ALWAYS use when starting a new FieldTwin integration, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.6.0"
+  version: "0.7.0"
 ---
 
 # Create FieldTwin Integrations
@@ -36,6 +36,16 @@ bot, or a server-side JWT verification boundary.
 When a single-page integration later needs one of those, promote it: re-run this skill for the
 full repository shape and move the existing page into the application. The bridge, message
 handling, and API code carry over unchanged, so starting single-page is not a dead end.
+
+### Deploying to FieldTwin hosting
+
+When the user's FieldTwin instance hosts integrations, a single page or any static build needs no
+host of its own: `scripts/ft-integrations.mjs` logs the user in through their browser, uploads the
+build output, and creates or updates the integration in their account. Read
+[references/hosted-integrations.md](references/hosted-integrations.md) for what a hosted integration
+must be and for the deploy workflow. Use it whenever the user asks to deploy, publish or update a
+static integration and names a FieldTwin instance. An integration that needs a backend cannot be
+deployed this way.
 
 ### Building the single-page shape
 

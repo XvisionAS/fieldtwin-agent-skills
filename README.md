@@ -9,7 +9,7 @@ This repository publishes two complementary skills:
   validation path for a new deployable integration.
 - **Develop FieldTwin Integration** — build, run, debug, test, and review FieldTwin custom-tab integrations and their Operation Mode host behavior, including the local Tilt/Helm path, HTTP/HTTPS URL generation, iframe lifecycle, API authentication, `postMessage`, pop-out windows, system highlighting, settings, and protocol tests.
 
-The skill is documentation and instructions only. It has no MCP server or executable runtime, makes no network requests by itself, and does not collect credentials or usage data.
+The skills are documentation and instructions, plus small helper scripts. There is no MCP server and no telemetry. One script makes network requests: `ft-integrations.mjs` in `create-fieldtwin-integration` deploys a static integration to the FieldTwin instance URL you give it, and to nothing else. To do that it logs you in through your browser and stores the resulting deploy token in your user configuration directory (`~/.config/fieldtwin/integrations.json`, `%APPDATA%` on Windows), readable only by you. The token can only manage FieldTwin-hosted integrations and expires after 7 days.
 
 ## Install
 

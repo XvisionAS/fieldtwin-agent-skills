@@ -1,6 +1,6 @@
 # Security policy
 
-This repository contains documentation and portable Agent Skill instructions. It does not run a service, store credentials, or collect telemetry.
+This repository contains documentation, portable Agent Skill instructions and helper scripts. It does not run a service or collect telemetry. `ft-integrations.mjs` stores a deploy token for the FieldTwin instance you log in to, in your user configuration directory with owner-only permissions; it sends that token only to that instance.
 
 ## Reporting a problem
 

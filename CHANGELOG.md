@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.14.0 - 2026-11-23
+
+- Added Integrations deployment to `create-fieldtwin-integration`: `scripts/ft-integrations.mjs` logs
+  the user in through their browser and deploys or updates a static integration on a FieldTwin
+  instance that hosts integrations, and `references/hosted-integrations.md` describes what a hosted
+  integration must be and the deploy workflow.
+- The package now ships a script that makes network requests and stores a deploy token; `README.md`
+  and `SECURITY.md` say exactly what it does.
+
 ## 0.13.0 - 2026-11-23
 
 - Removed the hosted-deployment guidance added to `create-fieldtwin-integration` in 0.12.0. It
