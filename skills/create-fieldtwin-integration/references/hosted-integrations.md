@@ -1,9 +1,9 @@
 # Deploying to FieldTwin hosting
 
-Some FieldTwin instances can host a static integration themselves. Its **integration hosting** stores the
-built files, serves them from its own hostname, and registers the integration in the account. Use
-it for the single-page shape and for any integration that builds to static files. An integration
-that needs a backend cannot be deployed this way; use the full repository shape.
+Some FieldTwin instances can host a static integration themselves: the instance stores the built
+files, serves them from its own hostname, and registers the integration in the account. Use it for
+the single-page shape and for any integration that builds to static files. An integration that
+needs a backend cannot be deployed this way; use the full repository shape.
 
 `scripts/ft-integrations.mjs` does the work. It needs Node 20.15 or later and has no dependencies.
 Add `--json` to every call you parse.
@@ -40,14 +40,17 @@ A minimal manifest:
 ## Workflow
 
 1. **Find the target.** Read `.fieldtwin.json` in the project root. If it exists, this project is
-   already linked to an integration: a deploy updates that integration.
+   already linked to an integration: a deploy updates that integration. Confirm its `instanceUrl`
+   is the instance the user means; the script refuses a deploy when the link and the target
+   disagree (`project-link-mismatch`).
 2. **No `.fieldtwin.json`?** Ask the user for their FieldTwin URL, then run
    `list --url <instance> --json`. Ask whether this is a new integration or an update of one
    marked hosted in that list. For an update, run `link <integrationId>` first.
 3. **Build** the integration and check `manifest.json` is in the output folder.
 4. **Deploy:** `deploy <output folder> --json`.
 5. **Report** the integration name, the account and the URL from the result. Tell the user to
-   reload FieldTwin to see a new integration.
+   reload FieldTwin to see a new integration. A deploy of unchanged files answers
+   `"unchanged": true`: say the integration was already up to date.
 
 Commit `.fieldtwin.json`. It holds the instance URL, the account id and the integration id, and no
 secret. It is what makes the next deploy an update instead of a second integration.
@@ -57,6 +60,11 @@ secret. It is what makes the next deploy an update instead of a second integrati
 When a command exits with code 3 and `"error": "login-required"`, run
 `login --url <instance>`. It opens the user's browser on the normal FieldTwin login page and waits
 for them to approve. Tell the user a browser tab is opening. Then repeat the command.
+
+- `--no-browser` prints the login URL without opening it. The callback still arrives on this
+  machine's loopback address, so it does not make a remote or SSH session work.
+- When the login page is on a different host than the instance, the script never opens it: it
+  only prints the URL, and the user should check it before opening it.
 
 - Never ask the user for a password, a token or a code, and never read the stored credentials
   file. The script keeps the token in the user's configuration directory and never prints it.
@@ -76,6 +84,8 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | `zip [dir] [out.zip]` | Write the bundle without deploying it, for an upload through FieldTwin Admin. |
 | `pull <integrationId> [dir]` | Download and extract the deployed files. |
 | `delete <integrationId> --yes` | Delete a hosted integration. Ask the user before running it. |
+| `logout` | Remove the stored login for that instance. The grant itself is revoked under Connected Apps in the user's FieldTwin settings. |
+| `self-check` | Check the script's packaging on this machine. Needs no login and no network. |
 
 ## Errors worth handling
 
@@ -88,4 +98,8 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | `licence-does-not-allow-integrations` | The account's licence does not include integrations. |
 | `missing-manifest`, `invalid-manifest`, `manifest-url-not-in-bundle`, `unsupported-manifest-field` | Fix `manifest.json`; `detail` names the field. |
 | `bundle-too-large`, `too-many-files`, `symlink-not-allowed`, `unsafe-entry-name` | Fix the build output; `detail` names the entry. |
+| `project-link-mismatch` | `.fieldtwin.json` points at another instance or account than this deploy. Pass the matching `--url` and `--account`, or remove the file. |
+| `insecure-instance-url` | The instance URL must be `https`. Correct `--url`. |
+| `invalid-login-url` | The instance gave a login URL that is not `https`. Do not log in; tell the user. |
+| `integration-id-required` | `link`, `pull` and `delete` need the integration id; get it from `list`. |
 | `integration-not-hosted` | The linked integration is not one integration hosting hosts. Deploy as a new one. |
