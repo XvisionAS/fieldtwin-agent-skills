@@ -23,6 +23,10 @@ Add `--json` to every call you parse.
 - **Relative asset paths and hash routing.** The page is served under a path, not at the root of
   its host, and unknown paths are not rewritten to `index.html`. With Vite, set `base: './'`.
 - **No secrets.** The files are public to anyone who has the URL.
+- **Only public files are packaged.** Dot-files (`.env`, `.fieldtwin.json`), dot-directories
+  (`.git`) and `node_modules` are never uploaded, at any depth; the script says how many it left
+  out. A single-page integration should still live in a folder of its own that holds only what is
+  meant to be public, rather than in a project root.
 - At most 25 MB zipped, 100 MB unzipped, 2000 files, no symbolic links.
 
 A minimal manifest:
@@ -71,6 +75,9 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 - The login only allows publishing, updating and deleting hosted integrations on accounts the user
   administers. It is unrelated to the JWT the integration receives at runtime.
 - It lasts 7 days. The user can revoke it under Connected Apps in their FieldTwin user settings.
+- A user has one login per instance: logging in again, for example from another machine, ends the
+  login of the first machine. The script then drops the stored login and answers `login-required`;
+  run `login` again.
 - In a remote or SSH session the browser cannot reach the script. Say so and ask the user to run
   the login on their own machine.
 
@@ -102,4 +109,13 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | `insecure-instance-url` | The instance URL must be `https`. Correct `--url`. |
 | `invalid-login-url` | The instance gave a login URL that is not `https`. Do not log in; tell the user. |
 | `integration-id-required` | `link`, `pull` and `delete` need the integration id; get it from `list`. |
+| `integration-not-found` | The integration `.fieldtwin.json` points at was deleted. Ask the user, then remove `.fieldtwin.json` and deploy as a new integration. |
+| `request-failed` | The instance could not be reached; `detail` has the reason. Check the URL and the network, then retry. |
+| `invalid-token-response` | The instance answered the login with an unusable token response. Retry the login; report it if it repeats. |
+| `invalid-instance-url` | `--url` is not a valid URL. Use `https://<instance>`. |
+| `instance-required` | No instance is known. Ask the user for their FieldTwin URL and pass `--url`. |
+| `login-denied` | The user cancelled the login in the browser. Ask whether to try again. |
+| `login-timeout` | No login was completed within 5 minutes. Run `login` again. |
+| `login-failed` | The login callback carried no authorization code. Run `login` again. |
+| `unsupported-zip-entry` | A downloaded bundle uses a compression method other than stored or deflate. Report it; `pull` cannot extract it. |
 | `integration-not-hosted` | The linked integration is not one integration hosting hosts. Deploy as a new one. |

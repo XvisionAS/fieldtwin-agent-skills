@@ -8,7 +8,15 @@
   `references/hosted-integrations.md` describes what a hosted integration must be and the deploy
   workflow.
 - The package now ships a script that makes network requests and stores a deploy token; `README.md`
-  and `SECURITY.md` say exactly what it does.
+  and `SECURITY.md` say exactly what it does, including what the token allows and how the
+  credentials file is protected on each platform.
+- Dot-files, dot-directories and `node_modules` are never packaged for hosting, `zip` never
+  archives its own output, and the script reports how many entries it left out.
+- A dead login (the grant was revoked, or the user logged in again elsewhere) now leads to a clean
+  `login-required`; an instance without integration hosting reports `hosting-disabled`; only a
+  refused token refresh (400, 401, 403) drops the stored login.
+- The hosting reference lists every error the script reports, explains the one-login-per-instance
+  rule, and `SKILL.md` no longer asks a hosted page for absolute manifest URLs.
 
 ## 0.13.0 - 2026-11-23
 
