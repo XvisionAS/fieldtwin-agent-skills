@@ -14,6 +14,8 @@ const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 const REFRESH_MARGIN_MS = 60 * 1000
 const BOOLEAN_FLAGS = new Set(['json', 'yes', 'no-browser'])
 const EXIT_LOGIN_REQUIRED = 3
+// A refresh the server refuses with one of these means the login is gone; any other failure may pass.
+const REFUSED_LOGIN_STATUSES = new Set([400, 401, 403])
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
 // The server's limit on the unzipped size of a bundle.
 const MAX_EXTRACTED_BYTES = 100 * 1024 * 1024
@@ -147,11 +149,38 @@ function assertValidTokens(tokens, isCodeExchange) {
  * @returns {Promise<{enabled: boolean, clientId: string, loginUrl: string, integrationsOrigin: string, maxBundleBytes: number}>}
  */
 async function getConfig(instance) {
-  const config = await (await request(`${instance}/backend/integrations/config`)).json()
+  const hostingDisabled = new CliError('hosting-disabled', `Integration hosting is not enabled on ${instance}.`)
+  let config
+  try {
+    config = await (await request(`${instance}/backend/integrations/config`)).json()
+  } catch (error) {
+    // An instance that predates integration hosting has no such route.
+    throw error.status === 404 ? hostingDisabled : error
+  }
   if (!config.enabled) {
-    throw new CliError('hosting-disabled', `Integration hosting is not enabled on ${instance}.`)
+    throw hostingDisabled
   }
   return config
+}
+
+/**
+ * @param {string} instance
+ * @returns {CliError} the error that asks the user to log in again
+ */
+function loginRequired(instance) {
+  return new CliError('login-required', `Not logged in to ${instance}. Run: login --url ${instance}`, EXIT_LOGIN_REQUIRED)
+}
+
+/**
+ * Forgets the stored login for an instance.
+ * @param {string} instance
+ * @returns {CliError} the error that asks the user to log in again
+ */
+function dropLogin(instance) {
+  const credentials = readCredentials()
+  delete credentials[instance]
+  writeCredentials(credentials)
+  return loginRequired(instance)
 }
 
 /**
@@ -162,9 +191,8 @@ async function getConfig(instance) {
 async function accessToken(instance) {
   const credentials = readCredentials()
   const stored = credentials[instance]
-  const loginRequired = new CliError('login-required', `Not logged in to ${instance}. Run: login --url ${instance}`, EXIT_LOGIN_REQUIRED)
   if (!stored) {
-    throw loginRequired
+    throw loginRequired(instance)
   }
   if (stored.accessExpiresAt - REFRESH_MARGIN_MS > Date.now()) {
     return stored.accessToken
@@ -178,14 +206,9 @@ async function accessToken(instance) {
     })
     tokens = await response.json()
   } catch (error) {
-    // Only a refusal (4xx) means the 7-day refresh token expired or the grant was revoked.
-    // A network error or a 5xx must keep the login.
-    if (error.status >= 400 && error.status < 500) {
-      delete credentials[instance]
-      writeCredentials(credentials)
-      throw loginRequired
-    }
-    throw error
+    // Only a refusal means the 7-day refresh token expired or the grant was revoked.
+    // A network error, a 5xx or a throttling 4xx (408, 429) must keep the login.
+    throw REFUSED_LOGIN_STATUSES.has(error.status) ? dropLogin(instance) : error
   }
   assertValidTokens(tokens, false)
   stored.accessToken = tokens.access_token
@@ -207,7 +230,13 @@ async function api(instance, method, apiPath, zip) {
   if (zip) {
     headers['Content-Type'] = 'application/zip'
   }
-  return request(`${instance}/backend/integrations${apiPath}`, { method, headers, body: zip })
+  try {
+    return await request(`${instance}/backend/integrations${apiPath}`, { method, headers, body: zip })
+  } catch (error) {
+    // The token is not expired but dead: the grant was revoked, or the user logged in again
+    // elsewhere, which ends this login.
+    throw error.status === 403 && error.code === 'invalid-credential' ? dropLogin(instance) : error
+  }
 }
 
 // ---- login ----------------------------------------------------------------------------------
