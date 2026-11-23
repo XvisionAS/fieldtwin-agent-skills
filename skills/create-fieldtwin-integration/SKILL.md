@@ -1,10 +1,10 @@
 ---
 name: create-fieldtwin-integration
-description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation. ALWAYS use when starting a new FieldTwin integration, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation, deploying or updating a static integration on a FieldTwin instance that hosts integrations. ALWAYS use when starting a new FieldTwin integration, deploying, publishing or updating a static integration on a FieldTwin instance, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.5.0"
+  version: "0.7.0"
 ---
 
 # Create FieldTwin Integrations
@@ -37,16 +37,15 @@ When a single-page integration later needs one of those, promote it: re-run this
 full repository shape and move the existing page into the application. The bridge, message
 handling, and API code carry over unchanged, so starting single-page is not a dead end.
 
-### Deploying with Vibe Deploy
+### Deploying to FieldTwin hosting
 
-When the user's FieldTwin offers Vibe Deploy, a single page or a small Node.js application needs
-no deployment files at all: Vibe Deploy builds the application folder from a zip or a Git folder
-(no Dockerfile), runs it, and lists it as a FieldTwin page. It also serves the trusted FieldTwin
-origins at `/__vibe/config.json` and as environment variables, and accepts deploys from an agent
-with a per-application deploy token. Read
-[references/vibe-deploy.md](references/vibe-deploy.md) for the accepted shapes, the runtime
-contract, and the deploy-and-poll commands. Prefer it over a full repository when the only thing
-pushing toward one is "it needs to be hosted".
+When the user's FieldTwin instance hosts integrations, a single page or any static build needs no
+host of its own: `scripts/ft-integrations.mjs` logs the user in through their browser, uploads the
+build output, and creates or updates the integration in their account. Read
+[references/hosted-integrations.md](references/hosted-integrations.md) for what a hosted integration
+must be and for the deploy workflow. Use it whenever the user asks to deploy, publish or update a
+static integration and names a FieldTwin instance. An integration that needs a backend cannot be
+deployed this way.
 
 ### Building the single-page shape
 
@@ -59,9 +58,13 @@ in-memory JWT, `tokenRefresh`, exact message shapes, and teardown. Sections 1-7 
 - Set `useGET: true` in the manifest. The default POST loading flow needs a server that accepts
   POST, and static hosts answer it with 405. Add `noURLParams: true` and initialize from the
   `loaded` event so bootstrap fields stay out of the URL.
-- Ship `manifest.json` as a second static file next to the page, with absolute URLs and
-  `Access-Control-Allow-Origin: *`, or let the administrator enter the page URL directly when the
-  host allows it. A manifest is the only file besides the page itself.
+- Ship `manifest.json` as a second static file next to the page. A page deployed to FieldTwin
+  hosting uses relative manifest URLs, as the hosting reference describes. Absolute URLs and
+  `Access-Control-Allow-Origin: *` apply only when the page is hosted elsewhere, where the
+  administrator may instead enter the page URL directly when the host allows it. A manifest is the
+  only file besides the page itself.
+- For FieldTwin hosting, keep the page and manifest in a folder of its own that holds only what is
+  meant to be public.
 - Prefer a static host that can set response headers, so CSP `frame-ancestors` can name the exact
   FieldTwin origins. Where the host cannot set headers, the page is embeddable by anyone; the
   exact origin and source checks in the bridge are then the only trust boundary, so they are not

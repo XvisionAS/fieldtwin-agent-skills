@@ -60,7 +60,8 @@ DEVELOP_INTEGRATION_FILES = {
     "scripts/query-postmessage-attributes.py",
     "scripts/schema-loader.mjs",
 }
-CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md", "vibe-deploy.md"}
+CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md", "hosted-integrations.md"}
+CREATE_INTEGRATION_FILES = {"scripts/ft-integrations.mjs"}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
     "CHANGELOG.md",
@@ -294,6 +295,9 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
         validate_postmessage_catalog(skill_path.parent, validation)
     elif name == "create-fieldtwin-integration":
         required_references = CREATE_INTEGRATION_REFERENCES
+        for filename in sorted(CREATE_INTEGRATION_FILES):
+            required_file = skill_path.parent / filename
+            validation.require(required_file.is_file(), f"Missing required skill file: {relative(required_file)}")
     else:
         validation.errors.append(f"No package validation profile for skill {name!r}")
         required_references = set()
