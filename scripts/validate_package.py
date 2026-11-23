@@ -60,7 +60,7 @@ DEVELOP_INTEGRATION_FILES = {
     "scripts/query-postmessage-attributes.py",
     "scripts/schema-loader.mjs",
 }
-CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md", "vibe-deploy.md"}
+CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md"}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
     "CHANGELOG.md",

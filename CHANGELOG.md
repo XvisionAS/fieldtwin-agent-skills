@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.13.0 - 2026-11-23
+
+- Removed the hosted-deployment guidance added to `create-fieldtwin-integration` in 0.12.0. It
+  described a service that is not released yet. A single-page integration is deployed by copying
+  it to a static host, as before.
+
 ## 0.12.0 - 2026-11-19
 
 - Added Vibe Deploy guidance to `create-fieldtwin-integration`: the static and Node.js shapes it

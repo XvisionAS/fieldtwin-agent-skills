@@ -4,7 +4,7 @@ description: Create and scaffold a FieldTwin external integration, either as a s
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # Create FieldTwin Integrations
@@ -36,17 +36,6 @@ bot, or a server-side JWT verification boundary.
 When a single-page integration later needs one of those, promote it: re-run this skill for the
 full repository shape and move the existing page into the application. The bridge, message
 handling, and API code carry over unchanged, so starting single-page is not a dead end.
-
-### Deploying with Vibe Deploy
-
-When the user's FieldTwin offers Vibe Deploy, a single page or a small Node.js application needs
-no deployment files at all: Vibe Deploy builds the application folder from a zip or a Git folder
-(no Dockerfile), runs it, and lists it as a FieldTwin page. It also serves the trusted FieldTwin
-origins at `/__vibe/config.json` and as environment variables, and accepts deploys from an agent
-with a per-application deploy token. Read
-[references/vibe-deploy.md](references/vibe-deploy.md) for the accepted shapes, the runtime
-contract, and the deploy-and-poll commands. Prefer it over a full repository when the only thing
-pushing toward one is "it needs to be hosted".
 
 ### Building the single-page shape
 
