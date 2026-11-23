@@ -17,6 +17,9 @@
   refused token refresh (400, 401, 403) drops the stored login.
 - Flags accept `--name=value` as well as `--name value`, and `delete` removes the project link when
   it pointed at the deleted integration.
+- The skill deploys only through the script, never through FieldTwin Admin or a browser, and says
+  what to do when an agent sandbox blocks the network. `develop-fieldtwin-integration` points to
+  it, so an agent with only that skill installed does not fall back to the Admin upload.
 - The hosting reference lists every error the script reports, explains the one-login-per-instance
   rule, and `SKILL.md` no longer asks a hosted page for absolute manifest URLs.
 

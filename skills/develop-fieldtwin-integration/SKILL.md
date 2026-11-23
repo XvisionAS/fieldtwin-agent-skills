@@ -36,6 +36,11 @@ Read the public [integration guide](integration/README.md) and [references/docum
 
 When the user's repository also contains an integration guide, read the relevant sections and reconcile them with the current public FieldTwin documentation. A deployed environment's released contract wins over bundled examples. Never infer a new protocol field from naming symmetry.
 
+To deploy, publish or update a static integration on a FieldTwin instance that hosts integrations,
+use the `create-fieldtwin-integration` skill and its `scripts/ft-integrations.mjs`. If that skill
+is not installed, tell the user to install it. Never upload, create or edit the integration through
+FieldTwin Admin or by driving a browser.
+
 ## Classify the task
 
 Identify which side owns the behavior before editing:

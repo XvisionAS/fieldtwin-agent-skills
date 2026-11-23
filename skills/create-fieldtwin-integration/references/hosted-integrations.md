@@ -43,6 +43,10 @@ A minimal manifest:
 
 ## Workflow
 
+Deploy only with the script. Never upload, create or edit the integration through FieldTwin Admin
+or by driving a browser, even when a command fails: report its `error` and the fix below. The
+instance chooses the URLs the integration is served from; never build or change them yourself.
+
 1. **Find the target.** Read `.fieldtwin.json` in the project root. If it exists, this project is
    already linked to an integration: a deploy updates that integration. Confirm its `instanceUrl`
    is the instance the user means; the script refuses a deploy when the link and the target
@@ -88,7 +92,7 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | `accounts` | The accounts the user administers. Needed when a deploy answers `account-required`. |
 | `list [--account <id>]` | The account's integrations; hosted ones carry a `hosted` object. |
 | `link <integrationId>` | Point this project at an existing hosted integration. |
-| `zip [dir] [out.zip]` | Write the bundle without deploying it, for an upload through FieldTwin Admin. |
+| `zip [dir] [out.zip]` | Write the bundle without deploying it, only when the user asks for the file to upload it through FieldTwin Admin themselves. |
 | `pull <integrationId> [dir]` | Download and extract the deployed files. |
 | `delete <integrationId> --yes` | Delete a hosted integration. Ask the user before running it. |
 | `logout` | Remove the stored login for that instance. The grant itself is revoked under Connected Apps in the user's FieldTwin settings. |
@@ -110,7 +114,7 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | `invalid-login-url` | The instance gave a login URL that is not `https`. Do not log in; tell the user. |
 | `integration-id-required` | `link`, `pull` and `delete` need the integration id; get it from `list`. |
 | `integration-not-found` | The integration `.fieldtwin.json` points at was deleted. Ask the user, then remove `.fieldtwin.json` and deploy as a new integration. |
-| `request-failed` | The instance could not be reached; `detail` has the reason. Check the URL and the network, then retry. |
+| `request-failed` | The instance could not be reached; `detail` has the reason. Check the URL and the network, then retry. In a sandbox without network access (the default in some agents), ask the user to allow network access for the script and run it again. |
 | `invalid-token-response` | The instance answered the login with an unusable token response. Retry the login; report it if it repeats. |
 | `invalid-instance-url` | `--url` is not a valid URL. Use `https://<instance>`. |
 | `instance-required` | No instance is known. Ask the user for their FieldTwin URL and pass `--url`. |

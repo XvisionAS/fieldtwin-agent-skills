@@ -44,8 +44,9 @@ host of its own: `scripts/ft-integrations.mjs` logs the user in through their br
 build output, and creates or updates the integration in their account. Read
 [references/hosted-integrations.md](references/hosted-integrations.md) for what a hosted integration
 must be and for the deploy workflow. Use it whenever the user asks to deploy, publish or update a
-static integration and names a FieldTwin instance. An integration that needs a backend cannot be
-deployed this way.
+static integration and names a FieldTwin instance. Deploy only through this script: never upload,
+create or edit the integration through FieldTwin Admin or by driving a browser, even when the
+script fails. An integration that needs a backend cannot be deployed this way.
 
 ### Building the single-page shape
 
