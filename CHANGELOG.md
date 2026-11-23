@@ -15,6 +15,8 @@
 - A dead login (the grant was revoked, or the user logged in again elsewhere) now leads to a clean
   `login-required`; an instance without integration hosting reports `hosting-disabled`; only a
   refused token refresh (400, 401, 403) drops the stored login.
+- Flags accept `--name=value` as well as `--name value`, and `delete` removes the project link when
+  it pointed at the deleted integration.
 - The hosting reference lists every error the script reports, explains the one-login-per-instance
   rule, and `SKILL.md` no longer asks a hosted page for absolute manifest URLs.
 

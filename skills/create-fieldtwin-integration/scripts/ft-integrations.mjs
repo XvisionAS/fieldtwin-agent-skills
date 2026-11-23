@@ -45,10 +45,14 @@ function parseArgs(argv) {
   const flags = {}
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index]
+    const equals = arg.indexOf('=')
     if (!arg.startsWith('--')) {
       positional.push(arg)
     } else if (BOOLEAN_FLAGS.has(arg.slice(2))) {
       flags[arg.slice(2)] = true
+    } else if (equals > 0) {
+      // --account=-Oabc: account and integration ids often start with a dash.
+      flags[arg.slice(2, equals)] = arg.slice(equals + 1)
     } else {
       flags[arg.slice(2)] = argv[++index]
     }
@@ -706,12 +710,20 @@ const commands = {
     const instance = resolveInstance(flags)
     const accountId = await resolveAccount(instance, flags)
     await api(instance, 'DELETE', `/accounts/${encodeURIComponent(accountId)}/integrations/${encodeURIComponent(integrationId)}`)
+    // A link to a deleted integration would make the next deploy here fail instead of creating one.
+    if (readProject()?.integrationId === integrationId) {
+      fs.rmSync(PROJECT_FILE)
+    }
     return { result: { integrationId, deleted: true }, text: `Deleted ${integrationId}.` }
   },
 
   // The smallest check that fails if packaging breaks: zip twice, compare, extract, compare,
   // then prove a hostile archive is refused before anything is written.
   async 'self-check'() {
+    const parsed = parseArgs(['dist', '--account=-Oa=b', '--url', 'https://x', '--yes', '-Pid'])
+    if (JSON.stringify(parsed) !== '{"positional":["dist","-Pid"],"flags":{"account":"-Oa=b","url":"https://x","yes":true}}') {
+      throw new CliError('self-check-failed', `Arguments were misread: ${JSON.stringify(parsed)}`)
+    }
     const source = fs.mkdtempSync(path.join(os.tmpdir(), 'ft-integrations-source-'))
     const extracted = fs.mkdtempSync(path.join(os.tmpdir(), 'ft-integrations-extracted-'))
     try {
