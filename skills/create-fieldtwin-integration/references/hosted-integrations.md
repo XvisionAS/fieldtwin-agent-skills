@@ -8,6 +8,14 @@ needs a backend cannot be deployed this way; use the full repository shape.
 `scripts/ft-integrations.mjs` does the work. It needs Node 20.15 or later and has no dependencies.
 Add `--json` to every call you parse.
 
+## Who may deploy
+
+- Account admins, and members whose user role grants "Can deploy integrations" under a PRO or PRO
+  Design licence. The account must also have the `hosted-integrations` module turned on.
+- Admin access is not needed. Users find their integrations, their versions and the zip of each
+  version in their FieldTwin profile, tab Integrations.
+- A member who is not an account admin manages only the integrations they deployed themselves.
+
 ## What a hosted integration must be
 
 - **Static files only.** No server code, no `dynamicPagesUrl`, no proxy, no OAuth client.
@@ -77,7 +85,7 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 - Never ask the user for a password, a token or a code, and never read the stored credentials
   file. The script keeps the token in the user's configuration directory and never prints it.
 - The login only allows publishing, updating and deleting hosted integrations on accounts the user
-  administers. It is unrelated to the JWT the integration receives at runtime.
+  may deploy to. It is unrelated to the JWT the integration receives at runtime.
 - It lasts 7 days. The user can revoke it under Connected Apps in their FieldTwin user settings.
 - A user has one login per instance: logging in again, for example from another machine, ends the
   login of the first machine. The script then drops the stored login and answers `login-required`;
@@ -85,15 +93,24 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 - In a remote or SSH session the browser cannot reach the script. Say so and ask the user to run
   the login on their own machine.
 
+## Versions and rollback
+
+FieldTwin keeps ten versions of each integration: the live one and up to nine earlier ones,
+newest first in the `hosted.history` of `list --json`. Each deploy of changed files adds a version
+and the oldest falls away. `rollback <integrationId> --version N` makes a kept version live again
+as a new deploy would, so the integration keeps its URL and settings. `pull --version N` downloads
+a kept version without changing what is live.
+
 ## Other commands
 
 | Command | Use |
 | ------- | --- |
-| `accounts` | The accounts the user administers. Needed when a deploy answers `account-required`. |
+| `accounts` | The accounts the user may deploy to. Needed when a deploy answers `account-required`. |
 | `list [--account <id>]` | The account's integrations; hosted ones carry a `hosted` object. |
 | `link <integrationId>` | Point this project at an existing hosted integration. |
 | `zip [dir] [out.zip]` | Write the bundle without deploying it, only when the user asks for the file to upload it through FieldTwin Admin themselves. |
-| `pull <integrationId> [dir]` | Download and extract the deployed files. |
+| `pull <integrationId> [dir] [--version N]` | Download and extract the deployed files, or those of a kept version. |
+| `rollback <integrationId> --version N` | Make a kept version live again. Ask the user which version first. |
 | `delete <integrationId> --yes` | Delete a hosted integration. Ask the user before running it. |
 | `logout` | Remove the stored login for that instance. The grant itself is revoked under Connected Apps in the user's FieldTwin settings. |
 | `self-check` | Check the script's packaging on this machine. Needs no login and no network. |
@@ -104,8 +121,12 @@ for them to approve. Tell the user a browser tab is opening. Then repeat the com
 | ------- | --------------- |
 | `hosting-disabled` | This instance does not host integrations. Offer the other deployment paths of this skill. |
 | `login-required` (exit 3) | Run `login`, then retry. |
-| `account-required` | The user administers several accounts. Show them and pass `--account <id>`. |
-| `no-administered-account`, `not-account-admin` | Only an account administrator can deploy. |
+| `account-required` | The user may deploy to several accounts. Show them and pass `--account <id>`. |
+| `no-deployable-account` | The user may deploy to no account of this instance. An account admin must turn on the `hosted-integrations` module and give the user's role "Can deploy integrations" (PRO licence required). |
+| `not-allowed` | The user may not deploy to this account, or the integration was deployed by someone else. |
+| `module-not-enabled` | The account does not have the `hosted-integrations` module. An account admin must turn it on. |
+| `version-required` | `rollback` needs `--version N`; `list --json` shows the kept versions. |
+| `version-not-kept` | That version is no longer kept. Choose one listed in `hosted.history` or the live one. |
 | `licence-does-not-allow-integrations` | The account's licence does not include integrations. |
 | `missing-manifest`, `invalid-manifest`, `manifest-url-not-in-bundle`, `unsupported-manifest-field` | Fix `manifest.json`; `detail` names the field. |
 | `bundle-too-large`, `too-many-files`, `symlink-not-allowed`, `unsafe-entry-name` | Fix the build output; `detail` names the entry. |

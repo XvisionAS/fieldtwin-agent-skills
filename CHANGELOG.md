@@ -2,6 +2,13 @@
 
 ## 0.14.0 - 2026-11-23
 
+- Added `rollback <integrationId> --version N` and `pull --version N` to `ft-integrations.mjs`:
+  FieldTwin keeps ten versions of each hosted integration, and a kept version can be made live
+  again or downloaded.
+- Hosted integrations can be deployed by non-admin users whose role has "Can deploy integrations"
+  under a PRO licence, on accounts with the `hosted-integrations` module. The errors
+  `not-account-admin` and `no-administered-account` became `not-allowed`, `module-not-enabled`
+  and `no-deployable-account`.
 - Added deployment to FieldTwin integration hosting to `create-fieldtwin-integration`:
   `scripts/ft-integrations.mjs` logs the user in through their browser and deploys or updates a
   static integration on a FieldTwin instance that hosts integrations, and

@@ -47,6 +47,9 @@ must be and for the deploy workflow. Use it whenever the user asks to deploy, pu
 static integration and names a FieldTwin instance. Deploy only through this script: never upload,
 create or edit the integration through FieldTwin Admin or by driving a browser, even when the
 script fails. An integration that needs a backend cannot be deployed this way.
+Account admins and members whose role has "Can deploy integrations" (PRO licence, account with the
+`hosted-integrations` module) may deploy; Admin access is not needed. Kept versions can be restored
+with `rollback`.
 
 ### Building the single-page shape
 

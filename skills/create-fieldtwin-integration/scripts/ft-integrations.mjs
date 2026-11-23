@@ -227,15 +227,19 @@ async function accessToken(instance) {
  * @param {string} method
  * @param {string} apiPath path under /backend/integrations
  * @param {Buffer} [zip]
+ * @param {object} [json] sent as the JSON body
  * @returns {Promise<Response>}
  */
-async function api(instance, method, apiPath, zip) {
+async function api(instance, method, apiPath, zip, json) {
   const headers = { Authorization: `Bearer ${await accessToken(instance)}` }
   if (zip) {
     headers['Content-Type'] = 'application/zip'
   }
+  if (json) {
+    headers['Content-Type'] = 'application/json'
+  }
   try {
-    return await request(`${instance}/backend/integrations${apiPath}`, { method, headers, body: zip })
+    return await request(`${instance}/backend/integrations${apiPath}`, { method, headers, body: json ? JSON.stringify(json) : zip })
   } catch (error) {
     // The token is not expired but dead: the grant was revoked, or the user logged in again
     // elsewhere, which ends this login.
@@ -578,7 +582,7 @@ function requireIntegrationId(positional) {
 }
 
 /**
- * The account to act on: the flag, else the linked project, else the only administered account.
+ * The account to act on: the flag, else the linked project, else the only account the user may deploy to.
  * @param {string} instance
  * @param {Record<string, string|boolean>} flags
  * @returns {Promise<string>}
@@ -594,8 +598,10 @@ async function resolveAccount(instance, flags) {
   }
   const choices = accounts.map((account) => `${account.id} (${account.name})`).join(', ')
   throw new CliError(
-    accounts.length ? 'account-required' : 'no-administered-account',
-    accounts.length ? `Choose an account with --account <id>: ${choices}` : 'You are not an administrator of any account.'
+    accounts.length ? 'account-required' : 'no-deployable-account',
+    accounts.length
+      ? `Choose an account with --account <id>: ${choices}`
+      : 'You may not deploy integrations to any account of this instance. An account admin must turn on the hosted-integrations module and give your role "Can deploy integrations" (PRO licence required).'
   )
 }
 
@@ -696,10 +702,26 @@ const commands = {
     const instance = resolveInstance(flags)
     const accountId = await resolveAccount(instance, flags)
     const directory = positional[1] || 'bundle'
-    const apiPath = `/accounts/${encodeURIComponent(accountId)}/integrations/${encodeURIComponent(integrationId)}/bundle`
+    const apiPath = `/accounts/${encodeURIComponent(accountId)}/integrations/${encodeURIComponent(integrationId)}/bundle${flags.version ? `?version=${encodeURIComponent(flags.version)}` : ''}`
     const response = await api(instance, 'GET', apiPath)
     const files = extractZip(Buffer.from(await response.arrayBuffer()), directory)
     return { result: { directory, files }, text: `Extracted ${files.length} files to ${directory}.` }
+  },
+
+  async rollback({ positional, flags }) {
+    const integrationId = requireIntegrationId(positional)
+    if (!flags.version) {
+      throw new CliError('version-required', 'Name the version to make live with --version N. `list --json` shows the kept versions.')
+    }
+    const instance = resolveInstance(flags)
+    const accountId = await resolveAccount(instance, flags)
+    const apiPath = `/accounts/${encodeURIComponent(accountId)}/integrations/${encodeURIComponent(integrationId)}/rollback`
+    const response = await api(instance, 'POST', apiPath, undefined, { version: Number(flags.version) })
+    const { integration } = await response.json()
+    return {
+      result: { integrationId, version: integration.hosted.version, url: integration.url },
+      text: `${integration.name} is now version ${integration.hosted.version}, built from version ${flags.version}.\n${integration.url}`,
+    }
   },
 
   async delete({ positional, flags }) {
@@ -815,7 +837,7 @@ const [commandName, ...rest] = process.argv.slice(2)
 const { positional, flags } = parseArgs(rest)
 try {
   if (!Object.hasOwn(commands, commandName)) {
-    throw new CliError('unknown-command', `Usage: ft-integrations.mjs <${Object.keys(commands).join('|')}> [--url <instance>] [--account <id>] [--json]`)
+    throw new CliError('unknown-command', `Usage: ft-integrations.mjs <${Object.keys(commands).join('|')}> [--url <instance>] [--account <id>] [--json]\n  rollback <integrationId> --version N\n  pull <integrationId> [dir] [--version N]`)
   }
   const { result, text } = await commands[commandName]({ positional, flags })
   console.log(flags.json ? JSON.stringify(result) : text)
