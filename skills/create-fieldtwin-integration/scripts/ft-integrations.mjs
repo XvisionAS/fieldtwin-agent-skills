@@ -150,7 +150,7 @@ function assertValidTokens(tokens, isCodeExchange) {
 
 /**
  * @param {string} instance
- * @returns {Promise<{enabled: boolean, clientId: string, loginUrl: string, integrationsOrigin: string, maxBundleBytes: number}>}
+ * @returns {Promise<{enabled: boolean, clientId: string, loginUrl: string, integrationsUrl: string, maxBundleBytes: number}>}
  */
 async function getConfig(instance) {
   const hostingDisabled = new CliError('hosting-disabled', `Integration hosting is not enabled on ${instance}.`)

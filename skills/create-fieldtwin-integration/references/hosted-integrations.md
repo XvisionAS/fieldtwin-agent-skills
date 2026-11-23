@@ -1,7 +1,7 @@
 # Deploying to FieldTwin hosting
 
 Some FieldTwin instances can host a static integration themselves: the instance stores the built
-files, serves them from its own hostname, and registers the integration in the account. Use it for
+files, serves them under `<instance>/integration/`, and registers the integration in the account. Use it for
 the single-page shape and for any integration that builds to static files. An integration that
 needs a backend cannot be deployed this way; use the full repository shape.
 
