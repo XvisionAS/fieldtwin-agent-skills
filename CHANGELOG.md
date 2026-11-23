@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.14.0 - 2026-11-23
+## 0.15.0 - 2026-11-23
 
 - Added `rollback <integrationId> --version N` and `pull --version N` to `ft-integrations.mjs`:
   FieldTwin keeps ten versions of each hosted integration, and a kept version can be made live
@@ -9,6 +9,13 @@
   under a PRO licence, on accounts with the `hosted-integrations` module. The errors
   `not-account-admin` and `no-administered-account` became `not-allowed`, `module-not-enabled`
   and `no-deployable-account`.
+- The skill deploys only through the script, never through FieldTwin Admin or a browser, and says
+  what to do when an agent sandbox blocks the network. `develop-fieldtwin-integration` points to
+  it, so an agent with only that skill installed does not fall back to the Admin upload.
+- The hosting reference says FieldTwin serves hosted integrations under `<instance>/integration/`.
+
+## 0.14.0 - 2026-11-23
+
 - Added deployment to FieldTwin integration hosting to `create-fieldtwin-integration`:
   `scripts/ft-integrations.mjs` logs the user in through their browser and deploys or updates a
   static integration on a FieldTwin instance that hosts integrations, and
@@ -24,9 +31,6 @@
   refused token refresh (400, 401, 403) drops the stored login.
 - Flags accept `--name=value` as well as `--name value`, and `delete` removes the project link when
   it pointed at the deleted integration.
-- The skill deploys only through the script, never through FieldTwin Admin or a browser, and says
-  what to do when an agent sandbox blocks the network. `develop-fieldtwin-integration` points to
-  it, so an agent with only that skill installed does not fall back to the Admin upload.
 - The hosting reference lists every error the script reports, explains the one-login-per-instance
   rule, and `SKILL.md` no longer asks a hosted page for absolute manifest URLs.
 
