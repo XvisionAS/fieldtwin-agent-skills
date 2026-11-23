@@ -344,20 +344,26 @@ async function login(instance, shouldOpenBrowser) {
 // ---- zip ------------------------------------------------------------------------------------
 
 /**
- * Every file under a directory, as sorted forward-slash paths relative to it.
+ * Every public file under a directory, as sorted forward-slash paths relative to it. Bundles are
+ * public, so dot-files, dot-directories and node_modules are left out at any depth.
  * @param {string} directory
+ * @param {{excluded?: string, skipped: {count: number}}} options `excluded` is an absolute path
+ *   that is never listed; `skipped.count` counts the dot-entries and node_modules left out
  * @param {string} [prefix]
  * @returns {string[]}
  */
-function listFiles(directory, prefix = '') {
+function listFiles(directory, options, prefix = '') {
   const names = []
   for (const entry of fs.readdirSync(path.join(directory, prefix), { withFileTypes: true })) {
     const relative = prefix ? `${prefix}/${entry.name}` : entry.name
-    if (entry.isSymbolicLink()) {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules') {
+      options.skipped.count++
+    } else if (path.resolve(directory, relative) === options.excluded) {
+      continue
+    } else if (entry.isSymbolicLink()) {
       throw new CliError('symlink-not-allowed', `${relative} is a symbolic link; bundles may not contain links.`)
-    }
-    if (entry.isDirectory()) {
-      names.push(...listFiles(directory, relative))
+    } else if (entry.isDirectory()) {
+      names.push(...listFiles(directory, options, relative))
     } else {
       names.push(relative)
     }
@@ -369,15 +375,18 @@ function listFiles(directory, prefix = '') {
  * Builds a zip of a directory. Entries are sorted and carry a fixed timestamp, so the same
  * files always give the same bytes and an unchanged redeploy is recognised by the server.
  * @param {string} directory
+ * @param {string} [excluded] a file inside the directory that must not be archived (the output)
+ * @param {{count: number}} [skipped] receives the number of entries left out, see listFiles
  * @returns {Buffer}
  */
-function createZip(directory) {
+function createZip(directory, excluded = undefined, skipped = { count: 0 }) {
+  const names = listFiles(directory, { excluded: excluded && path.resolve(excluded), skipped })
   const FIXED_DOS_DATE = 0x21 // 1980-01-01
   const UTF8_NAMES = 0x0800
   const localParts = []
   const centralParts = []
   let offset = 0
-  for (const name of listFiles(directory)) {
+  for (const name of names) {
     const content = fs.readFileSync(path.join(directory, name))
     const compressed = zlib.deflateRawSync(content, { level: 9 })
     const nameBytes = Buffer.from(name)
@@ -416,6 +425,17 @@ function createZip(directory) {
   end.writeUInt32LE(central.length, 12)
   end.writeUInt32LE(offset, 16)
   return Buffer.concat([...localParts, central, end])
+}
+
+/**
+ * Tells the agent, once, that entries were left out, so it can tell the user.
+ * @param {{count: number}} skipped
+ * @returns {void}
+ */
+function reportSkipped(skipped) {
+  if (skipped.count) {
+    console.error(`Left out ${skipped.count} dot-file, dot-directory or node_modules entries; bundles are public.`)
+  }
 }
 
 /**
@@ -592,7 +612,9 @@ const commands = {
         `${PROJECT_FILE} links ${project.instanceUrl} account ${project.accountId}, but this deploy targets ${instance} account ${accountId}. Pass the matching --url and --account, or remove ${PROJECT_FILE}.`
       )
     }
-    const zip = createZip(directory)
+    const skipped = { count: 0 }
+    const zip = createZip(directory, undefined, skipped)
+    reportSkipped(skipped)
     const target = project && project.integrationId
     const accountPath = `/accounts/${encodeURIComponent(accountId)}/integrations`
     const response = target
@@ -617,7 +639,9 @@ const commands = {
   async zip({ positional }) {
     const directory = positional[0] || 'dist'
     const output = positional[1] || 'bundle.zip'
-    fs.writeFileSync(output, createZip(directory))
+    const skipped = { count: 0 }
+    fs.writeFileSync(output, createZip(directory, output, skipped))
+    reportSkipped(skipped)
     return { result: { directory, output }, text: `Wrote ${output}.` }
   },
 
@@ -666,12 +690,26 @@ const commands = {
       fs.writeFileSync(path.join(source, 'manifest.json'), '{"name":"Check","url":"./index.html"}')
       fs.writeFileSync(path.join(source, 'index.html'), '<h1>é</h1>'.repeat(200))
       fs.writeFileSync(path.join(source, 'assets', 'app.js'), 'run()')
+      // What must never be published: dot-entries and installed packages.
+      fs.writeFileSync(path.join(source, '.env'), 'SECRET=1')
+      fs.mkdirSync(path.join(source, '.git'))
+      fs.writeFileSync(path.join(source, '.git', 'HEAD'), 'ref: refs/heads/main')
+      fs.mkdirSync(path.join(source, 'node_modules', 'x'), { recursive: true })
+      fs.writeFileSync(path.join(source, 'node_modules', 'x', 'i.js'), 'module.exports = 1')
 
       const first = createZip(source)
       if (!first.equals(createZip(source))) {
         throw new CliError('self-check-failed', 'The same files produced two different zips.')
       }
+      // The link file a deploy writes into the folder must not change the next bundle.
+      fs.writeFileSync(path.join(source, PROJECT_FILE), '{}')
+      if (!first.equals(createZip(source))) {
+        throw new CliError('self-check-failed', 'Dot-files or node_modules changed the bundle.')
+      }
       const names = extractZip(first, extracted)
+      if (names.join() !== 'assets/app.js,index.html,manifest.json') {
+        throw new CliError('self-check-failed', `The bundle holds ${names.join()} instead of only the public files.`)
+      }
       for (const name of ['assets/app.js', 'index.html', 'manifest.json']) {
         if (!fs.readFileSync(path.join(source, name)).equals(fs.readFileSync(path.join(extracted, name)))) {
           throw new CliError('self-check-failed', `${name} did not survive zip and extract.`)
