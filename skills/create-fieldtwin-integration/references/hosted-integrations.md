@@ -122,9 +122,9 @@ a kept version without changing what is live.
 | `hosting-disabled` | This instance does not host integrations. Offer the other deployment paths of this skill. |
 | `login-required` (exit 3) | Run `login`, then retry. |
 | `account-required` | The user may deploy to several accounts. Show them and pass `--account <id>`. |
-| `no-deployable-account` | The user may deploy to no account of this instance. An account admin must turn on the `hosted-integrations` module and give the user's role "Can deploy integrations" (PRO licence required). |
+| `no-deployable-account` | The user may deploy to no account of this instance. A FieldTwin super admin must turn on the `hosted-integrations` module for the account, and an account admin must give the user's role "Can deploy integrations" (PRO licence required). |
 | `not-allowed` | The user may not deploy to this account, or the integration was deployed by someone else. |
-| `module-not-enabled` | The account does not have the `hosted-integrations` module. An account admin must turn it on. |
+| `module-not-enabled` | The account does not have the `hosted-integrations` module. Only a FieldTwin super admin can turn it on. |
 | `version-required` | `rollback` needs `--version N`; `list --json` shows the kept versions. |
 | `version-not-kept` | That version is no longer kept. Choose one listed in `hosted.history` or the live one. |
 | `licence-does-not-allow-integrations` | The account's licence does not include integrations. |

@@ -601,7 +601,7 @@ async function resolveAccount(instance, flags) {
     accounts.length ? 'account-required' : 'no-deployable-account',
     accounts.length
       ? `Choose an account with --account <id>: ${choices}`
-      : 'You may not deploy integrations to any account of this instance. An account admin must turn on the hosted-integrations module and give your role "Can deploy integrations" (PRO licence required).'
+      : 'You may not deploy integrations to any account of this instance. A FieldTwin super admin must turn on the hosted-integrations module for the account, and an account admin must give your role "Can deploy integrations" (PRO licence required).'
   )
 }
 
