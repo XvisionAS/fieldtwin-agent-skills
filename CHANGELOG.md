@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.16.2 - 2026-11-25
+
+- Fixed the API failure and cancellation recipe, which called `subprojects/{id}/stagedAssets`
+  without the project ID. It now uses `v110SubProjectPath`.
+
 ## 0.16.1 - 2026-11-25
 
 - Both skills tell the agent how to talk to users who are not developers: plain words first, one

@@ -4,7 +4,7 @@ description: Develop, debug, test, and review FieldTwin integrations. Use for Fi
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.16.1"
+  version: "0.16.2"
 ---
 
 # Develop FieldTwin integrations
