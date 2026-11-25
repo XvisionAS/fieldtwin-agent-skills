@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.15.4 - 2026-11-25
+
+- Cut the create skill's instructions from 20 KB to 5 KB and shortened its description. The
+  full-repository contracts are read from the repository and deployment reference only.
+
 ## 0.15.3 - 2026-11-25
 
 - Compare each installed skill with its own version in the latest stable package release.
