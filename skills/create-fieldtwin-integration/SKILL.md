@@ -1,10 +1,10 @@
 ---
 name: create-fieldtwin-integration
-description: Create, scaffold, deploy, or update a FieldTwin integration, as a single static index.html page or a full repository (web app, manifest, Account Settings, Docker, Helm, Environment Modules, Tilt, devops.sh, build-pipeline.js). Use when starting an integration, choosing between the two shapes, deploying or publishing a static integration to a FieldTwin instance that hosts integrations, or promoting a prototype to a deployable repository.
+description: Create, scaffold, deploy, or update a FieldTwin integration, as a single static index.html page or a full repository (web app, manifest, Account Settings, Docker, Helm, Environment Modules, Tilt, devops.sh, build-pipeline.js). Use when starting an integration, choosing between the two shapes, deploying or publishing a static integration to a FieldTwin instance that hosts integrations, giving a static integration an API key that FieldTwin stores, or promoting a prototype to a deployable repository.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.15.4"
+  version: "0.16.0"
 ---
 
 # Create FieldTwin integrations
@@ -23,10 +23,16 @@ Recommend a shape with the reason, ask once, and proceed with it if the user doe
 - **Single page**: one `index.html` on any static host, with no build, Docker, Helm, or Tilt. Fits
   a demo, prototype, internal tool, or panel that only reads host events and calls the FieldTwin
   API with the host-issued token.
-- **Full repository**: required for a server-side secret or vault, OAuth flow, inbound webhook,
+- **Full repository**: required for a credential vault of its own, per-user credentials, an OAuth
+  flow, inbound webhook,
   automation `readUrl`/`invokeUrl`, `dynamicPagesUrl` endpoint, Account Settings provider
   administration, persistence, background worker, Kubernetes or build-bot deployment, or
   server-side JWT verification.
+
+An API key for a remote API does not rule out a single page: FieldTwin stores the key for the
+account and sends the request itself, and non-secret setup lives in `vendorAttributes` of the
+account or project. Read [integration secrets](references/integration-secrets.md) and generate the
+settings page it describes.
 
 To promote a single page later, create the repository and move the page into it; the bridge,
 message, and API code carry over.
@@ -37,7 +43,7 @@ When the user asks to deploy, publish, or update a static integration on a Field
 hosts integrations, read [hosted integrations](references/hosted-integrations.md) and use
 `scripts/ft-integrations.mjs`. Deploy only through this script, even when it fails: never upload,
 create, or edit the integration through FieldTwin Admin or by driving a browser. An integration
-that needs a backend cannot be hosted this way.
+that needs a backend cannot be hosted this way; one that only needs an API key can.
 
 ## Single page
 

@@ -3,7 +3,9 @@
 Some FieldTwin instances can host a static integration themselves: the instance stores the built
 files, serves them under `<instance>/integration/`, and registers the integration in the account. Use it for
 the single-page shape and for any integration that builds to static files. An integration that
-needs a backend cannot be deployed this way; use the full repository shape.
+needs a backend cannot be deployed this way; use the full repository shape. Calling a remote API
+with a key is not a reason for a backend: FieldTwin stores the key and makes the call, as
+[integration-secrets.md](integration-secrets.md) describes.
 
 `scripts/ft-integrations.mjs` does the work. It needs Node 20.15 or later and has no dependencies.
 Add `--json` to every call you parse.
@@ -30,7 +32,9 @@ Add `--json` to every call you parse.
   still applies.
 - **Relative asset paths and hash routing.** The page is served under a path, not at the root of
   its host, and unknown paths are not rewritten to `index.html`. With Vite, set `base: './'`.
-- **No secrets.** The files are public to anyone who has the URL.
+- **No secrets in the files.** They are public to anyone who has the URL. An API key is entered
+  by an account admin on the integration's settings page and kept by FieldTwin; non-secret setup
+  goes in `vendorAttributes`. Both are in [integration-secrets.md](integration-secrets.md).
 - **Only public files are packaged.** Dot-files (`.env`, `.fieldtwin.json`), dot-directories
   (`.git`) and `node_modules` are never uploaded, at any depth; the script says how many it left
   out. A single-page integration should still live in a folder of its own that holds only what is

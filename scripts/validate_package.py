@@ -60,7 +60,11 @@ DEVELOP_INTEGRATION_FILES = {
     "scripts/query-api-attributes.py",
     "scripts/query-postmessage-attributes.py",
 }
-CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md", "hosted-integrations.md"}
+CREATE_INTEGRATION_REFERENCES = {
+    "repository-and-deployment.md",
+    "hosted-integrations.md",
+    "integration-secrets.md",
+}
 CREATE_INTEGRATION_FILES = {"scripts/check-update.mjs", "scripts/ft-integrations.mjs"}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
