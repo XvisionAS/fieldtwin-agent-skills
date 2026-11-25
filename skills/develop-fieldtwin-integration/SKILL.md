@@ -4,7 +4,7 @@ description: Develop, debug, test, and review FieldTwin integrations. Use for Fi
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.16.0"
+  version: "0.16.1"
 ---
 
 # Develop FieldTwin integrations
@@ -52,4 +52,18 @@ their installer. Continue if the check is unavailable. Install updates only on r
 - A static integration needs no backend for a remote API key or its settings. Before writing a
   settings page or remote API call, read that skill's `references/integration-secrets.md`.
 
-Report what changed, the checks run, and any release-specific compatibility limits.
+## Test in FieldTwin
+
+Whenever a FieldTwin instance and a browser tool are available, test in the real application
+before reporting the work done. Unit tests and a page opened on its own do not prove the bridge.
+
+- Open a project the user names, open the integration's tab, and exercise what was built or
+  changed: the load, a selection, each API call, and the pop-out when it matters.
+- Let the user sign in themselves. Never ask for or type a password.
+- Read the console and network errors, fix them, and test again.
+- Change project data only when the test needs it and the user agrees.
+- If it cannot be tested this way, say so and give the user the steps to check it.
+
+Report in plain words first: what changed for the user, how to see it in FieldTwin, and what they
+or an admin still have to do. Then list the checks run and any release-specific compatibility
+limits. When something fails, say what it means and the next step.

@@ -20,7 +20,13 @@ Add `--json` to every call you parse.
 
 ## What a hosted integration must be
 
-- **Static files only.** No server code, no `dynamicPagesUrl`, no proxy, no OAuth client.
+- **Static files only.** No server code, no proxy, no OAuth client.
+- **Several tabs come from a pages file.** Set `dynamicPagesUrl` to a JSON file of the bundle
+  (`./pages.json`) holding an array of pages. Each page has a `title` and an `iframeUrl`, and may
+  set `path`, `logo`, `tabPosition`, `showInDesigner` and `showInOperation`. `iframeUrl` and `logo`
+  name files of the bundle, relative to the pages file. `url` may then be omitted. An instance
+  that does not support this yet answers `unsupported-manifest-field`: keep the views in one page
+  with hash routing instead.
 - **A `manifest.json` at the root of the build output**, next to `index.html`. With a bundler, put
   it in the folder copied as is to the output (`public/` with Vite) so it lands in `dist/`.
 - **Relative manifest URLs.** `url`, `logo`, `backgroundUrl`, `accountSettingsUrl` and
@@ -40,6 +46,15 @@ Add `--json` to every call you parse.
   out. A single-page integration should still live in a folder of its own that holds only what is
   meant to be public, rather than in a project root.
 - At most 25 MB zipped, 100 MB unzipped, 2000 files, no symbolic links.
+
+A pages file with a panel and an export dialog:
+
+```json
+[
+  { "title": "Overview", "path": "overview", "iframeUrl": "./index.html" },
+  { "title": "Export", "path": "export", "iframeUrl": "./export.html", "tabPosition": "main-toolbar-dialog" }
+]
+```
 
 A minimal manifest:
 
@@ -133,6 +148,7 @@ a kept version without changing what is live.
 | `version-not-kept` | That version is no longer kept. Choose one listed in `hosted.history` or the live one. |
 | `licence-does-not-allow-integrations` | The account's licence does not include integrations. |
 | `missing-manifest`, `invalid-manifest`, `manifest-url-not-in-bundle`, `unsupported-manifest-field` | Fix `manifest.json`; `detail` names the field. |
+| `invalid-dynamic-pages` | Fix the pages file `dynamicPagesUrl` names; `detail` names the page and field. Every page needs a `title` and an `iframeUrl` that is a file of the bundle. |
 | `bundle-too-large`, `too-many-files`, `symlink-not-allowed`, `unsafe-entry-name` | Fix the build output; `detail` names the entry. |
 | `project-link-mismatch` | `.fieldtwin.json` points at another instance or account than this deploy. Pass the matching `--url` and `--account`, or remove the file. |
 | `insecure-instance-url` | The instance URL must be `https`. Correct `--url`. |

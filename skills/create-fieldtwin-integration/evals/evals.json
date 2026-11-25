@@ -48,6 +48,12 @@
       "prompt": "Build me a single index.html FieldTwin integration. It needs to store our Jira API token so the backend can create issues from a webhook.",
       "expected_output": "The full-repository shape recommended instead, with the reason stated plainly: a server-side secret, a vault boundary, and an inbound webhook cannot live in a static file. The user is asked to confirm, and the repository scaffold follows only after that.",
       "files": []
+    },
+    {
+      "id": 9,
+      "prompt": "Make me a simple FieldTwin panel that lists open work orders from our maintenance system's REST API. It needs our API key. I'm not a developer, I just want it running on our FieldTwin.",
+      "expected_output": "The single-page shape is kept and explained in plain words: an API key alone does not need a backend because FieldTwin stores it and sends the request. One question at a time, starting with what cannot be found out such as the FieldTwin URL. The result has index.html, manifest.json with accountSettingsUrl, and a settings page with an empty password input, a narrow urlPrefix and no key in any file. It is deployed only through ft-integrations.mjs after telling the user a browser tab opens for sign-in. The panel is opened in the real FieldTwin application and exercised when a browser tool is available, with the user signing in themselves, or the answer says it was not tested and how to check it. The closing message says how to see the panel and that an account admin must enter the key in the integration's settings.",
+      "files": []
     }
   ]
 }

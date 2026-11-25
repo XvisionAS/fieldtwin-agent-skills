@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.16.1 - 2026-11-25
+
+- Both skills tell the agent how to talk to users who are not developers: plain words first, one
+  question at a time, what is about to happen, and who does the next step after a failure.
+- Both skills ask the agent to test the integration in the real FieldTwin application whenever
+  an instance and a browser tool are available, and to say so when it could not.
+- `create-fieldtwin-integration` says where an integration should appear: a one-off task such as
+  an export opens as a toolbar dialog, and a hosted integration can list several tabs in a pages file of its bundle.
+- `create-fieldtwin-integration` no longer lists every Account Settings page as needing a full
+  repository, and a single page may ship a settings page for its API key.
+
 ## 0.16.0 - 2026-11-25
 
 - Added `references/integration-secrets.md` to `create-fieldtwin-integration`: a static or hosted
