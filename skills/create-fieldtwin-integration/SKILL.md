@@ -4,7 +4,7 @@ description: Create and scaffold a FieldTwin external integration, either as a s
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.15.2"
+  version: "0.15.3"
 ---
 
 # Create FieldTwin Integrations

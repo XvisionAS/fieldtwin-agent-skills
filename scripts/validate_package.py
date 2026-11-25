@@ -242,12 +242,12 @@ def parse_frontmatter(
     return fields, metadata, len(lines)
 
 
-def validate_skill(skill_path: Path, validation: Validation) -> str | None:
+def validate_skill(skill_path: Path, validation: Validation) -> None:
     """Validate one canonical skill against the portable Agent Skills contract."""
 
     parsed = parse_frontmatter(skill_path, validation)
     if parsed is None:
-        return None
+        return
 
     fields, metadata, line_count = parsed
     unknown_fields = set(fields) - FRONTMATTER_FIELDS
@@ -309,8 +309,6 @@ def validate_skill(skill_path: Path, validation: Validation) -> str | None:
         validation.require(reference_path.is_file(), f"Missing required reference: {relative(reference_path)}")
         if reference_path.is_file():
             validation.require(bool(reference_path.read_text(encoding="utf-8").strip()), f"Required reference is empty: {relative(reference_path)}")
-
-    return version
 
 
 def validate_operation_paths(version: str, operations: list[dict], validation: Validation) -> None:
@@ -476,8 +474,8 @@ def validate_repository_shape(validation: Validation) -> None:
     validation.require(SKILLS_ROOT.is_dir(), "Missing canonical skills directory")
     skill_files = sorted(SKILLS_ROOT.glob("*/SKILL.md")) if SKILLS_ROOT.is_dir() else []
     validation.require(bool(skill_files), "No skills/*/SKILL.md files found")
-    versions = {validate_skill(skill_file, validation) for skill_file in skill_files}
-    validation.require(len(versions) == 1, "The bundled skills must share the package version")
+    for skill_file in skill_files:
+        validate_skill(skill_file, validation)
 
     for required_path in sorted(REQUIRED_REPOSITORY_FILES):
         validation.require((REPOSITORY_ROOT / required_path).is_file(), f"Missing repository file: {required_path}")

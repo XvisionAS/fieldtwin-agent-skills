@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.15.3 - 2026-11-25
+
+- Compare each installed skill with its own version in the latest stable package release.
+
 ## 0.15.2 - 2026-11-25
 
 - Both skills check for a newer stable release and explain how to update the installed copy.

@@ -9,7 +9,7 @@ This repository publishes two complementary skills:
   validation path for a new deployable integration.
 - **Develop FieldTwin Integration** — build, run, debug, test, and review FieldTwin custom-tab integrations and their Operation Mode host behavior, including the local Tilt/Helm path, HTTP/HTTPS URL generation, iframe lifecycle, API authentication, `postMessage`, pop-out windows, system highlighting, settings, and protocol tests.
 
-The skills are documentation and instructions, plus small helper scripts. There is no MCP server and no telemetry. `check-update.mjs` makes a read-only request for public release tags on GitHub. `ft-integrations.mjs` in `create-fieldtwin-integration` deploys a static integration to the FieldTwin instance URL you give it. To do that it logs you in through your browser and stores the resulting deploy token in your user configuration directory (`~/.config/fieldtwin/integrations.json`, `%APPDATA%` on Windows), readable only by you on macOS and Linux (file mode 0600); on Windows the file relies on your user profile's own protection. The token lets the script list the accounts you may deploy to and their integrations, and create, update, roll back and delete FieldTwin-hosted integrations there (you may deploy to an account if you are its admin, or if your role grants "Can deploy integrations" under a PRO licence and the account has the hosted-integrations module; without admin rights you manage only the integrations you created); it gives no access to project data; it expires after 7 days.
+The skills are documentation and instructions, plus small helper scripts. There is no MCP server and no telemetry. `check-update.mjs` reads public release tags and skill metadata from GitHub. `ft-integrations.mjs` in `create-fieldtwin-integration` deploys a static integration to the FieldTwin instance URL you give it. To do that it logs you in through your browser and stores the resulting deploy token in your user configuration directory (`~/.config/fieldtwin/integrations.json`, `%APPDATA%` on Windows), readable only by you on macOS and Linux (file mode 0600); on Windows the file relies on your user profile's own protection. The token lets the script list the accounts you may deploy to and their integrations, and create, update, roll back and delete FieldTwin-hosted integrations there (you may deploy to an account if you are its admin, or if your role grants "Can deploy integrations" under a PRO licence and the account has the hosted-integrations module; without admin rights you manage only the integrations you created); it gives no access to project data; it expires after 7 days.
 
 ## Install
 
@@ -63,10 +63,10 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 
 ## Update
 
-Each skill checks for a newer stable release on first use in a task. You can also run
-`node scripts/check-update.mjs` from the installed skill folder. The check reads the local
-`metadata.version` and compares it with the latest stable `vX.Y.Z` tag. It times out after
-four seconds and leaves the task and installation usable offline.
+Both skills ask the agent to check for updates on first use in a task. You can also run
+`node scripts/check-update.mjs` from the installed skill folder. It compares the installed
+`metadata.version` with that same skill’s version in the latest stable `vX.Y.Z` tag. The
+requests share a four-second timeout, so work can continue when GitHub is unavailable.
 
 Use the same installer and scope you originally used:
 
