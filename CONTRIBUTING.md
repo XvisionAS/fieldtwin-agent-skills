@@ -8,7 +8,7 @@ Before opening a change:
 2. Use fictional identifiers, domains, tags, coordinates, and measurements in every example.
 3. Never add JWTs, API tokens, customer data, private endpoints, internal repository paths, or unpublished implementation details.
 4. Keep browser examples safe by default: exact origins, pinned source windows, memory-only credentials, and explicit cleanup.
-5. Update the skill metadata version and changelog when installed behavior changes.
+5. Keep both skills at the package version. For each stable release, match both skill metadata versions, the changelog heading, and the `vX.Y.Z` tag.
 6. Keep canonical skills under `skills/<skill-name>`; do not duplicate them in agent-specific wrappers.
 7. Run `python3 scripts/validate_package.py` and `skills-ref validate` for every changed skill before publishing.
 

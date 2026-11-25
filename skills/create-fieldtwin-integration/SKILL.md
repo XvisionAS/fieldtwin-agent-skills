@@ -4,12 +4,16 @@ description: Create and scaffold a FieldTwin external integration, either as a s
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.8.0"
+  version: "0.15.2"
 ---
 
 # Create FieldTwin Integrations
 
 Create the smallest thing that works: a single static page when that is enough, otherwise one repository that developers, Tilt, the build bot, Helm, and FieldTwin can all use without maintaining separate deployment paths. Use `develop-fieldtwin-integration` alongside this skill for the browser bridge, manifest protocol, JWT lifecycle, messages, and protocol tests.
+
+On first use in a task, run `node <skill-dir>/scripts/check-update.mjs`. If it finds a newer
+release, tell the user the installed and available versions and the update command for
+their installer. Continue if the check is unavailable. Install updates only on request.
 
 ## 0. Choose the integration shape first
 

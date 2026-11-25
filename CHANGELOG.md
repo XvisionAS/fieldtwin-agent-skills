@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.15.2 - 2026-11-25
+
+- Both skills check for a newer stable release and explain how to update the installed copy.
+
 ## 0.15.1 - 2026-11-25
 
 - Shortened the integration skill and routed detailed guidance to focused references.

@@ -4,7 +4,7 @@ description: Develop, debug, test, and review FieldTwin integrations. Use for Fi
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.15.1"
+  version: "0.15.2"
 ---
 
 # Develop FieldTwin integrations
@@ -13,6 +13,10 @@ Read only the reference needed for the task. Use the [documentation map](referen
 for other topics and the [integration guide](integration/README.md) for host examples.
 The target release's public contract takes precedence. For a protocol change, update both sides,
 document compatibility, and test the changed exchange.
+
+On first use in a task, run `node <skill-dir>/scripts/check-update.mjs`. If it finds a newer
+release, tell the user the installed and available versions and the update command for
+their installer. Continue if the check is unavailable. Install updates only on request.
 
 ## REST API
 
