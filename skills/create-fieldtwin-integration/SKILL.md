@@ -1,10 +1,10 @@
 ---
 name: create-fieldtwin-integration
-description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation, deploying or updating a static integration on a FieldTwin instance that hosts integrations. ALWAYS use when starting a new FieldTwin integration, deploying, publishing or updating a static integration on a FieldTwin instance, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
+description: Create and scaffold a FieldTwin external integration, either as a single self-contained index.html page or as a production-ready repository, including the web application, manifest and dynamic pages, Account Settings provider administration, Docker image, Helm chart, Environment Modules, Tilt local workflow, devops.sh commands, build-pipeline.js build-bot entrypoint, secrets boundary, and deployment validation, deploying or updating a static integration on a FieldTwin instance that hosts integrations, and API keys FieldTwin stores for a static integration. ALWAYS use when starting a new FieldTwin integration, deploying, publishing or updating a static integration on a FieldTwin instance, choosing between a single-page and a full-repository integration, building a quick or demo integration as one static HTML file, converting a prototype into a deployable integration, promoting a single-page integration to a repository, or adding the standard FutureOn Kubernetes repository architecture to an integration.
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.8.0"
+  version: "0.9.0"
 ---
 
 # Create FieldTwin Integrations
@@ -27,8 +27,14 @@ Recommend **single page** when the integration is a demo, prototype, proof of co
 tool, or one panel that only reads host events and calls the FieldTwin API with the host-issued
 token, and the user asks for something quick, simple, or easy to deploy.
 
+An API key for a remote API does not rule out a single page. FieldTwin stores the key for the
+account and sends the request itself, so the page never holds it, and non-secret setup lives in
+`vendorAttributes` of the account or the project. Read
+[references/integration-secrets.md](references/integration-secrets.md) and generate the settings
+page it describes.
+
 Recommend **full repository** when any of these is in scope, because none of them can live in a
-static file: a server-side secret or credential vault, an OAuth flow, an inbound webhook, an
+static file: a credential vault of its own, per-user credentials, an OAuth flow, an inbound webhook, an
 automation `readUrl`/`invokeUrl`, a `dynamicPagesUrl` endpoint, Account Settings provider
 administration, persistence, a background worker, a team deploying through Kubernetes or the build
 bot, or a server-side JWT verification boundary.
@@ -46,7 +52,8 @@ build output, and creates or updates the integration in their account. Read
 must be and for the deploy workflow. Use it whenever the user asks to deploy, publish or update a
 static integration and names a FieldTwin instance. Deploy only through this script: never upload,
 create or edit the integration through FieldTwin Admin or by driving a browser, even when the
-script fails. An integration that needs a backend cannot be deployed this way.
+script fails. An integration that needs a backend cannot be deployed this way; one that only needs
+an API key can, with [references/integration-secrets.md](references/integration-secrets.md).
 Account admins and members whose role has "Can deploy integrations" (PRO licence, account with the
 `hosted-integrations` module) may deploy; Admin access is not needed. Kept versions can be restored
 with `rollback`.

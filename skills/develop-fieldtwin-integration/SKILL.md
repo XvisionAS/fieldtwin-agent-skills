@@ -4,7 +4,7 @@ description: Develop, run, debug, test, and review FieldTwin external integratio
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.12.0"
+  version: "0.13.0"
 ---
 
 # Develop FieldTwin Integrations
@@ -35,6 +35,12 @@ Read the public [integration guide](integration/README.md) and [references/docum
 - [references/security-and-testing.md](references/security-and-testing.md) before implementing message code and before handoff.
 
 When the user's repository also contains an integration guide, read the relevant sections and reconcile them with the current public FieldTwin documentation. A deployed environment's released contract wins over bundled examples. Never infer a new protocol field from naming symmetry.
+
+When a static integration needs an API key for a remote API, or a place for its settings, it does
+not need a backend: FieldTwin stores the key write-only and sends the request, and non-secret setup
+goes in `vendorAttributes` of the account or the project. Read
+`references/integration-secrets.md` of the `create-fieldtwin-integration` skill before writing a
+settings page or a remote API call.
 
 To deploy, publish or update a static integration on a FieldTwin instance that hosts integrations,
 use the `create-fieldtwin-integration` skill and its `scripts/ft-integrations.mjs`. If that skill
