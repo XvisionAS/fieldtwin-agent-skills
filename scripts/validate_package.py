@@ -58,7 +58,6 @@ DEVELOP_INTEGRATION_FILES = {
     "scripts/generate-postmessage-catalog.mjs",
     "scripts/query-api-attributes.py",
     "scripts/query-postmessage-attributes.py",
-    "scripts/schema-loader.mjs",
 }
 CREATE_INTEGRATION_REFERENCES = {"repository-and-deployment.md", "hosted-integrations.md"}
 CREATE_INTEGRATION_FILES = {"scripts/ft-integrations.mjs"}
@@ -311,6 +310,34 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
             validation.require(bool(reference_path.read_text(encoding="utf-8").strip()), f"Required reference is empty: {relative(reference_path)}")
 
 
+def validate_operation_paths(version: str, operations: list[dict], validation: Validation) -> None:
+    """Require unique operations and descriptions on URL and header inputs."""
+
+    seen = set()
+    for operation in operations:
+        path = operation["path"]
+        method = operation["method"]
+        key = (method, path)
+        validation.require(key not in seen, f"Duplicate {version} operation: {method} {path}")
+        seen.add(key)
+        if version == "v1.10":
+            placeholders = set(re.findall(r":([\w]+)", path))
+        else:
+            placeholders = set(re.findall(r"\{([\w]+)\}", path))
+        parameters = {
+            attribute["path"] for attribute in operation["attributes"]
+            if attribute["location"] == "path"
+        }
+        for attribute in operation["attributes"]:
+            if attribute["location"] in {"path", "query", "header"}:
+                validation.require(
+                    bool(attribute.get("description")),
+                    f"Missing {attribute['location']} input description for {attribute['path']}: {method} {path}",
+                )
+        for missing in sorted(placeholders - parameters):
+            validation.require(False, f"Undocumented path input {missing}: {method} {path}")
+
+
 def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) -> None:
     """Check that generated API catalogs retain broad, queryable contract coverage."""
 
@@ -330,6 +357,7 @@ def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) ->
         validation.require(v110.get("apiVersion") == "v1.10", "v1.10 attribute catalog has the wrong apiVersion")
         validation.require(not v110.get("unresolvedApiUses"), "v1.10 attribute catalog has unresolved @apiUse definitions")
         validation.require(isinstance(operations, list) and len(operations) >= 250, "v1.10 attribute catalog lost operation coverage")
+        validate_operation_paths("v1.10", operations, validation)
         attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
         validation.require(len(attributes) >= 7_000, "v1.10 attribute catalog lost field coverage")
         validation.require(all(attribute.get("path") and attribute.get("location") for attribute in attributes), "v1.10 catalog contains an attribute without path/location")
@@ -353,6 +381,7 @@ def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) ->
         validation.require(len(write_attributes) >= 2_000, "v2 attribute catalog lost writable field coverage")
         validation.require(all(attribute.get("path") for attribute in read_attributes + write_attributes), "v2 catalog contains an attribute without a path")
         operations = v2.get("operations", [])
+        validate_operation_paths("v2.0", operations, validation)
         operation_attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
         validation.require(isinstance(operations, list) and len(operations) >= 32, "v2 attribute catalog lost OpenAPI operation coverage")
         validation.require(len(operation_attributes) >= 7_000, "v2 attribute catalog lost OpenAPI field coverage")

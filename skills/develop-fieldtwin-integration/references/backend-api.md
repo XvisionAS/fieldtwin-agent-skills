@@ -7,8 +7,7 @@ action uses both.
 This reference covers the rules shared by API v1.10 and v2.0. Continue with
 [backend-api-v1.10.md](backend-api-v1.10.md), [backend-api-v2.0.md](backend-api-v2.0.md), and
 [backend-api-batch.md](backend-api-batch.md) for their exact shapes. Use
-[api-attributes.md](api-attributes.md) for the generated, operation-specific list of every request
-and response field.
+[api-attributes.md](api-attributes.md) for operation-specific request and response fields and the exact lookup workflow.
 
 ## Choose the deployed contract first
 
@@ -22,9 +21,8 @@ as deployment data, not constants:
 - before opting into v2, verify that the target tenant serves its v2 OpenAPI document and that the
   required operations are present.
 
-As verified on 2026-08-22, the public roadmap describes v1.10 as the generally supported version
-and v2.0 as the normalized API arriving with FieldTwin 8.3. Tenant rollout can differ. The target
-tenant's live contract wins.
+Check the target release for availability. The generated v2 OpenAPI lives at
+`/API/v2.0/documentation/oas3.json` where supported.
 
 | Need | v1.10 | v2.0 |
 | --- | --- | --- |
@@ -43,6 +41,14 @@ Public sources:
 - [API basics and authentication](https://docs.fieldtwin.com/developer-portal/apibasics/)
 - [API roadmap and lifecycle](https://docs.fieldtwin.com/developer-portal/xroadmap/)
 - [Official curl and Postman examples](https://docs.fieldtwin.com/developer-portal/postman/)
+
+## Resolve each operation before sending
+
+Use the [exact lookup workflow](api-attributes.md#resolve-an-operation) to identify the method,
+path, accepted input locations, and response. A type like `string` does not specify which resource
+or namespace an ID belongs to. Trace it to its defining response, named bootstrap field, or
+user input. Treat opaque IDs and cursors as returned values, including case and punctuation.
+Use the operation's declared query serialization, units, enum values, and default rules.
 
 ## Construct the API root without losing a base path
 

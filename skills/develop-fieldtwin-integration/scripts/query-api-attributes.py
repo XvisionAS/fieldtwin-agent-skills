@@ -21,18 +21,27 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--method", choices=("get", "post", "patch", "delete", "put"))
     parser.add_argument("--stream", help="v2 stream: users, accounts, projects, subProjects, or workflowTasks")
     parser.add_argument("--resource", help="v2 resource type, or v1.10 group/path search term")
-    parser.add_argument("--path", help="v1.10 endpoint path substring")
+    paths = parser.add_mutually_exclusive_group()
+    paths.add_argument("--path", help="Discover operations by case-insensitive path substring")
+    paths.add_argument("--exact-path", help="Require one exact catalog path template and --method")
     parser.add_argument("--group", help="v1.10 ApiDoc group substring")
     parser.add_argument("--field", help="Attribute path substring")
     parser.add_argument(
         "--location",
         choices=("header", "path", "query", "body", "response"),
-        help="v1.10 attribute location",
+        help="Filter operation attributes by location",
     )
     parser.add_argument("--list-resources", action="store_true")
     parser.add_argument("--list-operations", action="store_true")
     parser.add_argument("--json", action="store_true", help="Emit filtered JSON instead of tables")
-    return parser.parse_args()
+    arguments = parser.parse_args()
+    if arguments.exact_path:
+        if not arguments.method:
+            parser.error("--exact-path requires --method")
+        if any((arguments.stream, arguments.resource, arguments.group,
+                arguments.list_resources, arguments.list_operations)):
+            parser.error("--exact-path selects one operation and cannot be combined with discovery filters")
+    return arguments
 
 
 def load_catalog(version: str) -> dict[str, Any]:
@@ -43,6 +52,24 @@ def load_catalog(version: str) -> dict[str, Any]:
         return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         raise SystemExit(f"Missing generated catalog: {path}") from None
+
+
+def select_exact_operation(catalog: dict[str, Any], arguments: argparse.Namespace) -> None:
+    """Narrow to one documented operation before applying attribute filters."""
+
+    method = arguments.method.upper()
+    path = arguments.exact_path
+    matches = [operation for operation in catalog["operations"]
+               if operation["method"] == method and operation["path"] == path]
+    if len(matches) != 1:
+        raise SystemExit(
+            f"Expected one documented operation for {method} {path}, found {len(matches)}. "
+            "Check --list-operations and the target release's documentation."
+        )
+    attributes = filter_attributes(matches[0]["attributes"], arguments.field, arguments.location)
+    if (arguments.field or arguments.location) and not attributes:
+        raise SystemExit(f"No documented attributes match the filters for {method} {path}.")
+    catalog["operations"] = matches
 
 
 def contains(value: Any, search: str | None) -> bool:
@@ -126,6 +153,7 @@ def query_v110(catalog: dict[str, Any], arguments: argparse.Namespace) -> None:
         (
             arguments.method,
             arguments.path,
+            arguments.exact_path,
             arguments.group,
             arguments.resource,
             arguments.field,
@@ -147,13 +175,14 @@ def query_v110(catalog: dict[str, Any], arguments: argparse.Namespace) -> None:
         inherited = " (inherited from v1.9)" if operation.get("inherited") else ""
         print(f"\n### {operation['method']} {operation['path']}{inherited}\n")
         print_table(
-            ["Location", "Attribute", "Type", "Optional", "Description"],
+            ["Location", "Attribute", "Type", "Optional", "Default", "Description"],
             [
                 [
                     attribute["location"],
                     attribute["path"],
                     attribute["type"],
                     "yes" if attribute.get("optional") else "no",
+                    attribute.get("default"),
                     attribute.get("description"),
                 ]
                 for attribute in operation["attributes"]
@@ -264,7 +293,9 @@ def query_v2_operations(catalog: dict[str, Any], arguments: argparse.Namespace) 
                 "Type",
                 "Required",
                 "Media type",
+                "Status / variant",
                 "Allowed values",
+                "Default",
                 "Description",
             ],
             [
@@ -274,7 +305,9 @@ def query_v2_operations(catalog: dict[str, Any], arguments: argparse.Namespace) 
                     attribute["type"],
                     "yes" if attribute.get("required") else "no",
                     attribute.get("mediaType"),
+                    " / ".join(str(attribute[key]) for key in ("status", "variant") if key in attribute),
                     attribute.get("allowedValues"),
+                    attribute.get("default"),
                     attribute.get("description"),
                 ]
                 for attribute in operation["attributes"]
@@ -290,7 +323,7 @@ def query_v2(catalog: dict[str, Any], arguments: argparse.Namespace) -> None:
     if arguments.list_resources:
         list_v2_resources(catalog)
         return
-    if arguments.list_operations or arguments.path:
+    if arguments.list_operations or arguments.path or arguments.exact_path:
         query_v2_operations(catalog, arguments)
         return
     if not arguments.resource:
@@ -323,7 +356,7 @@ def query_v2(catalog: dict[str, Any], arguments: argparse.Namespace) -> None:
         for stream_name, stream in streams.items():
             if not stream:
                 raise SystemExit(f"Unknown v2 stream: {stream_name}")
-            resource = stream[method].get(arguments.resource)
+            resource = stream.get(method, {}).get(arguments.resource)
             if not resource:
                 continue
             attributes = filter_attributes(resource["attributes"], arguments.field)
@@ -383,6 +416,8 @@ def main() -> None:
 
     arguments = parse_arguments()
     catalog = load_catalog(arguments.version)
+    if arguments.exact_path:
+        select_exact_operation(catalog, arguments)
     if arguments.version == "v1.10":
         query_v110(catalog, arguments)
     else:

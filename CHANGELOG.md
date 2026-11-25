@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.15.1 - 2026-11-25
+
+- Shortened the integration skill and routed detailed guidance to focused references.
+- Regenerated API v1.10 and v2.0 catalogs and added a strict method and path lookup.
+- Documented metadata lookup parameters and the distinct REST and host metadata IDs.
+
 ## 0.15.0 - 2026-11-23
 
 - Added `rollback <integrationId> --version N` and `pull --version N` to `ft-integrations.mjs`:

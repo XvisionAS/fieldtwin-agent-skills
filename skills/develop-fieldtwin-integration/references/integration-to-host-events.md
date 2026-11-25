@@ -180,7 +180,8 @@ The reply preserves the request order among resources that resolve. Unknown IDs
 and unknown collections are omitted; the reply does not insert `null` or a
 per-item error. Returned resources contain their released attributes plus host
 query decorations such as `metaData`, `tags`, and applicable length or connection
-type values.
+type values. The host's metadata row `id` is the definition resource ID. For REST metadata rows,
+use `metaDatumId` instead. See [metadata lookup](backend-api-v1.10.md#read-metadata-for-a-selection).
 
 Account, project, and subproject IDs may be fully qualified as
 `resourceId:streamId`. When a root resource is in its main stream,

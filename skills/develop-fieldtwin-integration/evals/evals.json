@@ -174,6 +174,12 @@
       "prompt": "My FieldTwin video integration should reopen the same video at the same time when an Operate user shares their view. How do I opt in, which messages do I handle, and what should I store?",
       "expected_output": "Set supportShareView true on the integration or dynamic page (pages inherit and override, default false; each open supporting page is asked and restored separately with data.pageId = page path); Operation Mode only, loaded panels/pop-outs asked, not hidden background copies. Handle shareViewCapture data.requestId and answer via the pinned bridge with shareViewState {requestId, state}; state null/omitted means nothing to save; host waits up to 5 s per instance in parallel and leaves out late/invalid answers while still sharing; only the asked window may answer. State is plain JSON ≤64 KiB, max 16 integrations, keyed by integration ID or <integrationId>-dynamic-<path>. Always include a version and check it on restore; store IDs/time, never JWT or signed URLs. shareViewRestore data.state arrives once right after loaded, before data is ready: keep it, apply when loaded, validate as untrusted, skip inaccessible IDs, do not move the camera.",
       "files": []
+    },
+    {
+      "id": 30,
+      "prompt": "My hosted FieldTwin v1.10 selection inspector displays a choice field, but its GET to /metadatadefinition/Example%3APlant%5Bchoices%5D fails. Explain how to show the current value and look up the full definition, including when the row only contains definitionId.",
+      "expected_output": "Use the selected resource metadata row for its name and current value. Use metaDatumId on a REST resource metadata row or id on a host getResources metadata row as the single-definition path ID. Keep definitionId, the REST row id (link), and metaDatumLinkId out of that path. If only definitionId is present, match it exactly in the project-scoped definitions collection and take the returned object key, reusing the definition when possible. Leave missing or ambiguous matches unresolved.",
+      "files": []
     }
   ]
 }

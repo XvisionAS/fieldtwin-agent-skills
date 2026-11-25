@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
-import { register } from 'node:module'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
@@ -31,7 +30,6 @@ if (!sourceRoot) {
 }
 
 const resolvedSourceRoot = path.resolve(sourceRoot)
-register(new URL('./schema-loader.mjs', import.meta.url), import.meta.url)
 
 /**
  * Import a module from the FieldTwin source checkout.
@@ -72,7 +70,7 @@ function compact(value) {
 function normalizeAttributes(attributes) {
   const unique = new Map()
   for (const attribute of attributes) {
-    const key = `${attribute.location || ''}:${attribute.mediaType || ''}:${attribute.variant || ''}:${attribute.path}`
+    const key = `${attribute.location || ''}:${attribute.mediaType || ''}:${attribute.variant || ''}:${attribute.status || ''}:${attribute.path}`
     unique.set(key, compact(attribute))
   }
   return [...unique.values()].sort((left, right) =>
@@ -208,6 +206,10 @@ function v2OperationsFromOpenApi(document) {
           description: parameter.description,
           allowedValues: parameter.schema?.enum || parameter.schema?.items?.enum,
           default: parameter.schema?.default,
+          minimum: parameter.schema?.minimum,
+          maximum: parameter.schema?.maximum,
+          style: parameter.style,
+          explode: parameter.explode,
         })
       }
       for (const [mediaType, body] of Object.entries(operation.requestBody?.content || {})) {
@@ -219,18 +221,22 @@ function v2OperationsFromOpenApi(document) {
           }))
         )
       }
-      const successfulResponse = operation.responses?.['200'] || operation.responses?.[200]
-      const resolvedResponse = successfulResponse?.$ref
-        ? resolveOpenApiReference(document, successfulResponse.$ref)
-        : successfulResponse
-      for (const [mediaType, response] of Object.entries(resolvedResponse?.content || {})) {
-        attributes.push(
-          ...flattenOpenApiSchema(response.schema, document).map((attribute) => ({
-            ...attribute,
-            location: 'response',
-            mediaType,
-          }))
-        )
+      const responses = Object.entries(operation.responses || {})
+        .filter(([status]) => /^2[0-9X]{2}$/.test(status))
+      for (const [status, response] of responses) {
+        const resolvedResponse = response.$ref
+          ? resolveOpenApiReference(document, response.$ref)
+          : response
+        for (const [mediaType, content] of Object.entries(resolvedResponse.content || {})) {
+          attributes.push(
+            ...flattenOpenApiSchema(content.schema, document).map((attribute) => ({
+              ...attribute,
+              location: 'response',
+              mediaType,
+              status: status === '200' && responses.length === 1 ? undefined : status,
+            }))
+          )
+        }
       }
       operations.push({
         method: method.toUpperCase(),
@@ -523,30 +529,24 @@ async function generateV2Catalog() {
   }
 
   const originalFetch = globalThis.fetch
-  const originalLog = console.log
-  globalThis.fetch = async () => ({ ok: true, json: async () => manifest })
-  console.log = () => undefined
+  globalThis.fetch = async (url) => {
+    if (typeof url !== 'string' || !url.endsWith('/manifest')) {
+      throw new Error('Unexpected HTTP request during OpenAPI generation')
+    }
+    return { ok: true, json: async () => manifest }
+  }
   let apiDocument
   try {
-    const apiDocModule = await importSource(
+    const { buildApiDoc, oas3 } = await importSource(
       'backends',
       'fieldtwinapi',
-      'utils',
+      'apiDoc',
       'buildApiDoc.js'
     )
-    await apiDocModule.buildAPIDocResponsesSchemas()
-    const paths = {}
-    apiDocModule.addRootPath('users', paths, { noParameters: true })
-    apiDocModule.addRootPath('accounts', paths)
-    apiDocModule.addRootPath('projects', paths)
-    apiDocModule.addRootPath('subProjects', paths)
-    apiDocModule.addRootPath('workflowTasks', paths, { noParameters: true })
-    apiDocModule.addCustomPaths(paths)
-    apiDocModule.buildAPIDocRequestPath(paths)
-    apiDocument = apiDocModule.oas3
+    await buildApiDoc()
+    apiDocument = oas3
   } finally {
     globalThis.fetch = originalFetch
-    console.log = originalLog
   }
 
   return {
@@ -748,11 +748,16 @@ async function generateV110Catalog() {
   const combinedDefinitions = new Map([...v19.definitions, ...v110.definitions])
   const parsed110 = parseOperations('v1.10', v110.comments, combinedDefinitions)
   const effective = new Map()
-  for (const operation of parsed19.operations) {
-    effective.set(`${operation.method} ${operation.path} ${operation.name || ''}`, operation)
-  }
-  for (const operation of parsed110.operations) {
-    effective.set(`${operation.method} ${operation.path} ${operation.name || ''}`, operation)
+  for (const { operations } of [parsed19, parsed110]) {
+    const seen = new Set()
+    for (const operation of operations) {
+      const key = `${operation.method} ${operation.path}`
+      if (seen.has(key)) {
+        throw new Error(`Duplicate ApiDoc operation in ${operation.sourceVersion}: ${key}`)
+      }
+      seen.add(key)
+      effective.set(key, operation)
+    }
   }
   const operations = [...effective.values()].sort((left, right) =>
     `${left.path} ${left.method} ${left.name || ''}`.localeCompare(

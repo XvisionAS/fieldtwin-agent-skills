@@ -1,47 +1,41 @@
 # FieldTwin API attribute catalog
 
-Use this reference whenever a task asks which fields an API operation returns or accepts. The
-catalog distinguishes response attributes from request attributes and keeps v2 stream-specific
-schemas separate. Do not infer write access from a GET response or reuse one stream's schema in a
-different stream.
+Use these catalogs to confirm the public contract of one method and path at a time. The v1.10
+catalog indexes ApiDoc, including inherited v1.9 operations. The v2.0 catalog indexes OpenAPI
+operations plus stream-specific Joi write schemas and manifest read fields. Neither can fill
+gaps in the documentation for a target release.
 
-## Catalog files
+## Resolve an operation
 
-- `api-attributes-v1.10.json` contains every field documented on the effective v1.10 operation
-  surface: headers, path parameters, query parameters, request bodies, and success responses.
-  Operations implemented by v1.9 and inherited by v1.10 are normalized to the v1.10 URL and marked
-  `inherited`.
-- `api-attributes-v2.0.json` contains every readable resource attribute from the events manifest,
-  stream-specific GET additions/exclusions, and every POST, PATCH, and DELETE request field from
-  the per-stream Joi contracts. It also flattens every standard stream envelope and specialized
-  v2 endpoint from the generated OpenAPI document, including path/query/header/body/response
-  attributes and media-type variants.
+1. Select the deployed API version and use `--list-operations` with discovery filters
+   (`--path`, `--group`, or `--resource`) to locate the documented path template.
+2. Copy the full template and supply its method to `--exact-path`. A missing or ambiguous match
+   fails. Inspect path, query, headers, body and response separately with `--location`. For v2
+   stream writes, also look up the exact `--stream`, `--resource`, and `--method` for item fields.
+3. For each value, establish its source and meaning before serializing it. Check the resource
+   type and ownership, identifier namespace, branch qualification, units, enum values,
+   wire format, optionality, default and conditional requirements. Check the response status,
+   media type, and envelope before selecting fields. Follow the release's authentication and
+   paging or filter rules for that operation.
+4. Use the target release's ApiDoc/OpenAPI and released source or tests for any detail the
+   catalog cannot settle. Ask for the missing input or report the gap when these sources
+   cannot resolve it. A similarly named parameter in another operation is insufficient.
 
-The JSON files are generated artifacts. Query them with `scripts/query-api-attributes.py` instead
-of opening an entire catalog in the model context.
-
-## Fast lookup
-
-Run commands from the `develop-fieldtwin-integration` skill directory.
+Run from the skill directory. Quote the exact path template, including placeholders:
 
 ```bash
-python3 scripts/query-api-attributes.py --version v2.0 --list-resources
-python3 scripts/query-api-attributes.py --version v2.0 --stream subProjects --resource stagedAssets --method get
-python3 scripts/query-api-attributes.py --version v2.0 --stream subProjects --resource stagedAssets --method post
-python3 scripts/query-api-attributes.py --version v2.0 --stream accounts --resource users --method post
-python3 scripts/query-api-attributes.py --version v2.0 --list-operations
-python3 scripts/query-api-attributes.py --version v2.0 --path /schematics --method post
-python3 scripts/query-api-attributes.py --version v1.10 --resource stagedAsset --method get --list-operations
-python3 scripts/query-api-attributes.py --version v1.10 --path /stagedAsset/:stagedAssetId --method get
-python3 scripts/query-api-attributes.py --version v1.10 --group StagedAssets --field initialState
+python3 scripts/query-api-attributes.py --version v1.10 --method get --path metadatadefinition --list-operations
+python3 scripts/query-api-attributes.py --version v1.10 --method get --exact-path '/API/v1.10/metadatadefinition/:metaDataDefinitionId' --location path
+python3 scripts/query-api-attributes.py --version v2.0 --method get --exact-path '/API/v2.0/subProjects/{subProjectId}' --location query
+python3 scripts/query-api-attributes.py --version v2.0 --stream subProjects --resource stagedAssets --method patch --field initialState
 ```
 
-Add `--field <substring>` to narrow nested attributes, `--location body` or `--location response`
-for v1.10, and `--json` when another tool must consume the result.
-
-For v2, resource queries expose the reusable read/write model; `--path` exposes the complete
-OpenAPI operation including stream envelopes, specialized endpoint fields, and non-JSON response
-variants. Use both views when implementing a full request.
+Use `--field` for a substring within the selected operation. Use `--json` to see available
+machine-readable details such as query serialization, numeric bounds, and validation rules.
+Keep media types, success statuses and alternatives distinct. Consult the actual OpenAPI for
+composition and global security declarations. See [backend-api.md](backend-api.md) for common
+authentication and routing, and [backend-api-v2.0.md](backend-api-v2.0.md) for stream filters,
+including supported dynamic query keys. Avoid opening the generated JSON files wholesale.
 
 ## Interpret the results
 
@@ -122,7 +116,7 @@ From this skill directory, point the generator at a FieldTwin source checkout:
 node scripts/generate-api-attributes.mjs --source /path/to/FieldTwin
 ```
 
-The generator executes schema construction without starting services or connecting to data
-stores. Review the summary counts, query representative root/related resources in every stream,
+The generator uses the checkout’s ApiDoc annotations and runs its OpenAPI builder with a
+local Events manifest. It does not start services or fetch the manifest over the network. Review the summary counts, query representative root/related resources in every stream,
 and run the package validator. Commit both generated JSON files with the source documentation or
 schema change so the skill never describes a newer or older contract than its catalogs.

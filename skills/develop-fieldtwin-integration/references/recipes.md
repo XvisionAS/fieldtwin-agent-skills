@@ -250,6 +250,12 @@ bridge.send({
 
 Common documented levels are `info`, `success`, `warning`, and `error`. Use the values supported by the target FieldTwin release.
 
+## Display metadata for the current selection
+
+Display the metadata rows returned with the resource. If you need
+additional definition details, follow the [v1.10 metadata lookup](backend-api-v1.10.md#read-metadata-for-a-selection)
+to resolve the definition resource ID from the row.
+
 ## Keep selection separate from camera focus
 
 The `select` command focuses the camera by default when `focusSelection` is omitted. Set the field explicitly so an ordinary click does not unexpectedly zoom.
