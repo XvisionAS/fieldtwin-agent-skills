@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.16.3 - 2026-11-25
+
+- The hosting reference has a section on the pages file of a hosted integration: a manifest and
+  `pages.json` example, URLs relative to the pages file, the fields a page may set, when `url`
+  can be omitted, and what to expect after a redeploy.
+- It says the list is the same for every user, since it is a static file, and what to do when
+  tabs must differ per user.
+- `develop-fieldtwin-integration` says that a hosted integration's `dynamicPagesUrl` is a file
+  read with a plain GET, not an endpoint.
+- The secrets reference lists `DELETE /secrets`, which removes every secret of an integration,
+  and says that removing an integration from its account removes its secrets.
+
 ## 0.16.2 - 2026-11-25
 
 - Fixed the API failure and cancellation recipe, which called `subprojects/{id}/stagedAssets`

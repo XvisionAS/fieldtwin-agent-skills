@@ -22,15 +22,12 @@ Add `--json` to every call you parse.
 
 - **Static files only.** No server code, no proxy, no OAuth client.
 - **Several tabs come from a pages file.** Set `dynamicPagesUrl` to a JSON file of the bundle
-  (`./pages.json`) holding an array of pages. Each page has a `title` and an `iframeUrl`, and may
-  set `path`, `logo`, `tabPosition`, `showInDesigner` and `showInOperation`. `iframeUrl` and `logo`
-  name files of the bundle, relative to the pages file. `url` may then be omitted. An instance
-  that does not support this yet answers `unsupported-manifest-field`: keep the views in one page
-  with hash routing instead.
+  (`./pages.json`). [Several tabs: the pages file](#several-tabs-the-pages-file) has the format
+  and the rules.
 - **A `manifest.json` at the root of the build output**, next to `index.html`. With a bundler, put
   it in the folder copied as is to the output (`public/` with Vite) so it lands in `dist/`.
-- **Relative manifest URLs.** `url`, `logo`, `backgroundUrl`, `accountSettingsUrl` and
-  `projectSettingsUrl` name files inside the bundle (`./index.html`, `./logo.svg`). The instance
+- **Relative manifest URLs.** `url`, `logo`, `backgroundUrl`, `accountSettingsUrl`,
+  `projectSettingsUrl` and `dynamicPagesUrl` name files inside the bundle (`./index.html`, `./logo.svg`). The instance
   turns them into served URLs. An absolute URL is refused.
 - **Bootstrap from the `loaded` message.** The instance forces `useGET: true` and
   `noURLParams: true`: the page gets its JWT from `loaded` and `tokenRefresh`, never from the URL.
@@ -67,6 +64,59 @@ A minimal manifest:
   "showInOperation": true
 }
 ```
+
+## Several tabs: the pages file
+
+One integration can show several tabs, each in its own position. Outside FieldTwin hosting that
+needs an endpoint answering an authenticated POST. A hosted integration ships the list as a file
+instead: FieldTwin reads it with a plain GET and no token.
+
+`manifest.json`:
+
+```json
+{
+  "name": "Field reports",
+  "dynamicPagesUrl": "./pages.json",
+  "showInDesigner": true,
+  "showInOperation": true
+}
+```
+
+`pages.json`, next to it:
+
+```json
+[
+  { "title": "Overview", "iframeUrl": "./overview.html", "path": "overview" },
+  {
+    "title": "Export",
+    "iframeUrl": "./export.html",
+    "path": "export",
+    "logo": "./export.svg",
+    "tabPosition": "main-toolbar-dialog",
+    "showInOperation": false
+  }
+]
+```
+
+- The file is a JSON array. Every page needs a non-empty `title` and an `iframeUrl`.
+- `iframeUrl` and `logo` name files of the bundle, **relative to the pages file**, not to the
+  manifest. With `dynamicPagesUrl: "./pages/list.json"`, `"./overview.html"` means
+  `pages/overview.html`. An absolute URL, or a file that is not in the bundle, is refused.
+- A page may also set `path`, `tabPosition`, `showInDesigner`, `showInOperation`,
+  `showOperationButton` and `supportShareView`. What a page leaves out falls back to the manifest,
+  then to the defaults. Give every page a stable `path`: it is the page's identity.
+- `url` may be omitted when every visible tab comes from the pages file. Keep it when the
+  integration also needs a main page or a background page.
+- **The list is the same for everyone.** It is a static file, so it cannot depend on the user,
+  their rights or the project. When the tabs must differ per user, show or hide content inside
+  the pages from the `loaded` data, or use the full repository shape with a real endpoint.
+- Each page is a normal integration page: it bootstraps from its own `loaded` message with the
+  same origin and source checks, and keeps its token in memory.
+- A redeploy leaves a page that is already open on the files it was opened with. FieldTwin keeps
+  the page list for a few minutes, so a tab added or removed by a deploy can take a reload of
+  FieldTwin to appear.
+- An instance that does not support the pages file yet answers `unsupported-manifest-field`
+  for `dynamicPagesUrl`. Keep the views in one page with hash routing instead, and say so.
 
 ## Workflow
 

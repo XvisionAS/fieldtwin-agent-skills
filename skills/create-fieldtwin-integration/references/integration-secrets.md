@@ -34,6 +34,9 @@ can make any request under it with the key, including writes when the remote API
 so to the user when the key grants more than the integration uses, and ask for a read-only or
 scoped key when the provider offers one.
 
+FieldTwin deletes an integration's secrets when the integration is removed from the account. An
+integration that is removed and added again starts without secrets.
+
 At most 20 secrets per integration. The secret can only go in a header: an API that wants its key
 in the query string or the body, or HTTP Basic with a computed value, is not covered. For Basic, the
 admin can enter the already encoded `user:password` and use `format: "Basic {secret}"`.
@@ -49,6 +52,7 @@ path of `backendUrl`. Send the JWT from `loaded` or `tokenRefresh` as `Authoriza
 | `GET /secrets` | Any user of the integration, and account admins | `[{ name, urlPrefix, header, format, updatedAt, updatedBy }]`. Never a value. |
 | `PUT /secrets/<name>` with `{ value, urlPrefix, header, format? }` | Account admin | The stored destination. Creates or replaces. `name` matches `[A-Za-z0-9_-]{1,64}`. |
 | `DELETE /secrets/<name>` | Account admin | `{ deleted: true }` |
+| `DELETE /secrets` | Account admin | `{ deleted: true }`. Removes every secret of the integration. |
 | `POST /request` with `{ url, method?, headers?, body?, secrets: [name, ...] }` | Any user of the integration, and account admins | The remote API's answer, streamed |
 
 "Account admin" is checked on the server from the user of the token. The token of the Account

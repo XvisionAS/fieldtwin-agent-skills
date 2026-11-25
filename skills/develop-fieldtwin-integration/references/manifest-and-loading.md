@@ -101,6 +101,8 @@ real iframe load. A direct top-level page load does not validate iframe permissi
 
 Set `dynamicPagesUrl` when the visible tabs depend on user permissions, external configuration, or available workflows. The endpoint accepts an authenticated POST and returns a JSON array.
 
+An integration hosted by FieldTwin has no endpoint. Its `dynamicPagesUrl` names a JSON file of its bundle, which FieldTwin reads with a plain GET and no token: the list is then the same for every user, and each `iframeUrl` and `logo` is a path relative to that file instead of a full URL. The `create-fieldtwin-integration` skill's `references/hosted-integrations.md` has the format. Everything below about the endpoint applies to integrations with their own server.
+
 ```json
 [
   {
@@ -124,7 +126,7 @@ Page fields:
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `title` | Yes | Tab label. |
-| `iframeUrl` | Yes | Full HTTPS page URL. |
+| `iframeUrl` | Yes | Full HTTPS page URL. In the pages file of a hosted integration, a path relative to that file. |
 | `path` | No | Stable page identity. When omitted, FieldTwin can generate an order-based path such as `page-1`. Explicit stable paths are preferable. |
 | `tabPosition` | No | Page override, then manifest value, then `bottom`. |
 | `showInDesigner` | No | Page override, then manifest value, then `true`. |
