@@ -46,7 +46,7 @@ path of `backendUrl`. Send the JWT from `loaded` or `tokenRefresh` as `Authoriza
 
 | Call | Who | Result |
 | ---- | --- | ------ |
-| `GET /secrets` | Account admin | `[{ name, urlPrefix, header, format, updatedAt, updatedBy }]`. Never a value. |
+| `GET /secrets` | Any user of the integration, and account admins | `[{ name, urlPrefix, header, format, updatedAt, updatedBy }]`. Never a value. |
 | `PUT /secrets/<name>` with `{ value, urlPrefix, header, format? }` | Account admin | The stored destination. Creates or replaces. `name` matches `[A-Za-z0-9_-]{1,64}`. |
 | `DELETE /secrets/<name>` | Account admin | `{ deleted: true }` |
 | `POST /request` with `{ url, method?, headers?, body?, secrets: [name, ...] }` | Any user of the integration, and account admins | The remote API's answer, streamed |
@@ -152,8 +152,28 @@ async function callRemote(context, path, { method = 'GET', headers, body } = {})
 | `upstream-unreachable` | The remote API did not answer; `detail` has the network error code. |
 | `secrets-unavailable` | This instance cannot store secrets. Report it. |
 
-When no secret is set yet, the integration's main page should say so plainly and tell the user that
-an account admin sets it up under Admin, Integrations, the integration, Settings.
+## Knowing whether a secret is set
+
+Every user of the integration may call `GET /secrets`, so the main page can check before it calls
+the remote API. Do it once after `loaded`:
+
+```js
+async function isSecretSet(context, name) {
+  const response = await fetch(`${secretsBase(context)}/secrets`, {
+    headers: { Authorization: `Bearer ${context.token}` },
+  })
+  if (!response.ok) {
+    return false
+  }
+  const secrets = await response.json()
+  return secrets.some((secret) => secret.name === name)
+}
+```
+
+When the secret is missing, show that instead of an empty or failing view, and tell the user that
+an account admin sets it up under Admin, Integrations, the integration, Settings. When it is set,
+the page may show that it is connected and to which `urlPrefix`. A set secret is not proof that the
+key still works: a remote 401 or 403 from `/request` means the admin must replace it.
 
 ## Non-secret setup: vendorAttributes
 

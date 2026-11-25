@@ -7,6 +7,8 @@
   key is write-only, bound to a URL prefix and a header, and FieldTwin sends the request and
   streams the answer. The reference covers the settings page to generate, the request call and its
   errors.
+- Every user of the integration can list which secrets are set, so a page can show whether it is
+  connected before it calls the remote API.
 - The same reference says where non-secret setup goes: `vendorAttributes` of the account or the
   project, under a key named after the integration.
 - An API key alone no longer makes `create-fieldtwin-integration` recommend the full repository
