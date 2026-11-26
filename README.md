@@ -2,11 +2,15 @@
 
 Public, portable [Agent Skills](https://agentskills.io/home) for building secure FieldTwin integrations.
 
-This repository publishes two complementary skills:
+This repository publishes three complementary skills:
 
 - **Create FieldTwin Integration** — scaffold the application, Docker image, Helm chart,
   Environment Modules, Tilt workflow, `devops.sh`, build-bot pipeline, secrets boundary, and
   validation path for a new deployable integration.
+- **Upgrade FieldTwin Integration** — move an existing integration, script, or server client from
+  FieldTwin API v1.x to v2.0 call by call: inventory the v1.x calls, map each one with the complete
+  endpoint mapping, rework the transport, reads and writes, keep what has no v2.0 equivalent on
+  v1.10, and validate with a configuration switch that can roll a tenant back.
 - **Develop FieldTwin Integration** — build, run, debug, test, and review FieldTwin custom-tab integrations and their Operation Mode host behavior, including the local Tilt/Helm path, HTTP/HTTPS URL generation, iframe lifecycle, API authentication, `postMessage`, pop-out windows, system highlighting, settings, and protocol tests.
 
 The skills are documentation and instructions, plus small helper scripts. There is no MCP server and no telemetry. `check-update.mjs` reads public release tags and skill metadata from GitHub. `ft-integrations.mjs` in `create-fieldtwin-integration` deploys a static integration to the FieldTwin instance URL you give it. To do that it logs you in through your browser and stores the resulting deploy token in your user configuration directory (`~/.config/fieldtwin/integrations.json`, `%APPDATA%` on Windows), readable only by you on macOS and Linux (file mode 0600); on Windows the file relies on your user profile's own protection. The token lets the script list the accounts you may deploy to and their integrations, and create, update, roll back and delete FieldTwin-hosted integrations there (you may deploy to an account if you are its admin, or if your role grants "Can deploy integrations" under a PRO licence and the account has the hosted-integrations module; without admin rights you manage only the integrations you created); it gives no access to project data; it expires after 7 days.
@@ -20,6 +24,8 @@ npx skills add XvisionAS/fieldtwin-agent-skills \
   --skill create-fieldtwin-integration
 npx skills add XvisionAS/fieldtwin-agent-skills \
   --skill develop-fieldtwin-integration
+npx skills add XvisionAS/fieldtwin-agent-skills \
+  --skill upgrade-fieldtwin-integration
 ```
 
 For a user-wide, non-interactive installation, name the agent explicitly. For example:
@@ -58,12 +64,14 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 - `Add a dynamic page manifest and API client to this FieldTwin integration.`
 - `Build a FieldTwin v1.10 client for account configuration, subproject resources, and batch writes.`
 - `Use the tenant OpenAPI to implement FieldTwin API v2.0 stream reads, filters, and batch CRUD.`
+- `Use upgrade-fieldtwin-integration to move this integration from FieldTwin API v1.10 to v2.0 and tell me which calls have to stay on v1.10.`
+- `What is the v2.0 equivalent of POST .../subProject/{id}/stagedAsset, and what changes in the body and the response?`
 
 - `Use develop-fieldtwin-integration to transform coordinates, convert a DGN/DXF file, and read raster profiles and difference volumes.`
 
 ## Update
 
-Both skills ask the agent to check for updates on first use in a task. You can also run
+All three skills ask the agent to check for updates on first use in a task. You can also run
 `node scripts/check-update.mjs` from the installed skill folder. It compares the installed
 `metadata.version` with that same skill’s version in the latest stable `vX.Y.Z` tag. The
 requests share a four-second timeout, so work can continue when GitHub is unavailable.
@@ -76,7 +84,8 @@ Use the same installer and scope you originally used:
 | GitHub CLI | `gh skill update <skill-name>`. For a pinned installation, add `--unpin` only if you want to remove the pin and update. |
 | Manual copy | Replace the installed skill folder with the same folder from the [latest stable tag](https://github.com/XvisionAS/fieldtwin-agent-skills/tags). |
 
-Use `create-fieldtwin-integration` or `develop-fieldtwin-integration` for `<skill-name>`.
+Use `create-fieldtwin-integration`, `develop-fieldtwin-integration` or
+`upgrade-fieldtwin-integration` for `<skill-name>`.
 Copies installed before v0.15.2 gain the check after their first update.
 
 ## Documentation scope
@@ -91,6 +100,8 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - exhaustive v1.10 account/configuration and subproject endpoint families;
 - v2.0 users/account/project/subproject/workflow stream CRUD, filters, specialized operations,
   resource ownership, and tenant OpenAPI discovery;
+- the v1.10 to v2.0 migration: every v1.10 endpoint mapped to its v2.0 form, renamed and folded
+  concepts, calls with no equivalent, behaviour changes, and a rollout that can be reversed;
 - v1.10 and v2.0 batch POST/PATCH/DELETE envelopes, ordering, atomicity boundaries, response IDs,
   and ambiguous-failure recovery;
 - generated v1.10 operation fields and v2.0 read/write resource schemas, with a narrow command-line
@@ -111,7 +122,7 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
   difference volumes, heat-map metadata and float32 tiles;
 - automated and manual protocol testing.
 
-See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and [FieldTwin API documentation](https://api.fieldtwin.com/) for current product documentation. Bundled message guidance was reconciled with integration-guide revision 66 and the matching host contract on 2026-11-18. Verify newer events on the target deployment; its current documented contract takes precedence.
+See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and the FieldTwin API references for [v2.0](https://api.fieldtwin.com/) and [v1.10](https://api-1-10.fieldtwin.com/) for current product documentation. Backend API guidance and the v1.10 to v2.0 migration mapping were reconciled with the FieldTwin 9.0 contract on 2026-11-13. Bundled message guidance was reconciled with integration-guide revision 66 and the matching host contract on 2026-11-18. Verify newer events on the target deployment; its current documented contract takes precedence.
 
 All IDs, origins, assets, tags, and measurements in examples are fictional.
 
@@ -123,9 +134,14 @@ skills/
 │   ├── SKILL.md
 │   ├── evals/evals.json
 │   └── references/
-└── develop-fieldtwin-integration/
+├── develop-fieldtwin-integration/
+│   ├── SKILL.md
+│   ├── integration/README.md
+│   ├── evals/evals.json
+│   ├── references/
+│   └── scripts/
+└── upgrade-fieldtwin-integration/
     ├── SKILL.md
-    ├── integration/README.md
     ├── evals/evals.json
     ├── references/
     └── scripts/
@@ -137,6 +153,7 @@ skills/
 python3 scripts/validate_package.py
 skills-ref validate ./skills/create-fieldtwin-integration
 skills-ref validate ./skills/develop-fieldtwin-integration
+skills-ref validate ./skills/upgrade-fieldtwin-integration
 ```
 
 The first command uses only the Python standard library. It validates the portable `SKILL.md` contract, bundled files and links, and public-safety rules. The second invokes the Agent Skills reference validator when `skills-ref` is installed.

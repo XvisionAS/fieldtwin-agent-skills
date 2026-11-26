@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.17.0 - 2026-11-26
+
+- Added the `upgrade-fieldtwin-integration` skill for moving an integration, script, or server
+  client from FieldTwin API v1.x to v2.0: an eight-step workflow from inventory to rollback, the
+  complete v1.10 to v2.0 endpoint mapping, read and write migration references with fictional
+  before-and-after examples, behaviour changes, the calls that stay on v1.10, and eleven
+  evaluations. It carries the same update check as the other two skills.
+- Documented where the v2.0 account ID comes from: an embedded integration takes it from
+  `account` in the `loaded` message, an integration backend gets it from its own frontend, and
+  `GET /users/whoami` is only the fallback for a job that no frontend can pass it to. Added
+  `account` to the `loaded` field lists and the sample bridge in `develop-fieldtwin-integration`.
+- Corrected v2.0 guidance in `develop-fieldtwin-integration`: an unknown `resourceTypes` value
+  answers `422`, not `400`; unknown batch types and fields are dropped silently instead of being
+  rejected; PATCH answers `{}`; v2.0 ships with FieldTwin 9.0 beside v1.10.
+- Documented v2.0 `attributes`, attribute-value filters and the leftover-parameter trap, the
+  metadata filter, envelope rules for relationships, nulls, `lastModified` and backdrop
+  resources, client-chosen IDs, `updatedBy` for API tokens, whole-batch `422` rejection, the
+  account-ID and own-root `403` rules, and which operations were added after 9.0.0.
+- Pointed every "do not translate v1.10 to v2.0" rule at the new skill, split the public API
+  reference links by version, added two develop-skill evaluations, and raised the validator's
+  v2.0 operation threshold and scanned-file size limit so the larger catalog stays checked.
+
 ## 0.16.4 - 2026-11-26
 
 - A request sent with a stored secret is described with fields instead of a hand-built URL and

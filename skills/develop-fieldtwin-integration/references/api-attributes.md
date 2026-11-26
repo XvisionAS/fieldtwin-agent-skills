@@ -28,6 +28,8 @@ python3 scripts/query-api-attributes.py --version v1.10 --method get --path meta
 python3 scripts/query-api-attributes.py --version v1.10 --method get --exact-path '/API/v1.10/metadatadefinition/:metaDataDefinitionId' --location path
 python3 scripts/query-api-attributes.py --version v2.0 --method get --exact-path '/API/v2.0/subProjects/{subProjectId}' --location query
 python3 scripts/query-api-attributes.py --version v2.0 --stream subProjects --resource stagedAssets --method patch --field initialState
+python3 scripts/query-api-attributes.py --version v2.0 --method get --exact-path '/API/v2.0/users/whoami'
+python3 scripts/query-api-attributes.py --version v2.0 --method get --path /resources --list-operations
 ```
 
 Use `--field` for a substring within the selected operation. Use `--json` to see available
@@ -117,6 +119,8 @@ node scripts/generate-api-attributes.mjs --source /path/to/FieldTwin
 ```
 
 The generator uses the checkout’s ApiDoc annotations and runs its OpenAPI builder with a
-local Events manifest. It does not start services or fetch the manifest over the network. Review the summary counts, query representative root/related resources in every stream,
+local Events manifest. It does not start services or fetch the manifest over the network. Review
+the summary counts, compare the v2 operation list with the tenant's
+`/API/v2.0/documentation/oas3.json`, query representative root/related resources in every stream,
 and run the package validator. Commit both generated JSON files with the source documentation or
 schema change so the skill never describes a newer or older contract than its catalogs.

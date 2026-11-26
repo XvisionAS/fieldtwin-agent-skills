@@ -18,6 +18,7 @@ Use `loaded` to initialize only the runtime fields the integration needs:
 | `token` | Current JWT for FieldTwin API requests. Keep it in memory only. |
 | `backendUrl` | Backend base URL supplied by the trusted host. |
 | `APIVersion` | API version such as `v1.10`. |
+| `account` | Current account ID. API v2.0 accounts-stream paths need it. |
 | `project`, `subProject`, `stream` | Current project scope. |
 | `customTabId` | Identity of this integration instance. |
 | `canEdit` | UI capability hint. The API still enforces authorization. |
@@ -143,6 +144,7 @@ function readLoadedState(message, allowInsecureHttp) {
     token: message.token,
     ...(backendBaseUrl ? { backendBaseUrl } : {}),
     ...(apiVersion ? { apiVersion } : {}),
+    account: message.account,
     project: message.project,
     subProject: message.subProject,
     stream: message.stream,
@@ -178,6 +180,7 @@ export function createFieldTwinBridge({
     return {
       backendBaseUrl: state.backendBaseUrl,
       apiVersion: state.apiVersion,
+      account: state.account,
       project: state.project,
       subProject: state.subProject,
       stream: state.stream,
@@ -360,9 +363,12 @@ The helper intentionally uses the trusted `APIVersion`. Do not make it silently 
 v1.10 relative path as v2.0. Read [backend-api.md](backend-api.md) for common authentication,
 readiness, error, and retry behavior; use [backend-api-v1.10.md](backend-api-v1.10.md) or
 [backend-api-v2.0.md](backend-api-v2.0.md) for the selected version and
-[backend-api-batch.md](backend-api-batch.md) for mutations.
+[backend-api-batch.md](backend-api-batch.md) for mutations. On FieldTwin 9.0 the `loaded` event
+still reports v1.10, so an integration that moves to v2.0 selects it through its own
+configuration and migrates each call with the `upgrade-fieldtwin-integration` skill.
 
-Use endpoint paths from the [FieldTwin API documentation](https://api.fieldtwin.com/). This illustrative request uses only fictional identifiers:
+Use endpoint paths from the FieldTwin API reference for the selected version:
+[v1.10](https://api-1-10.fieldtwin.com/) or [v2.0](https://api.fieldtwin.com/). This illustrative request uses only fictional identifiers:
 
 ```javascript
 async function loadInitialData() {

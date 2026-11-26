@@ -11,18 +11,28 @@ This reference covers the rules shared by API v1.10 and v2.0. Continue with
 
 ## Choose the deployed contract first
 
-The integration receives `backendUrl` and `APIVersion` in the trusted `loaded` message. Treat them
-as deployment data, not constants:
+The integration receives `backendUrl`, `APIVersion` and `account` in the trusted `loaded` message.
+Treat them as deployment data, not constants:
 
 - preserve the complete `backendUrl`, including a path such as `/backend`;
 - accept HTTP only in an explicitly configured local-development mode;
 - use the supplied `APIVersion` by default;
+- use `account` as the account ID in v2.0 accounts-stream paths; v1.10 takes the account from the
+  credential;
 - do not silently replace `v1.10` with `v2.0` because v2 exists in another tenant or branch;
 - before opting into v2, verify that the target tenant serves its v2 OpenAPI document and that the
   required operations are present.
 
-Check the target release for availability. The generated v2 OpenAPI lives at
-`/API/v2.0/documentation/oas3.json` where supported.
+v2.0 is available from FieldTwin 9.0 and is served next to v1.10. v1.10 keeps working and has no
+retirement date; one will be announced in advance. New capabilities only arrive in v2.0. Tenant
+rollout can differ, so check the target release for availability. The generated v2 OpenAPI lives
+at `/API/v2.0/documentation/oas3.json` where supported, and the target tenant's live contract
+wins.
+
+On FieldTwin 9.0 the `loaded` event still reports `APIVersion` 1.10 to embedded integrations. An
+integration that wants v2.0 chooses it deliberately in its own configuration, so that a tenant can
+be switched back. Moving existing v1.10 calls is a mapping exercise, not a prefix change: use the
+`upgrade-fieldtwin-integration` skill for it.
 
 | Need | v1.10 | v2.0 |
 | --- | --- | --- |
@@ -37,7 +47,8 @@ tenant's live portal/OpenAPI still wins when its deployed release differs.
 
 Public sources:
 
-- [FieldTwin API documentation](https://api.fieldtwin.com/)
+- [FieldTwin API v2.0 reference](https://api.fieldtwin.com/)
+- [FieldTwin API v1.10 reference](https://api-1-10.fieldtwin.com/)
 - [API basics and authentication](https://docs.fieldtwin.com/developer-portal/apibasics/)
 - [API roadmap and lifecycle](https://docs.fieldtwin.com/developer-portal/xroadmap/)
 - [Official curl and Postman examples](https://docs.fieldtwin.com/developer-portal/postman/)
@@ -94,8 +105,13 @@ The API supports two mutually exclusive authentication profiles:
 | Account API token | `token: <API token>` | Server-to-server or non-interactive administration configured by an account administrator |
 
 For a custom-tab integration, use the JWT received through trusted bootstrap. Do not also send the
-`token` header. API tokens commonly live longer and may be unrestricted unless assigned a role;
+`token` header: when both arrive, the API token is used. API tokens commonly live longer and may be unrestricted unless assigned a role;
 never put one in browser code.
+
+A JWT user needs a Design or Pro licence; any other licence gets `403`. Some v2.0 operations
+accept only one credential type: organisation-level writes on the users stream need the JWT of
+an IT admin or super admin and answer `403` to an API token. `GET /API/v2.0/users/whoami` reports
+which credential arrived and what it may do.
 
 Build `Authorization` immediately before each request so `tokenRefresh` takes effect. Keep both
 credential types out of URLs, browser storage, DOM, logs, analytics, error text, source control,
@@ -230,14 +246,14 @@ Handle status codes by meaning, not by parsing one exact message:
 | Status | Meaning and client action |
 | --- | --- |
 | `200` | Success. The body may be JSON, another media type, or empty depending on the endpoint. |
-| `400` | Invalid query/path option, including an unknown v2 `resourceTypes` value. Fix the request. |
+| `400` | Invalid query/path option. Fix the request. |
 | `401` | Missing, expired, malformed, or unacceptable credential. Await refresh or reconnect. |
-| `403` | Authenticated but not allowed by account/project/type rights or license. Do not retry unchanged. |
+| `403` | Authenticated but not allowed by account/project/type rights or license. In v2.0 also: an account ID that is not the credential's own, a credential type the operation does not accept, or a stream's own root sent to its own `DELETE`. Do not retry unchanged. |
 | `404` | Route or resource not found. Check version, casing, scope, and ID. |
-| `409` | State conflict. Refresh the relevant data before deciding whether to retry. |
+| `409` | State conflict, including a duplicate client-chosen ID or a second metadata link to the same target in v2.0. Refresh the relevant data before deciding whether to retry. |
 | `410` | API version discontinued. Move to a live version advertised by the tenant. |
 | `421` | The requested subproject is not loaded by that directly addressed API process. Use the public backend/gateway URL. |
-| `422` | Payload or domain validation failed, or required subproject data could not be prepared. Show actionable validation details. |
+| `422` | Payload or domain validation failed, or required subproject data could not be prepared. In v2.0 also: an unknown `resourceTypes` value, a metadata filter outside the subprojects stream, an unknown ID anywhere in a batch (the whole batch is rejected), or a missing `updatedBy` on an API-token PATCH. Show actionable validation details. |
 | `500` | Unexpected server failure. Report a sanitized correlation/context and allow a manual retry. |
 | `501` | Operation or resource shape is not implemented for this version. Use the live docs to choose an alternative. |
 | `502` | A dependent FieldTwin instance/service failed, for example an external-parent summary. Do not use a partial result. |
@@ -273,6 +289,14 @@ presence rules are endpoint-specific.
 
 Other internal or legacy headers exist. Do not discover them by trial and treat them as public.
 Use the live endpoint documentation for the exact allowed subset.
+
+v2.0 ignores the v1.10 `include-last-modified` header because `lastModified` is always returned,
+and it has no `merge-foreign`: backdrop resources arrive in the same type maps with
+`isForeign: true` unless `no-foreign: true` is sent.
+
+A successful status does not prove a v2.0 request did what was intended. An unrecognised query
+key on a stream GET acts as a filter, and an unknown type or field in a batch body is dropped;
+both still answer `200`.
 
 ## Validation checklist
 

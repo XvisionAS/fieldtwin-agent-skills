@@ -537,14 +537,16 @@ async function generateV2Catalog() {
   }
   let apiDocument
   try {
-    const { buildApiDoc, oas3 } = await importSource(
+    // The builder reads the events manifest through fetch, which is stubbed above, and then
+    // assembles the same document the API serves at /API/v2.0/documentation/oas3.json.
+    const apiDocModule = await importSource(
       'backends',
       'fieldtwinapi',
       'apiDoc',
       'buildApiDoc.js'
     )
-    await buildApiDoc()
-    apiDocument = oas3
+    await apiDocModule.buildApiDoc()
+    apiDocument = apiDocModule.oas3
   } finally {
     globalThis.fetch = originalFetch
   }

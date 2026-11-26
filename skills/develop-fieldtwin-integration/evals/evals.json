@@ -180,6 +180,18 @@
       "prompt": "My hosted FieldTwin v1.10 selection inspector displays a choice field, but its GET to /metadatadefinition/Example%3APlant%5Bchoices%5D fails. Explain how to show the current value and look up the full definition, including when the row only contains definitionId.",
       "expected_output": "Use the selected resource metadata row for its name and current value. Use metaDatumId on a REST resource metadata row or id on a host getResources metadata row as the single-definition path ID. Keep definitionId, the REST row id (link), and metaDatumLinkId out of that path. If only definitionId is present, match it exactly in the project-scoped definitions collection and take the returned object key, reusing the definition when possible. Leave missing or ambiguous matches unresolved.",
       "files": []
+    },
+    {
+      "id": 31,
+      "prompt": "Build a FieldTwin API v2.0 read helper for a custom tab. It must return only the name and tags of the visible connections in the current subproject, and callers can pass extra options through to the query string. A colleague passed includeMetaData=false and got an empty result with no error. Explain what happened and make the helper safe.",
+      "expected_output": "A stream GET on /API/v2.0/subProjects/{qualified ID} with resourceTypes=connections, attributes=name,tags and the attribute-value filter visible=true, built with URLSearchParams from named keys. Explains that every query key other than resourceTypes, resourceIds, attributes, at, limit, after and sortOrder is an attribute-value filter, so a passed-through key filters the response to nothing while still answering 200; the helper accepts filters only through an explicit argument and does not forward arbitrary options. Uses the no-metadata header for that intent, states that id is always returned, that an unknown resource type answers 422, and that a missing type key means not returned rather than empty.",
+      "files": []
+    },
+    {
+      "id": 32,
+      "prompt": "A server-side job with an account API token needs the account ID to call FieldTwin API v2.0 account endpoints, and it must fail fast when the token cannot administer the account. Then it creates two well types with stable IDs from our ERP and renames one project. Show the requests and how to tell that each write really happened.",
+      "expected_output": "GET /API/v2.0/users/whoami with the token header only, reading the credential type and the one account the token is scoped to, and checking admin rights there before any write; the account ID goes in the URL and another account answers 403. POST /API/v2.0/accounts/{accountId} with wellTypes items carrying client-chosen id values, handling 409 for an ID that already exists. PATCH /API/v2.0/projects/{projectId} with the projects type keyed by ID and updatedBy, which an API token must send or get 422. POST answers ID arrays and PATCH answers {}, and unknown types or fields are dropped while still answering 200, so each write is confirmed by comparing the returned IDs and reading the resources back by ID. No blind POST retry after a timeout.",
+      "files": []
     }
   ]
 }

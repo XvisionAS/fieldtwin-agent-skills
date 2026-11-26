@@ -4,7 +4,7 @@ This is the public entry point for developing an external FieldTwin integration.
 
 The message guidance was reconciled with FieldTwin integration-guide revision 65 and its matching
 host contract on 2026-10-01; backend guidance was reconciled with public API material and v1.10/v2.0
-contracts on 2026-08-22. Verify newer messages on the target deployment. Its current documented
+contracts on 2026-11-13. Verify newer messages on the target deployment. Its current documented
 contract takes precedence.
 
 For an implementation sequence that covers repository conventions, Environment Modules, Tilt,
@@ -166,10 +166,17 @@ The two supported API designs are intentionally different:
 | Explicit `/batch` and per-type batch routes | Every stream mutation is a type-keyed batch |
 
 Use the version sent by FieldTwin unless the target tenant explicitly supports and the integration
-selects another contract. Keep a batch inside one stream, create parents before dependent children,
+selects another contract. FieldTwin 9.0 serves both versions and still sends v1.10 in `loaded`, so
+v2.0 is always a deliberate, configurable choice. Moving existing v1.10 calls to v2.0 is a
+call-by-call mapping, never a prefix change; the `upgrade-fieldtwin-integration` skill carries the
+mapping. Keep a batch inside one stream, create parents before dependent children,
 and do not blindly retry a timed-out POST: it may have committed. Successful PATCH/DELETE can have
 an empty body, while specialized operations can return SVG, files, or chunked data, so parse by
 status and `Content-Type`.
+
+In v2.0 a `200` is not proof of effect: an unrecognised query key on a stream GET acts as a filter,
+and an unknown type or field in a batch body is dropped. Build queries from named keys and read
+writes back.
 
 Read [backend-api.md](../references/backend-api.md) for authentication, routing, readiness, errors,
 and retries; [backend-api-v1.10.md](../references/backend-api-v1.10.md) and

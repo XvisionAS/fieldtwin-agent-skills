@@ -65,6 +65,13 @@ CREATE_INTEGRATION_REFERENCES = {
     "hosted-integrations.md",
     "integration-secrets.md",
 }
+UPGRADE_INTEGRATION_REFERENCES = {
+    "behavior-changes.md",
+    "endpoint-mapping.md",
+    "reads-and-envelope.md",
+    "writes-and-batches.md",
+}
+UPGRADE_INTEGRATION_FILES = {"scripts/check-update.mjs"}
 CREATE_INTEGRATION_FILES = {"scripts/check-update.mjs", "scripts/ft-integrations.mjs"}
 REQUIRED_REPOSITORY_FILES = {
     ".github/workflows/validate.yml",
@@ -302,6 +309,11 @@ def validate_skill(skill_path: Path, validation: Validation) -> None:
         for filename in sorted(CREATE_INTEGRATION_FILES):
             required_file = skill_path.parent / filename
             validation.require(required_file.is_file(), f"Missing required skill file: {relative(required_file)}")
+    elif name == "upgrade-fieldtwin-integration":
+        required_references = UPGRADE_INTEGRATION_REFERENCES
+        for filename in sorted(UPGRADE_INTEGRATION_FILES):
+            required_file = skill_path.parent / filename
+            validation.require(required_file.is_file(), f"Missing required skill file: {relative(required_file)}")
     else:
         validation.errors.append(f"No package validation profile for skill {name!r}")
         required_references = set()
@@ -388,7 +400,7 @@ def validate_api_attribute_catalogs(skill_root: Path, validation: Validation) ->
         operations = v2.get("operations", [])
         validate_operation_paths("v2.0", operations, validation)
         operation_attributes = [attribute for operation in operations for attribute in operation.get("attributes", [])]
-        validation.require(isinstance(operations, list) and len(operations) >= 32, "v2 attribute catalog lost OpenAPI operation coverage")
+        validation.require(isinstance(operations, list) and len(operations) >= 50, "v2 attribute catalog lost OpenAPI operation coverage")
         validation.require(len(operation_attributes) >= 7_000, "v2 attribute catalog lost OpenAPI field coverage")
         validation.require(all(attribute.get("path") and attribute.get("location") for attribute in operation_attributes), "v2 OpenAPI catalog contains an attribute without path/location")
 
@@ -532,7 +544,8 @@ def iter_public_text_files() -> list[Path]:
     for path in REPOSITORY_ROOT.rglob("*"):
         if not path.is_file() or ".git" in path.parts:
             continue
-        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 5_000_000:
+        # The limit must stay above the largest generated catalog so it is still scanned.
+        if path.suffix.lower() in SCANNED_SUFFIXES and path.stat().st_size <= 8_000_000:
             files.append(path)
     return sorted(files)
 

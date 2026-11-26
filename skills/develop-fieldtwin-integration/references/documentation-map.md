@@ -3,7 +3,8 @@
 Use this page to choose a source before implementing a FieldTwin integration.
 
 This bundle's message guidance was reconciled with FieldTwin integration-guide revision 66 and
-the matching host contract on 2026-11-18. API catalogs are generated from the v1.10 ApiDoc and v2.0 OpenAPI and schemas in the source checkout. Treat these dates as provenance, not as a
+the matching host contract on 2026-11-18. API catalogs are generated from the v1.10 ApiDoc and v2.0 OpenAPI and schemas in the source checkout. Backend/API guidance was verified against the public API
+guidance and v1.10/v2.0 server contracts on 2026-11-13. Treat these dates as provenance, not as a
 promise that every deployment exposes the same revision; verify newer events on the target host.
 
 ## Source priority
@@ -11,7 +12,8 @@ promise that every deployment exposes the same revision; verify newer events on 
 1. The contract documented for the FieldTwin environment the user is integrating with.
 2. Current public FieldTwin documentation:
    - [FieldTwin documentation center](https://docs.fieldtwin.com/)
-   - [FieldTwin API documentation](https://api.fieldtwin.com/)
+   - [FieldTwin API v2.0 reference](https://api.fieldtwin.com/) and
+     [v1.10 reference](https://api-1-10.fieldtwin.com/)
    - [FieldTwin Admin integration configuration](https://docs.fieldtwin.com/admin/b_integrations/)
 3. The user's working integration code, tests, and captured messages.
 4. These bundled references and fictional samples.
@@ -30,6 +32,7 @@ FieldTwin deployments can differ by release and configuration. If a current docu
 | v1.10 account/configuration and subproject endpoint catalog | [backend-api-v1.10.md](backend-api-v1.10.md) |
 | v2.0 stream CRUD, GET filters, resource ownership, specialized endpoints | [backend-api-v2.0.md](backend-api-v2.0.md) |
 | v1.10 and v2.0 batch envelopes, ordering, failure and recovery | [backend-api-batch.md](backend-api-batch.md) |
+| Moving existing v1.x calls to v2.0: endpoint mapping, envelope and batch changes, rollback | The `upgrade-fieldtwin-integration` skill; never translate paths or payloads by naming symmetry |
 | Complete readable/writable API field catalog and narrow lookup commands | [api-attributes.md](api-attributes.md) |
 | Complete bidirectional postMessage event/field catalog and narrow lookup commands | [postmessage-attributes.md](postmessage-attributes.md) |
 | Common event names and payload placement, automation descriptors and attribute webhooks | [message-catalog.md](message-catalog.md) |

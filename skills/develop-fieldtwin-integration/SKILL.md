@@ -4,7 +4,7 @@ description: Develop, debug, test, and review FieldTwin integrations. Use for Fi
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.16.4"
+  version: "0.17.0"
 ---
 
 # Develop FieldTwin integrations
@@ -35,6 +35,11 @@ their installer. Continue if the check is unavailable. Install updates only on r
 5. Follow the [API request and error rules](references/backend-api.md) and
    [batch contract](references/backend-api-batch.md) when applicable. Verify permissions,
    readiness, response status and media type, and empty bodies.
+6. To move existing v1.x calls to v2.0, use `upgrade-fieldtwin-integration` and its endpoint
+   mapping. Never translate a v1.10 path or payload by naming symmetry. FieldTwin 9.0 still
+   reports v1.10 in `loaded`, so v2.0 is a deliberate configuration choice. In v2.0 a `200` is
+   not proof of effect: an unknown query key filters a stream GET, and an unknown type or field
+   in a batch body is dropped, so read writes back.
 
 ## Browser integration
 
