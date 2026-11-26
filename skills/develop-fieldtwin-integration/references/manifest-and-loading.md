@@ -181,6 +181,7 @@ Typical `loaded` fields include:
 | `token` | Current JWT for API requests; memory only. |
 | `backendUrl` | API base supplied by the host. |
 | `APIVersion` | API version such as `v1.10`. |
+| `account` | Current account ID; API v2.0 accounts-stream paths need it. |
 | `project`, `subProject`, `stream` | Current FieldTwin scope. |
 | `customTabId` | Integration-instance identity. |
 | `canEdit` | UI capability hint; backend rights still apply. |

@@ -22,7 +22,7 @@
     {
       "id": 4,
       "prompt": "A server-side cleanup script with an account API token deletes a scratch subproject and then its project: DELETE /API/v1.10/{project}/subProject/{sp} followed by DELETE /API/v1.10/project/{project}. Migrate it to v2.0.",
-      "expected_output": "DELETE /API/v2.0/projects/{PROJECT_ID} with {subProjects: [qualified ID]} and then DELETE /API/v2.0/accounts/{ACCOUNT_ID} with {projects: [ID]}: each resource is deleted on the stream that owns it, and sending a root to its own stream is refused with 403. The account ID is explicit in the URL and is checked against GET /users/whoami. The two deletes are separate requests in separate streams, in child-before-parent order. The empty 200 body is not parsed as JSON.",
+      "expected_output": "DELETE /API/v2.0/projects/{PROJECT_ID} with {subProjects: [qualified ID]} and then DELETE /API/v2.0/accounts/{ACCOUNT_ID} with {projects: [ID]}: each resource is deleted on the stream that owns it, and sending a root to its own stream is refused with 403. The account ID is explicit in the URL. This script has no integration frontend that could pass it, so it resolves the ID once from GET /users/whoami (me.account); it adds no separate check, because FieldTwin answers 403 when the token has no rights on the account in the URL. The two deletes are separate requests in separate streams, in child-before-parent order. The empty 200 body is not parsed as JSON.",
       "files": []
     },
     {
@@ -52,13 +52,19 @@
     {
       "id": 9,
       "prompt": "Our custom tab builds its API root from loaded.backendUrl and loaded.APIVersion. The tenant was upgraded to FieldTwin 9.0 but we are still calling v1.10. How do we move to v2.0 and still be able to go back if something breaks? Some of our calls are account level, such as listing tags.",
-      "expected_output": "Explains that loaded still reports 1.10 on 9.0, so v2.0 has to be chosen deliberately through the integration's own configuration, not hard-coded and not read from loaded. Keeps one API root per version from the same trusted backend URL so calls can move incrementally, and makes rollback a configuration switch that is actually exercised. Account-level calls need the account ID in the URL, taken from loaded.account or configuration and checked with GET /users/whoami, since another account gets 403. Tags become GET /API/v2.0/accounts/{ACCOUNT_ID}?resourceTypes=tags. The bridge, origin checks and token handling are left unchanged.",
+      "expected_output": "Explains that loaded still reports 1.10 on 9.0, so v2.0 has to be chosen deliberately through the integration's own configuration, not hard-coded and not read from loaded. Keeps one API root per version from the same trusted backend URL so calls can move incrementally, and makes rollback a configuration switch that is actually exercised. Account-level calls need the account ID in the URL, read from the account field of the loaded message and used directly: FieldTwin checks the token against it and answers 403 for another account, so no GET /users/whoami call is added. Tags become GET /API/v2.0/accounts/{ACCOUNT_ID}?resourceTypes=tags. The bridge, origin checks and token handling are left unchanged.",
       "files": []
     },
     {
       "id": 10,
       "prompt": "A nightly sync using an account API token renames subprojects and sets vendorAttributes with PATCH /API/v1.10/{project}/subProject/{sp} {name, vendorAttributes}, then uses the returned object to refresh our cache. Port it to v2.0.",
       "expected_output": "PATCH /API/v2.0/subProjects/{SUBPROJECT:STREAM} with {subProjects: {[qualified ID]: {name, vendorAttributes, updatedBy}}}. updatedBy is required because an API token is patching more than vendorAttributes; it is the e-mail address of the user making the change, the value v1.10 took as userEmail, and without it the answer is 422. The response is {} rather than the updated object, so the cache is refreshed by reading the subproject back from the stream root and unwrapping it by type and ID, and the body is not assumed to contain the resource. Notes that vendorAttributes: null now clears the attributes and that unknown fields are dropped without an error.",
+      "files": []
+    },
+    {
+      "id": 11,
+      "prompt": "Our custom tab posts to our own Node backend, which forwards the user's JWT and calls GET /API/v1.10/tags and GET /API/v1.10/metadatadefinitions to build an export. We are moving the backend to API v2.0. Where does the backend get the account ID that the v2.0 URLs need?",
+      "expected_output": "Both reads become one GET /API/v2.0/accounts/{ACCOUNT_ID}?resourceTypes=tags,metaData on the accounts stream. The custom tab reads account from the loaded message, keeping that field if its bootstrap reader dropped it, and passes it to the backend in the body or a header of its request, not in a page URL; the backend puts it in the URL. No GET /users/whoami call and no separate check is added: the request carries the user's JWT, FieldTwin checks it against the account in the URL and answers 403 otherwise. whoami is named only as the fallback for a job that no frontend can pass the ID to. If the backend scopes its own data per account, it keeps taking the tenant from its verified token claim. The envelope is read by type and then ID, a missing type key is an empty result, and a metadata definition's type is now kind.",
       "files": []
     }
   ]

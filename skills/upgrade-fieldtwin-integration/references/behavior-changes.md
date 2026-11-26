@@ -25,8 +25,9 @@ Leave this code alone. Rewriting it adds risk without moving the integration clo
   on the v2.0 stream reads as before.
 - **The embedded bootstrap.** Embedded integrations still receive `APIVersion` set to `1.10` in
   the `loaded` event on 9.0. An integration that wants v2.0 chooses it deliberately in its own
-  configuration. The `postMessage` bridge, origin checks, `tokenRefresh` handling and the JWT
-  itself are untouched by this migration.
+  configuration. The same event carries `account`, the ID that accounts-stream URLs need. The
+  `postMessage` bridge, origin checks, `tokenRefresh` handling and the JWT itself are untouched
+  by this migration.
 
 ## Behaviour that changed
 
@@ -77,7 +78,7 @@ the user wants the integration fully on v2.0, and say that the result is compute
    parameters.
 2. Map each one with the endpoint table. Note the ones with no equivalent and decide whether to
    keep them on v1.10.
-3. Add the account ID to every account-level call and check it against `GET /users/whoami`.
+3. Add the account ID to every account-level call.
 4. Replace per-resource reads with one stream GET plus `resourceTypes`, `resourceIds` and
    `attributes`. Remove every other query parameter that is no longer needed.
 5. Rewrite parsers for the envelope: type, then ID, relationships as IDs, `lastModified` present,

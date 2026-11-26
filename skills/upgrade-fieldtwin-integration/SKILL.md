@@ -150,12 +150,19 @@ to fix.
   removes the way back. One setting per deployment lets a tenant be switched back.
 - **Hold one API root per version** while both are in use, built from the same trusted backend
   URL with its base path preserved.
-- **Make the account ID explicit.** Every accounts-stream call needs it, and any account other
-  than the credential's own gets `403`. `GET /users/whoami` is the reliable source: `me.account`
-  is the one account an API token or an embedded-integration token is scoped to. A plain user JWT
-  has no single account; its accounts are the keys of `me.accounts`, so the integration has to
-  know which one it works in. Where configuration or the host's `loaded.account` supplies an
-  expected ID, compare it with `whoami` once per session instead of trusting it.
+- **Make the account ID explicit.** Every accounts-stream call needs it in the path. Take it from
+  the first of these sources that applies:
+  1. An embedded integration reads `account` from the trusted `loaded` message.
+  2. An integration backend gets it from the integration's own frontend, which passes the
+     `loaded` value in the body or a header of its request, never in a page URL.
+  3. Only a server job or script that no frontend can pass it to resolves it from
+     `GET /users/whoami`, as `me.account`.
+
+  Do not add a call to check the ID. The request carries the token, and FieldTwin checks that
+  the token has rights on the account named in the URL; any other account gets `403`. If the
+  integration's bootstrap reader discards `account`, keep that one field. A backend that scopes
+  its own data or secrets per account keeps taking the tenant from its verified token claim; the
+  ID from the frontend only builds the FieldTwin URL.
 - **Leave authentication, the readiness loop and qualified `SUBPROJECT:STREAM` IDs as they are.**
 
 ```javascript
@@ -168,24 +175,19 @@ function apiRootFor(backendUrl, version) {
   return base
 }
 
-// `fetchV2` is the integration's existing authenticated fetch, bound to the v2.0 root.
-async function resolveAccountId(fetchV2, expectedAccountId) {
+// Fallback only: for a server job or script that no frontend can pass the account ID to.
+// `fetchV2` is the job's authenticated fetch, bound to the v2.0 root. An API token is scoped to
+// one account, which `whoami` reports as `me.account`.
+async function accountIdFromWhoami(fetchV2) {
   const response = await fetchV2('users/whoami')
   if (!response.ok) {
     throw new Error(`FieldTwin API returned ${response.status}`)
   }
   const { me } = await response.json()
-  // API tokens and embedded-integration tokens are scoped to one account: `me.account`.
-  // A plain user JWT has none, so it needs the expected ID and must be a member of it.
-  const accountId = me?.account ?? expectedAccountId
-  const reachable = me?.account ? [me.account] : Object.keys(me?.accounts ?? {})
-  if (!accountId || !reachable.includes(accountId)) {
-    throw new Error('FieldTwin account is unknown or does not belong to this credential')
+  if (!me?.account) {
+    throw new Error('FieldTwin did not report an account for this credential')
   }
-  if (expectedAccountId && accountId !== expectedAccountId) {
-    throw new Error('FieldTwin account does not match the configured account')
-  }
-  return accountId
+  return me.account
 }
 ```
 

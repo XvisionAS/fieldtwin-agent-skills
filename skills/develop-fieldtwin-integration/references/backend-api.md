@@ -12,12 +12,14 @@ and response field.
 
 ## Choose the deployed contract first
 
-The integration receives `backendUrl` and `APIVersion` in the trusted `loaded` message. Treat them
-as deployment data, not constants:
+The integration receives `backendUrl`, `APIVersion` and `account` in the trusted `loaded` message.
+Treat them as deployment data, not constants:
 
 - preserve the complete `backendUrl`, including a path such as `/backend`;
 - accept HTTP only in an explicitly configured local-development mode;
 - use the supplied `APIVersion` by default;
+- use `account` as the account ID in v2.0 accounts-stream paths; v1.10 takes the account from the
+  credential;
 - do not silently replace `v1.10` with `v2.0` because v2 exists in another tenant or branch;
 - before opting into v2, verify that the target tenant serves its v2 OpenAPI document and that the
   required operations are present.

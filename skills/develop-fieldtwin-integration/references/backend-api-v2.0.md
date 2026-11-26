@@ -42,7 +42,19 @@ endpoints, `PUT /accounts/{accountId}/customTabs/manifest`, and the `include-ass
 
 The authenticated gateway confirms that path IDs belong to the credential's account/project
 scope. Do not set context headers yourself. The account ID in the path must be the account the
-credential belongs to; any other ID gets `403`. `GET /users/whoami` reports that account.
+credential belongs to; any other ID gets `403`.
+
+Take the account ID from the first source that applies, and do not add a call to check it: the
+request carries the token, and FieldTwin checks that the token has rights on the account in the
+URL.
+
+1. An embedded integration reads `account` from the trusted `loaded` message.
+2. An integration backend gets it from its own frontend, which passes the `loaded.account` value in the
+   body or a header of its request, never in a page URL. A backend that scopes its own data or
+   secrets per account still takes the tenant from its verified token claim; see
+   [development-workflow.md](development-workflow.md).
+3. Only a server job or script that no frontend can pass it to resolves it from
+   `GET /users/whoami`, as `me.account`.
 
 Users and workflow tasks have one logical root route without a path ID. Account, project, and
 subproject routes require the root ID. A subproject ID keeps the `{id}:{streamId}` form; a bare ID

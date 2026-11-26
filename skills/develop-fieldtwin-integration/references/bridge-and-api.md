@@ -18,6 +18,7 @@ Use `loaded` to initialize only the runtime fields the integration needs:
 | `token` | Current JWT for FieldTwin API requests. Keep it in memory only. |
 | `backendUrl` | Backend base URL supplied by the trusted host. |
 | `APIVersion` | API version such as `v1.10`. |
+| `account` | Current account ID. API v2.0 accounts-stream paths need it. |
 | `project`, `subProject`, `stream` | Current project scope. |
 | `customTabId` | Identity of this integration instance. |
 | `canEdit` | UI capability hint. The API still enforces authorization. |
@@ -143,6 +144,7 @@ function readLoadedState(message, allowInsecureHttp) {
     token: message.token,
     ...(backendBaseUrl ? { backendBaseUrl } : {}),
     ...(apiVersion ? { apiVersion } : {}),
+    account: message.account,
     project: message.project,
     subProject: message.subProject,
     stream: message.stream,
@@ -178,6 +180,7 @@ export function createFieldTwinBridge({
     return {
       backendBaseUrl: state.backendBaseUrl,
       apiVersion: state.apiVersion,
+      account: state.account,
       project: state.project,
       subProject: state.subProject,
       stream: state.stream,

@@ -76,6 +76,7 @@ fields are top-level:
   token: '<short-lived-jwt>',
   backendUrl: 'https://fieldtwin-host.example',
   APIVersion: 'v1.10',
+  account: 'account-fictional-001',
   project: 'project-fictional-001',
   subProject: 'subproject-fictional-001',
   stream: 'stream-fictional-main',
@@ -94,6 +95,7 @@ time:
   event: 'tokenRefresh',
   token: '<replacement-short-lived-jwt>',
   backendUrl: 'https://fieldtwin-host.example',
+  account: 'account-fictional-001',
   project: 'project-fictional-001',
   subProject: 'subproject-fictional-001',
   isFrameActive: true

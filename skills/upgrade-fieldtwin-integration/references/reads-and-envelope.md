@@ -29,7 +29,8 @@ streams, each with `GET`, `POST`, `PATCH` and `DELETE` on a single path:
 Three rules follow:
 
 - The account ID is explicit and must be the account the credential belongs to. Any other ID gets
-  `403`.
+  `403`. An embedded integration reads it from the `loaded` message as `account` and uses it as
+  it is: FieldTwin checks the token against the account in the URL, so no check call is needed.
 - A resource is created and deleted on the stream that owns it. Projects are created and deleted
   on the accounts stream, sub-projects on the projects stream.
 - Sub-project IDs keep the `SUBPROJECT:STREAM` form. A bare ID still means the default stream of

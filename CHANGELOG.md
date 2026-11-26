@@ -5,7 +5,13 @@
 - Added the `upgrade-fieldtwin-integration` skill for moving an integration, script, or server
   client from FieldTwin API v1.x to v2.0: an eight-step workflow from inventory to rollback, the
   complete v1.10 to v2.0 endpoint mapping, read and write migration references with fictional
-  before-and-after examples, behaviour changes, the calls that stay on v1.10, and ten evaluations.
+  before-and-after examples, behaviour changes, the calls that stay on v1.10, and eleven
+  evaluations.
+- Followed the updated migration guide on the v2.0 account ID: an embedded integration takes it
+  from `account` in the `loaded` message, an integration backend gets it from its own frontend,
+  and `GET /users/whoami` is only the fallback for a job that no frontend can pass it to. Removed
+  the `whoami` comparison from the upgrade workflow, and added `account` to the `loaded` field
+  lists and the sample bridge in `develop-fieldtwin-integration`.
 - Regenerated both API attribute catalogs from the FieldTwin 9.0 contract: 304 effective v1.10
   operations with 9,512 fields, and 50 v2.0 operations, 112 readable resource types and every
   per-stream write schema. New v2.0 coverage includes `whoami`, paged `/resources` and
