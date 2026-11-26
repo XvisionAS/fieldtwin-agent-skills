@@ -53,7 +53,7 @@ path of `backendUrl`. Send the JWT from `loaded` or `tokenRefresh` as `Authoriza
 | `PUT /secrets/<name>` with `{ value, urlPrefix, header, format? }` | Account admin | The stored destination. Creates or replaces. `name` matches `[A-Za-z0-9_-]{1,64}`. |
 | `DELETE /secrets/<name>` | Account admin | `{ deleted: true }` |
 | `DELETE /secrets` | Account admin | `{ deleted: true }`. Removes every secret of the integration. |
-| `POST /request` with `{ url, method?, headers?, body?, secrets: [name, ...] }` | Any user of the integration, and account admins | The remote API's answer, streamed |
+| `POST /request` with `{ url, method?, query?, headers?, json? \| form? \| multipart? \| body?, secrets: [name, ...] }` | Any user of the integration, and account admins | The remote API's answer, streamed |
 
 "Account admin" is checked on the server from the user of the token. The token of the Account
 Settings page works, and so does the token a normal tab receives when its user is an account admin.
@@ -109,15 +109,14 @@ async function saveApiKey(context, value) {
 ## Calling the remote API
 
 ```js
-async function callRemote(context, path, { method = 'GET', headers, body } = {}) {
+async function callRemote(context, path, request = {}) {
   const response = await fetch(`${secretsBase(context)}/request`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${context.token}`, 'Content-Type': 'application/json' },
+    // request: { method, query, headers, json | form | multipart | body }
     body: JSON.stringify({
       url: `https://api.example.com/v1/${path}`,
-      method,
-      headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      ...request,
       secrets: ['apiKey'],
     }),
   })
@@ -132,7 +131,32 @@ async function callRemote(context, path, { method = 'GET', headers, body } = {})
 
 - The call itself is always a `POST` to FieldTwin; `method` is what the remote API receives: `GET`,
   `HEAD`, `POST`, `PUT`, `PATCH` or `DELETE`.
-- `body` is a string. Set the remote `Content-Type` in `headers`.
+- Describe the request with fields and let FieldTwin build it. Do not assemble query strings or
+  encode bodies by hand:
+
+  | Field | What the remote API receives |
+  | ----- | ---------------------------- |
+  | `query` | Query parameters, added to any already in `url`. `{ lat: 60.5, tags: ['a', 'b'] }` gives `?lat=60.5&tags=a&tags=b`. |
+  | `headers` | Request headers, as `{ name: value }`. |
+  | `json` | Any JSON value as the body, with `Content-Type: application/json`. |
+  | `form` | An object as a URL-encoded form body, with `Content-Type: application/x-www-form-urlencoded`. |
+  | `multipart` | An object as `multipart/form-data`. A field is a value, or a file given as `{ filename, contentType, base64 }`. |
+  | `body` | A string sent as is, for anything else (XML, CSV). Set its `Content-Type` in `headers`. |
+
+- Send at most one of `json`, `form`, `multipart` and `body`. `GET` and `HEAD` send none.
+- Values in `query` and `form` are strings, numbers or booleans, or a list of them; a list repeats
+  its name. A nested object is refused: flatten it the way the remote API expects.
+- A `Content-Type` in `headers` wins over the one `json` or `form` implies, for example
+  `application/merge-patch+json`. With `multipart` it is refused, because FieldTwin sets the
+  boundary.
+- A file goes through as base64 inside the JSON call, so keep uploads small: the whole call is
+  limited to 50 MB.
+
+  ```js
+  await callRemote(context, 'items', { query: { limit: 20, status: ['open', 'late'] } })
+  await callRemote(context, 'items', { method: 'POST', json: { name: 'Pump A' } })
+  await callRemote(context, 'oauth/token', { method: 'POST', form: { grant_type: 'client_credentials' } })
+  ```
 - `headers` may not set a header that a named secret owns, nor `Host`, `Cookie`, `Content-Length`,
   `Connection` or `Transfer-Encoding`.
 - The response carries the remote status, `Content-Type`, `Content-Encoding`, `Content-Length`,
@@ -150,7 +174,7 @@ async function callRemote(context, path, { method = 'GET', headers, body } = {})
 | `secret-unreadable` | The stored secret can no longer be decrypted. An account admin must enter it again. |
 | `url-not-allowed` | `url` is outside the secret's `urlPrefix`. Fix the URL; do not widen the prefix to make it pass. |
 | `header-not-allowed` | A header in `headers` is reserved or belongs to a secret. |
-| `invalid-request`, `invalid-secret` | `detail` names the field. |
+| `invalid-request`, `invalid-secret` | `detail` names the field, for example `query.filter` or `send only one of json, form`. |
 | `too-many-secrets` | The integration already has 20 secrets. |
 | `destination-blocked` | The URL points inside the FieldTwin deployment. Use the public address of the API. |
 | `upstream-unreachable` | The remote API did not answer; `detail` has the network error code. |

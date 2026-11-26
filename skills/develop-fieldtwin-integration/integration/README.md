@@ -178,6 +178,55 @@ and retries; [backend-api-v1.10.md](../references/backend-api-v1.10.md) and
 [api-attributes.md](../references/api-attributes.md) to list the exact fields returned or accepted
 by a version, operation, stream, resource type, and method.
 
+## Call a remote API with a stored secret
+
+A page that runs only in the browser cannot keep an API key. FieldTwin can: an account admin
+stores the key once, bound to an `https` URL prefix and a request header, and the integration
+asks the FieldTwin backend to make the call. The answer is streamed back and the page never holds
+the key. This works for every integration, hosted by FieldTwin or not.
+
+Routes are under `<backendUrl>/integrations/accounts/<account>/integrations/<customTabId>`, with
+the current JWT as `Authorization: Bearer`:
+
+| Route | Who | Purpose |
+| --- | --- | --- |
+| `GET /secrets` | Users of the integration, account admins | Which secrets are set, never their values |
+| `PUT /secrets/<name>` | Account admins | Store `{ value, urlPrefix, header, format? }` |
+| `DELETE /secrets/<name>`, `DELETE /secrets` | Account admins | Remove one secret, or all |
+| `POST /request` | Users of the integration, account admins | Call the remote API with named secrets |
+
+Describe the request with fields and let FieldTwin build it:
+
+```json
+{
+  "url": "https://api.example.com/v1/items",
+  "method": "POST",
+  "query": { "limit": 20, "status": ["open", "late"] },
+  "headers": { "X-Trace": "abc" },
+  "json": { "name": "Pump A" },
+  "secrets": ["apiKey"]
+}
+```
+
+| Field | What the remote API receives |
+| --- | --- |
+| `query` | Query parameters, added to any already in `url`; a list repeats its name |
+| `headers` | Request headers |
+| `json` | Any JSON value as the body |
+| `form` | An object as a URL-encoded form body |
+| `multipart` | An object as `multipart/form-data`; a file is `{ filename, contentType, base64 }` |
+| `body` | A string sent as is; set its `Content-Type` in `headers` |
+
+Send at most one of `json`, `form`, `multipart` and `body`. `url` must start with the `urlPrefix`
+of every secret it names, redirects are not followed, and the response carries
+`X-FieldTwin-Upstream-Status` only when it comes from the remote API.
+
+Keep settings that are not secret in `vendorAttributes` of the account or the project, under one
+key named after the integration.
+
+The `create-fieldtwin-integration` skill's `references/integration-secrets.md` has the settings
+page to build, every rule and the error table.
+
 ## Preserve the exact message contract
 
 Every message has an `event` string, but payload placement varies by event. Do not move a documented top-level field under `data`, or the reverse.

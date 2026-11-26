@@ -4,7 +4,7 @@ description: Develop, debug, test, and review FieldTwin integrations. Use for Fi
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.16.3"
+  version: "0.16.4"
 ---
 
 # Develop FieldTwin integrations
@@ -49,8 +49,10 @@ their installer. Continue if the check is unavailable. Install updates only on r
   for credential handling, malformed inputs, and real host verification.
 - For hosted static deployments, use `create-fieldtwin-integration` and
   `scripts/ft-integrations.mjs`. Deploy through the CLI and use the browser for sign-in.
-- A static integration needs no backend for a remote API key or its settings. Before writing a
-  settings page or remote API call, read that skill's `references/integration-secrets.md`.
+- A static integration needs no backend for a remote API key or its settings. FieldTwin stores
+  the key and makes the call, from a request described with `url`, `method`, `query`, `headers`
+  and one of `json`, `form`, `multipart` or `body`. Before writing a settings page or remote API
+  call, read that skill's `references/integration-secrets.md`.
 
 ## Test in FieldTwin
 

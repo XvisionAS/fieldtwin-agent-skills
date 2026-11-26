@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.16.4 - 2026-11-26
+
+- A request sent with a stored secret is described with fields instead of a hand-built URL and
+  body: `query` for query parameters, and `json`, `form` or `multipart` for the body, beside
+  `headers` and the raw `body`. The secrets reference lists them with examples.
+- The integration guide bundled with `develop-fieldtwin-integration` has a section on calling a
+  remote API with a stored secret, and the skill names the request fields.
+
 ## 0.16.3 - 2026-11-25
 
 - The hosting reference has a section on the pages file of a hosted integration: a manifest and
