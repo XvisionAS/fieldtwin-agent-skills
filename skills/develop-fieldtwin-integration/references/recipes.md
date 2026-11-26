@@ -250,6 +250,12 @@ bridge.send({
 
 Common documented levels are `info`, `success`, `warning`, and `error`. Use the values supported by the target FieldTwin release.
 
+## Display metadata for the current selection
+
+Display the metadata rows returned with the resource. If you need
+additional definition details, follow the [v1.10 metadata lookup](backend-api-v1.10.md#read-metadata-for-a-selection)
+to resolve the definition resource ID from the row.
+
 ## Keep selection separate from camera focus
 
 The `select` command focuses the camera by default when `focusSelection` is omitted. Set the field explicitly so an ordinary click does not unexpectedly zoom.
@@ -303,20 +309,20 @@ For Operation Search, map the row's ordinary selection handler to `focusSelectio
 
 ## Handle API failures and cancellation
 
-Create an `AbortController` for work owned by the mounted integration. The bridge adds the current JWT; feature code handles HTTP status and user feedback.
+Create an `AbortController` for work owned by the mounted integration. The bridge adds the current JWT; feature code handles HTTP status and user feedback. `v110SubProjectPath` is the path helper from [backend-api-v1.10.md](backend-api-v1.10.md).
 
 ```javascript
 const requestController = new AbortController()
 
 async function refreshEquipment() {
   const context = bridge.getContext()
-  if (!context?.subProject || !context.apiServerIsReady) {
+  if (!context?.project || !context?.subProject || !context.apiServerIsReady) {
     return
   }
 
   try {
-    const subProjectId = encodeURIComponent(context.subProject)
-    const response = await bridge.apiFetch(`subprojects/${subProjectId}/stagedAssets`, {
+    // v1.10 subproject route: project ID plus the qualified {subProject}:{stream} branch ID.
+    const response = await bridge.apiFetch(v110SubProjectPath(context, '/stagedAssets'), {
       signal: requestController.signal,
     })
 

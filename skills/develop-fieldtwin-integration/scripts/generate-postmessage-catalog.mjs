@@ -308,6 +308,40 @@ addHostReply('waterCurrentUpdate', 'waterCurrentUpdate-reply', 'Acknowledges acc
   field('error', 'string', false, 'Validation or registration failure; the previous field stays in place.'),
 ], { category: 'walking', correlation: 'responseToEvent only; no per-update request ID' })
 
+host.push(message('host-to-integration', 'shareViewCapture', 'shared-view-capture-request', 'operation-mode', 'targetedDirect', 'Asks a supportShareView instance for its state while the user shares an Operate view.', [
+  eventField,
+  field('data.requestId', 'string', true, 'Opaque request ID to echo in shareViewState.'),
+  field('data.pageId', 'string', false, 'Path of the dynamic page being asked; absent for a static integration.'),
+], {
+  surfaces: ['designer', 'pop-out'],
+  correlation: 'data.requestId',
+  reply: { event: 'shareViewState', kind: 'integration answer; the host waits up to 5 seconds' },
+  notes: [
+    'Operation Mode only. Sent to supporting panels the user has open in the side panel or popped out; closed panels and hidden background copies are not asked.',
+    'Posted directly to that integration window with its exact origin: no host transport fields, and never forwarded to an application embedding FieldTwin.',
+    'Each supporting dynamic page is asked separately and saves its own state; a page supportShareView overrides the integration value.',
+    'A missing, late or invalid answer leaves this integration out of the shared view; sharing still succeeds and the user is warned.',
+  ],
+}))
+host.push(message('host-to-integration', 'shareViewRestore', 'shared-view-restore', 'operation-mode', 'targetedDirect', 'Returns the state this integration saved, when a shared Operate view is opened.', [
+  eventField,
+  field('data.state', 'unknown (JSON)', true, 'The state sent in shareViewState, unchanged and uninterpreted by the host.'),
+  field('data.pageId', 'string', false, 'Path of the dynamic page the state belongs to; absent for a static integration.'),
+], {
+  surfaces: ['designer', 'pop-out'],
+  notes: [
+    'Sent once per page load, right after loaded, usually before the integration has loaded its own data: keep it and apply it when ready.',
+    'Opening the shared view also opens the side panels whose state it carries, when the recipient may use them.',
+    'States can be older than the running integration release; check the state version before applying it.',
+  ],
+}))
+addHostReply('shareViewState', 'shareViewState-reply', 'Acknowledges a shared-view state answer.', [
+  field('success', 'boolean', true, 'Whether the answer matched a pending request from this window.'),
+  field('error', 'string', false, 'Unknown or expired request.'),
+], { category: 'operation-mode', surfaces: ['designer', 'pop-out'] })
+addHostReply('allDeepTags', 'getAllDeepTags-reply', 'Returns the de-duplicated tags of the current scene.', [field('data.tags[]', 'string', true, 'Effective resource tags, operator tags and tags parsed from loaded Roberto part names, original spelling preserved.'), field('data.queryId', 'string', false, 'Echoed query ID.')], { correlation: 'data.queryId' })
+addHostReply('updateResourceColors', 'updateResourceColors-reply', 'Acknowledges a tag color snapshot.', [field('success', 'boolean', true, 'Whether the snapshot was applied.'), field('error', 'string', false, 'Validation failure; the previous snapshot stays in place.')])
+addHostReply('displayTimeline', 'displayTimeline-reply', 'Reports whether the Timeline Viewer opened.', [field('success', 'boolean', true, 'Whether the viewer opened or was revealed.'), field('error', 'string', false, 'Why it could not open, for example the timeline-viewer module is not enabled.')])
 addHostReply('viewBox', 'getViewBox-reply', 'Returns the current camera view box.', [field('data.viewBox', 'object', true, 'Camera-derived view box.')])
 addHostReply('resourcesByTags', 'getResourcesByTags-reply', 'Returns resource IDs grouped by requested tag.', [field('data.results', 'object<string, array<object>>', true, 'Matches keyed by requested tag.'), field('data.results.*[].resourceType', 'string', true, 'Canonical plural collection.'), field('data.results.*[].resourceId', 'string', true, 'Matched resource ID.'), field('data.queryId', 'string', false, 'Echoed query ID.'), field('data.error', 'string', false, 'Validation error.')], { correlation: 'data.queryId' })
 addHostReply('resourceAttributesBulk', 'getResourceAttributesBulk-reply', 'Returns selected attributes keyed by resource ID.', [field('data.results', 'object<string, object>', true, 'Results keyed by resource ID.'), field('data.results.*.resourceType', 'string', true, 'Canonical plural collection.'), field('data.results.*.*', 'unknown|null', false, 'Each requested attribute value.'), field('data.queryId', 'string', false, 'Echoed query ID.')], { correlation: 'data.queryId' })
@@ -352,6 +386,22 @@ request('waterCurrentUpdate', 'water-current-snapshot', 'walking', 'Replaces or 
   ],
 })
 
+request('shareViewState', 'shared-view-state', 'operation-mode', 'Answers shareViewCapture with this instance view state.', [
+  field('data.requestId', 'string', true, 'requestId from shareViewCapture.'),
+  field('data.state', 'unknown (JSON)|null', false, 'JSON of at most 64 KiB, ideally { version, ... }; omit or send null when there is nothing to save.'),
+], {
+  surfaces: ['designer', 'pop-out'],
+  correlation: 'data.requestId',
+  reply: { event: 'shareViewState', kind: 'direct reply' },
+  notes: [
+    'Only the window that received the request can answer it; sender identity comes from the registered source window.',
+    'The host stores states keyed by integration ID, or <integrationId>-dynamic-<path> for a dynamic page, and sends each back with shareViewRestore.',
+    'Store identifiers and positions with a version number, never credentials or signed URLs; the recipient may lack access to some of them.',
+  ],
+})
+request('getAllDeepTags', 'deep-tag-enumeration', 'query', 'Enumerates resource, operator and loaded Roberto model-part tags in the scene.', [field('data.queryId', 'string', false, 'Echoed in allDeepTags.')], { correlation: 'data.queryId', reply: { event: 'allDeepTags', kind: 'direct reply' }, notes: ['Does not load models: tags of parts not yet loaded are absent.'] })
+request('updateResourceColors', 'tag-color-snapshot', 'annotation', 'Replaces the sending integration temporary tag colors for connection and wellbore bodies.', [field('data.colors', 'object<string, string>', true, 'Complete tag to #RGB or #RRGGBB snapshot for this integration.'), field('data.blackenUnmatched', 'boolean', false, 'Colors unmatched connections and wellbores black; defaults to true.')], { reply: { event: 'updateResourceColors', kind: 'direct reply' }, notes: ['Clear the contribution with data: { colors: {}, blackenUnmatched: false }; closing the integration clears it too.', 'Sender identity comes from the registered source window. Invalid messages leave the previous snapshot intact; nothing is saved.'] })
+request('displayTimeline', 'timeline-display', 'ui', 'Opens the project Timeline Viewer; requires the timeline-viewer module.', [], { reply: { event: 'displayTimeline', kind: 'direct reply' } })
 request('zoomAt', 'camera-point', 'selection', 'Moves the camera to a project-space point.', [field('data.x', 'number', true, 'Project-space X.'), field('data.y', 'number', true, 'Project-space Y.'), field('data.z', 'number', false, 'Positive height offset; defaults to 100.')])
 request('zoomOn', 'camera-resource', 'selection', 'Focuses one resource.', [field('data.type', 'string', true, 'Singular selection/navigation type.'), field('data.id', 'string', true, 'Resource ID.'), field('data.distance', 'number', false, 'Positive camera distance.')])
 request('select', 'select-resources', 'selection', 'Selects one or more resources.', [field('data.id', 'string', false, 'Single-resource shorthand ID.'), field('data.type', 'string', false, 'Single-resource shorthand singular type.'), field('data.items', 'array<object>', false, 'Resources to select.'), field('data.items[].id', 'string', true, 'Resource ID.'), field('data.items[].type', 'string', true, 'Singular selection type.'), field('data.items[].partIndex', 'number', false, 'Single staged-asset model-part index.'), field('data.items[].selectedPartIndices[]', 'number', false, 'Staged-asset model-part indices.'), field('data.focusSelection', 'boolean', false, 'Whether to focus; defaults to true.'), field('data.senderId', 'string', false, 'Opaque selection correlation value echoed later.')], { correlation: 'Optional data.senderId is echoed by a later select/unselect.', reply: { event: 'select or unselect', kind: 'asynchronous notification' } })

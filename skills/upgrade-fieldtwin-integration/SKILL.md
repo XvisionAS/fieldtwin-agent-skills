@@ -4,7 +4,7 @@ description: Upgrade a FieldTwin integration, script, or server client from Fiel
 license: ISC
 metadata:
   author: FutureOn AS
-  version: "0.11.0"
+  version: "0.17.0"
 ---
 
 # Upgrade FieldTwin Integrations to API v2.0
@@ -20,6 +20,10 @@ the **write model** (type-keyed batches that answer with IDs only). A search-and
 FieldTwin 9.0 serves both versions side by side and v1.10 has no retirement date yet, so the
 migration can be incremental. That is what makes a careful, reversible upgrade possible: a call
 that cannot move stays on v1.10, and a tenant can be switched back.
+
+On first use in a task, run `node <skill-dir>/scripts/check-update.mjs`. If it finds a newer
+release, tell the user the installed and available versions and the update command for
+their installer. Continue if the check is unavailable. Install updates only on request.
 
 ## Choose the references
 

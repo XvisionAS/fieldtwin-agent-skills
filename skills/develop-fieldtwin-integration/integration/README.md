@@ -185,6 +185,55 @@ and retries; [backend-api-v1.10.md](../references/backend-api-v1.10.md) and
 [api-attributes.md](../references/api-attributes.md) to list the exact fields returned or accepted
 by a version, operation, stream, resource type, and method.
 
+## Call a remote API with a stored secret
+
+A page that runs only in the browser cannot keep an API key. FieldTwin can: an account admin
+stores the key once, bound to an `https` URL prefix and a request header, and the integration
+asks the FieldTwin backend to make the call. The answer is streamed back and the page never holds
+the key. This works for every integration, hosted by FieldTwin or not.
+
+Routes are under `<backendUrl>/integrations/accounts/<account>/integrations/<customTabId>`, with
+the current JWT as `Authorization: Bearer`:
+
+| Route | Who | Purpose |
+| --- | --- | --- |
+| `GET /secrets` | Users of the integration, account admins | Which secrets are set, never their values |
+| `PUT /secrets/<name>` | Account admins | Store `{ value, urlPrefix, header, format? }` |
+| `DELETE /secrets/<name>`, `DELETE /secrets` | Account admins | Remove one secret, or all |
+| `POST /request` | Users of the integration, account admins | Call the remote API with named secrets |
+
+Describe the request with fields and let FieldTwin build it:
+
+```json
+{
+  "url": "https://api.example.com/v1/items",
+  "method": "POST",
+  "query": { "limit": 20, "status": ["open", "late"] },
+  "headers": { "X-Trace": "abc" },
+  "json": { "name": "Pump A" },
+  "secrets": ["apiKey"]
+}
+```
+
+| Field | What the remote API receives |
+| --- | --- |
+| `query` | Query parameters, added to any already in `url`; a list repeats its name |
+| `headers` | Request headers |
+| `json` | Any JSON value as the body |
+| `form` | An object as a URL-encoded form body |
+| `multipart` | An object as `multipart/form-data`; a file is `{ filename, contentType, base64 }` |
+| `body` | A string sent as is; set its `Content-Type` in `headers` |
+
+Send at most one of `json`, `form`, `multipart` and `body`. `url` must start with the `urlPrefix`
+of every secret it names, redirects are not followed, and the response carries
+`X-FieldTwin-Upstream-Status` only when it comes from the remote API.
+
+Keep settings that are not secret in `vendorAttributes` of the account or the project, under one
+key named after the integration.
+
+The `create-fieldtwin-integration` skill's `references/integration-secrets.md` has the settings
+page to build, every rule and the error table.
+
 ## Preserve the exact message contract
 
 Every message has an `event` string, but payload placement varies by event. Do not move a documented top-level field under `data`, or the reverse.
@@ -202,6 +251,7 @@ Common host-to-integration events include:
 | `visualFilterToggle` | Notify the owning integration that a filter changed. |
 | `getTimeSeriesData` | Request samples for a registered series and viewport window. |
 | `waterCurrentRequest` | A walk successfully starts; answer with a current snapshot if available. |
+| `shareViewCapture` / `shareViewRestore` | Operate shared views: answer with this instance's state, or restore a saved one. |
 
 Common integration-to-host events include:
 
@@ -217,6 +267,7 @@ Common integration-to-host events include:
 | `visualFilteringUpdate` | Register integration-owned visual filter chips. |
 | `timeSeriesInfo` / `timeSeriesData` | Register a series and return correlated binary samples. |
 | `waterCurrentUpdate` | Replace or clear this integration's water current for walking and swimming. |
+| `shareViewState` | Answer `shareViewCapture` with `data.requestId` and a versioned `data.state`. |
 
 Water current is a walking/swimming feature in Designer and Presenter, including Operation Mode.
 Send `data.stations` with project-CRS `x`/`y` and true-depth profiles (`z` in metres, `east`/`north`/`up`
@@ -224,6 +275,11 @@ in m/s); do not exaggerate the depth. The most recently accepted integration fie
 blending. Empty stations clear only the sender, and invalid input preserves its previous field.
 See [water-current.md](../references/water-current.md) for every field and limit, exact replies,
 time changes, and the explicit-clear requirement before closing a pop-out.
+
+Integrations that set `supportShareView` are asked for their state when a user shares an Operate
+view, and receive it with `shareViewRestore` right after `loaded` when the view is opened. Put a
+`version` in every state and check it on restore; links outlive releases. See
+[shared-views.md](../references/shared-views.md).
 
 `updateTagStyles` rules require a user-toggleable `category`; categories start disabled. Roberto
 uses `style.backgroundColor`, falling back to `style.color`, for status outlines rather than surface
@@ -320,6 +376,7 @@ Read [security-and-testing.md](../references/security-and-testing.md) before imp
 | Complete host-client postMessage attributes and lookup commands | [postmessage-attributes.md](../references/postmessage-attributes.md) |
 | Common event catalog and exact envelopes | [message-catalog.md](../references/message-catalog.md) |
 | Walking/swimming water-current snapshots, limits, ownership, and replies | [water-current.md](../references/water-current.md) |
+| Operate shared views: opt-in, capture/restore messages, versioned state | [shared-views.md](../references/shared-views.md) |
 | Integration-to-host events and resource-type vocabulary | [integration-to-host-events.md](../references/integration-to-host-events.md) |
 | Operation Search, actions, filters, panels, time series | [operation-mode.md](../references/operation-mode.md) |
 | Selection, resources, settings, notifications, focus | [recipes.md](../references/recipes.md) |

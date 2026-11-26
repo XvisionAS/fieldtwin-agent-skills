@@ -87,6 +87,39 @@ Several route families accept both singular and plural aliases. Do not generate 
 singularizing a collection name: names such as `metaData`, `metadatumlinks`, and workflow routes
 have historical spelling. Copy the released path.
 
+## Read metadata for a selection
+
+After a host `select` event, load the selected resource by type and ID using
+[the host's `getResources` message](integration-to-host-events.md#getresources-exact-contract)
+or its v1.10 resource GET. Both return `metaData` rows with `name` and `value`. Choice values can
+already include their display names. Read a definition only when the row lacks details you need.
+
+| Source | Field | Value |
+| --- | --- | --- |
+| REST resource's metadata row | `metaDatumId` | Definition resource ID for the single-definition GET |
+| Host `getResources` metadata row | `id` | Definition resource ID for the same GET |
+| REST resource's metadata row | `metaDatumLinkId` or, on directly linked rows, `id` | Attachment link ID |
+| Definition object | `id` | Definition resource ID and collection key |
+| Metadata row or definition | `definitionId` | Exact match key in the collection, for example `Example:Plant[choices]` |
+| Choice value or option | `id` | Choice ID within its definition |
+
+| GET route | Path input | Query inputs |
+| --- | --- | --- |
+| `/API/v1.10/metadatadefinition/{id}` | Definition resource ID, encoded once | Optional `at` |
+| `/API/v1.10/metadatadefinitions` | None | Optional `projectId` and `at` |
+
+Both GETs use `Authorization: Bearer <JWT>` in a browser integration and have no request body.
+Use the separate `token` header only with an account API token in a server client. Omit `at` for
+current data. A historical read takes Unix milliseconds or an ISO 8601 date/datetime. If you
+compare snapshots, use the same `at` for the resource and its definitions.
+
+With only `definitionId`, list definitions with `projectId` set to the project resource ID
+(`loaded.project`). A matching project adds its definitions and can be configured to exclude
+account/global definitions. An omitted or unavailable project uses account scope. Match
+`definitionId` exactly against the values and use the matching entry's key. Reuse the returned
+definition, including `options.items.list` for choices. Leave missing or ambiguous matches
+unresolved.
+
 ## Subproject layout surface
 
 Base path:

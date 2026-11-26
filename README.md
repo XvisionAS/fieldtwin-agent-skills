@@ -13,7 +13,7 @@ This repository publishes three complementary skills:
   v1.10, and validate with a configuration switch that can roll a tenant back.
 - **Develop FieldTwin Integration** — build, run, debug, test, and review FieldTwin custom-tab integrations and their Operation Mode host behavior, including the local Tilt/Helm path, HTTP/HTTPS URL generation, iframe lifecycle, API authentication, `postMessage`, pop-out windows, system highlighting, settings, and protocol tests.
 
-The skill is documentation and instructions only. It has no MCP server or executable runtime, makes no network requests by itself, and does not collect credentials or usage data.
+The skills are documentation and instructions, plus small helper scripts. There is no MCP server and no telemetry. `check-update.mjs` reads public release tags and skill metadata from GitHub. `ft-integrations.mjs` in `create-fieldtwin-integration` deploys a static integration to the FieldTwin instance URL you give it. To do that it logs you in through your browser and stores the resulting deploy token in your user configuration directory (`~/.config/fieldtwin/integrations.json`, `%APPDATA%` on Windows), readable only by you on macOS and Linux (file mode 0600); on Windows the file relies on your user profile's own protection. The token lets the script list the accounts you may deploy to and their integrations, and create, update, roll back and delete FieldTwin-hosted integrations there (you may deploy to an account if you are its admin, or if your role grants "Can deploy integrations" under a PRO licence and the account has the hosted-integrations module; without admin rights you manage only the integrations you created); it gives no access to project data; it expires after 7 days.
 
 ## Install
 
@@ -71,13 +71,22 @@ You can also copy `skills/develop-fieldtwin-integration` into any skill director
 
 ## Update
 
-Update installations managed by the `skills` CLI:
+All three skills ask the agent to check for updates on first use in a task. You can also run
+`node scripts/check-update.mjs` from the installed skill folder. It compares the installed
+`metadata.version` with that same skill’s version in the latest stable `vX.Y.Z` tag. The
+requests share a four-second timeout, so work can continue when GitHub is unavailable.
 
-```bash
-npx skills update create-fieldtwin-integration
-npx skills update develop-fieldtwin-integration
-npx skills update upgrade-fieldtwin-integration
-```
+Use the same installer and scope you originally used:
+
+| Installer | Update command |
+| --- | --- |
+| skills CLI | `npx skills update <skill-name>`. Add `--global` for a global installation or run inside the project for a project installation. |
+| GitHub CLI | `gh skill update <skill-name>`. For a pinned installation, add `--unpin` only if you want to remove the pin and update. |
+| Manual copy | Replace the installed skill folder with the same folder from the [latest stable tag](https://github.com/XvisionAS/fieldtwin-agent-skills/tags). |
+
+Use `create-fieldtwin-integration`, `develop-fieldtwin-integration` or
+`upgrade-fieldtwin-integration` for `<skill-name>`.
+Copies installed before v0.15.2 gain the check after their first update.
 
 ## Documentation scope
 
@@ -107,11 +116,13 @@ The bundled [integration guide](skills/develop-fieldtwin-integration/integration
 - host-side system highlighting for metadata-backed connection bundles with multi-channel colors and independent flow direction;
 - walking/swimming water-current requests and depth-profile snapshots, numerical limits, ownership,
   acknowledgement, time changes, and iframe/pop-out cleanup;
+- Operate shared views: the `supportShareView` opt-in and versioned integration state captured on
+  share and restored after `loaded`;
 - projector CRS/axis-order transforms, URL-based vector conversion, and raster profiles, signed
   difference volumes, heat-map metadata and float32 tiles;
 - automated and manual protocol testing.
 
-See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and the FieldTwin API references for [v2.0](https://api.fieldtwin.com/) and [v1.10](https://api-1-10.fieldtwin.com/) for current product documentation. Backend API guidance, the attribute catalogs, and the migration mapping were reconciled with the FieldTwin 9.0 contract on 2026-11-13. Bundled message guidance was reconciled with integration-guide revision 65 and the matching host contract on 2026-10-01. Verify newer events on the target deployment; its current documented contract takes precedence.
+See the [FieldTwin documentation center](https://docs.fieldtwin.com/) and the FieldTwin API references for [v2.0](https://api.fieldtwin.com/) and [v1.10](https://api-1-10.fieldtwin.com/) for current product documentation. Backend API guidance and the v1.10 to v2.0 migration mapping were reconciled with the FieldTwin 9.0 contract on 2026-11-13. Bundled message guidance was reconciled with integration-guide revision 66 and the matching host contract on 2026-11-18. Verify newer events on the target deployment; its current documented contract takes precedence.
 
 All IDs, origins, assets, tags, and measurements in examples are fictional.
 
@@ -132,7 +143,8 @@ skills/
 └── upgrade-fieldtwin-integration/
     ├── SKILL.md
     ├── evals/evals.json
-    └── references/
+    ├── references/
+    └── scripts/
 ```
 
 ## Validate a contribution

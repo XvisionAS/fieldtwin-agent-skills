@@ -1,7 +1,7 @@
 {
   "catalogVersion": 1,
   "apiVersion": "v1.10",
-  "generatedOn": "2026-11-13",
+  "generatedOn": "2026-11-25",
   "contract": {
     "source": "Effective v1.10 ApiDoc annotations, including v1.9 operations inherited by v1.10.",
     "pathNotation": "Dots indicate nested properties. Optional attributes are marked explicitly.",
@@ -174,7 +174,7 @@
           "path": "linkableExternalSubProjects",
           "type": "Object",
           "optional": false,
-          "description": "An object listing external sub-projects that can be linked to projects within this account. Keys are in <subProjectId:streamId> format."
+          "description": "An object listing external sub-projects that can be linked to projects within this account. Keys are in <subProjectId:streamId> format. Not returned to a service principal."
         },
         {
           "location": "response",
@@ -279,7 +279,7 @@
           "path": "projects.id.externalParentSubProjects",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of external parent sub projects."
+          "description": "Array of external parent sub projects. Not returned to a service principal."
         },
         {
           "location": "response",
@@ -696,7 +696,7 @@
           "path": "externalParentSubProjects",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of external parent sub projects."
+          "description": "Array of external parent sub projects. Not returned to a service principal."
         },
         {
           "location": "response",
@@ -1191,7 +1191,7 @@
           "path": "externalParentSubProjects",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of external parent sub projects."
+          "description": "Array of external parent sub projects. Not returned to a service principal."
         },
         {
           "location": "body",
@@ -1345,8 +1345,8 @@
           "location": "body",
           "path": "userEmail",
           "type": "String",
-          "optional": false,
-          "description": "- Email of user who do the request, used and require only with API token"
+          "optional": true,
+          "description": "- Email of user who do the request, used and require only with API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -1602,7 +1602,7 @@
           "path": "externalParentSubProjects",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of external parent sub projects."
+          "description": "Array of external parent sub projects. Not returned to a service principal."
         },
         {
           "location": "response",
@@ -2037,6 +2037,20 @@
           "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
         },
         {
+          "location": "query",
+          "path": "days",
+          "type": "Number",
+          "optional": false,
+          "description": "number of days to look back. Default is 30 days."
+        },
+        {
+          "location": "query",
+          "path": "from",
+          "type": "Number",
+          "optional": false,
+          "description": "the date from when to start look back to get logs. Date format is time in milliseconds, Unix epoch. Default is \"now\""
+        },
+        {
           "location": "header",
           "path": "include-last-modified",
           "type": "Boolean",
@@ -2426,8 +2440,8 @@
           "location": "body",
           "path": "userEmail",
           "type": "String",
-          "optional": false,
-          "description": "- Email of user who do the request, used and require only with API token"
+          "optional": true,
+          "description": "- Email of user who do the request, used and require only with API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -9264,8 +9278,8 @@
           "location": "body",
           "path": "userEmail",
           "type": "String",
-          "optional": false,
-          "description": "- Email of user who do the request, used and require only with API token"
+          "optional": true,
+          "description": "- Email of user who do the request, used and require only with API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -10886,7 +10900,7 @@
           "path": "connections.id.intermediaryPoints",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of intermediaryPoints"
+          "description": "Array of intermediaryPoints. At most 100000 points, but use lower numbers for higher performance"
         },
         {
           "location": "body",
@@ -11387,6 +11401,34 @@
         },
         {
           "location": "body",
+          "path": "connectionSegments.id.endPoint",
+          "type": "Object",
+          "optional": false,
+          "description": "point, in the project coordinates, where the segment ends. It must project after `startPoint` along the connection."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.endPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.endPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.endPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
+        },
+        {
+          "location": "body",
           "path": "connectionSegments.id.isValidForCost",
           "type": "Boolean",
           "optional": false,
@@ -11538,6 +11580,34 @@
           "type": "Number",
           "optional": false,
           "description": "start offset of the connection segment. This value is relative to the start of the connection when `relativeToEnd=false`."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.startPoint",
+          "type": "Object",
+          "optional": false,
+          "description": "point, in the project coordinates, where the segment starts. Send it with `endPoint` instead of `startOffset`, `length` and `relativeToEnd`: both points are projected on the connection, which sets them."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.startPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.startPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.id.startPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
         },
         {
           "location": "body",
@@ -14629,7 +14699,7 @@
           "path": "annotations.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "header",
@@ -14844,9 +14914,9 @@
         {
           "location": "body",
           "path": "connections.globals.intermediaryPoints",
-          "type": "Object",
+          "type": "Object[]",
           "optional": false,
-          "description": "Array of objects containg intermediate points"
+          "description": "Array of objects containg intermediate points. At most 100000 points, but use lower numbers for higher performance"
         },
         {
           "location": "body",
@@ -15258,7 +15328,7 @@
           "path": "connections.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -15421,6 +15491,34 @@
           "optional": false,
           "default": "''",
           "description": "description of the connection segment."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.endPoint",
+          "type": "Object",
+          "optional": true,
+          "description": "point, in the project coordinates, where the segment ends. It must project after `startPoint` along the connection."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.endPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.endPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.endPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
         },
         {
           "location": "body",
@@ -15587,6 +15685,34 @@
         },
         {
           "location": "body",
+          "path": "connectionSegments.globals.startPoint",
+          "type": "Object",
+          "optional": true,
+          "description": "point, in the project coordinates, where the segment starts. Send it with `endPoint` instead of `startOffset`, `length` and `relativeToEnd`: both points are projected on the connection, which sets them."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.startPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.startPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "connectionSegments.globals.startPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
+        },
+        {
+          "location": "body",
           "path": "connectionSegments.globals.tags",
           "type": "String[]",
           "optional": false,
@@ -15620,7 +15746,7 @@
           "path": "connectionSegments.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -15809,7 +15935,7 @@
           "path": "customCosts.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -15844,7 +15970,7 @@
           "path": "gaussianSplats.totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Minimum number of Gaussian splat records to create."
+          "description": "Minimum number of Gaussian splat records to create. At most 100."
         },
         {
           "location": "body",
@@ -16159,7 +16285,7 @@
           "path": "layers.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -16313,7 +16439,7 @@
           "path": "overlays.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -16348,7 +16474,7 @@
           "path": "pointClouds.totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Minimum number of point cloud records to create."
+          "description": "Minimum number of point cloud records to create. At most 100."
         },
         {
           "location": "path",
@@ -16390,7 +16516,7 @@
           "path": "reservoirs.totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Minimum number of reservoirs to create."
+          "description": "Minimum number of reservoirs to create. At most 100."
         },
         {
           "location": "body",
@@ -17080,7 +17206,7 @@
           "path": "shapes.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -17607,7 +17733,7 @@
           "path": "stagedAssets.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "path",
@@ -18069,7 +18195,7 @@
           "path": "wellBores.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -18419,7 +18545,7 @@
           "path": "wellBoreSegments.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         },
         {
           "location": "body",
@@ -18735,7 +18861,7 @@
           "path": "wells.totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -18779,16 +18905,16 @@
         {
           "location": "response",
           "path": "changes.firstTimeStamp",
-          "type": "Date",
+          "type": "Number",
           "optional": false,
-          "description": "First event time stamp for this item, in milliseconds, Unix epoch."
+          "description": "First event timestamp for this item in Unix milliseconds."
         },
         {
           "location": "response",
           "path": "changes.fromLog",
           "type": "Boolean",
-          "optional": false,
-          "description": "True if one of the change is from a log event."
+          "optional": true,
+          "description": "Present and true if sourced from a client log event."
         },
         {
           "location": "response",
@@ -18807,9 +18933,23 @@
         {
           "location": "response",
           "path": "changes.lastTimeStamp",
-          "type": "Date",
+          "type": "Number",
           "optional": false,
-          "description": "Last event time stamp for this item, in milliseconds, Unix epoch."
+          "description": "Last event timestamp for this item in Unix milliseconds."
+        },
+        {
+          "location": "response",
+          "path": "changes.stream",
+          "type": "String",
+          "optional": false,
+          "description": "Stream ID of the changed resource."
+        },
+        {
+          "location": "response",
+          "path": "changes.subProject",
+          "type": "String",
+          "optional": false,
+          "description": "Subproject document ID of the changed resource."
         },
         {
           "location": "response",
@@ -18827,24 +18967,24 @@
         },
         {
           "location": "response",
-          "path": "firstTimeStamp",
-          "type": "Date",
+          "path": "changes.values",
+          "type": "Object",
           "optional": false,
-          "description": "First event time stamp, in milliseconds, Unix epoch."
+          "description": "Changed values keyed by field name."
         },
         {
-          "location": "header",
-          "path": "include-last-modified",
-          "type": "Boolean",
-          "optional": true,
-          "description": "Set to `true` to add a `lastModified` field to every"
+          "location": "response",
+          "path": "firstTimeStamp",
+          "type": "Number",
+          "optional": false,
+          "description": "First matching event timestamp in Unix milliseconds."
         },
         {
           "location": "response",
           "path": "lastTimeStamp",
-          "type": "Date",
+          "type": "Number",
           "optional": false,
-          "description": "Last event time stamp, in milliseconds, Unix epoch."
+          "description": "Last matching event timestamp in Unix milliseconds."
         },
         {
           "location": "path",
@@ -18858,21 +18998,21 @@
           "path": "relateToId",
           "type": "String",
           "optional": true,
-          "description": "if present, filter all logs by model id"
+          "description": "Exact resource ID to match on the event."
         },
         {
           "location": "query",
           "path": "relateToType",
           "type": "String",
           "optional": true,
-          "description": "if present, filter all logs by model type"
+          "description": "Resource collection to match on the event, such as `stagedAssets`."
         },
         {
           "location": "query",
           "path": "since",
-          "type": "String",
+          "type": "Number",
           "optional": true,
-          "description": "if present, will return only change that happen since (and not included) this date. Date format is time in seconds, Unix epoch."
+          "description": "Exclusive lower bound in Unix seconds. Defaults to 30 days before the request."
         },
         {
           "location": "path",
@@ -18891,9 +19031,9 @@
         {
           "location": "query",
           "path": "until",
-          "type": "String",
+          "type": "Number",
           "optional": true,
-          "description": "if present, will return only change that happen until (and not included) this date. Date format is time in seconds, Unix epoch."
+          "description": "Exclusive upper bound in Unix seconds. Defaults to the time of the request."
         }
       ]
     },
@@ -19241,9 +19381,9 @@
         {
           "location": "body",
           "path": "intermediaryPoints",
-          "type": "Object",
+          "type": "Object[]",
           "optional": false,
-          "description": "Array of objects containg intermediate points"
+          "description": "Array of objects containg intermediate points. At most 100000 points, but use lower numbers for higher performance"
         },
         {
           "location": "body",
@@ -21358,7 +21498,7 @@
           "path": "intermediaryPoints",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of intermediaryPoints"
+          "description": "Array of intermediaryPoints. At most 100000 points, but use lower numbers for higher performance"
         },
         {
           "location": "body",
@@ -21955,6 +22095,34 @@
         },
         {
           "location": "body",
+          "path": "endPoint",
+          "type": "Object",
+          "optional": true,
+          "description": "point, in the project coordinates, where the segment ends. It must project after `startPoint` along the connection."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
+        },
+        {
+          "location": "body",
           "path": "flipTexture",
           "type": "Boolean",
           "optional": true,
@@ -22136,6 +22304,34 @@
           "optional": true,
           "default": "10",
           "description": "start offset of the connection segment. This value is relative to the start of the connection when `relativeToEnd=false`."
+        },
+        {
+          "location": "body",
+          "path": "startPoint",
+          "type": "Object",
+          "optional": true,
+          "description": "point, in the project coordinates, where the segment starts. Send it with `endPoint` instead of `startOffset`, `length` and `relativeToEnd`: both points are projected on the connection, which sets them."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
         },
         {
           "location": "path",
@@ -22390,6 +22586,34 @@
         },
         {
           "location": "body",
+          "path": "endPoint",
+          "type": "Object",
+          "optional": false,
+          "description": "point, in the project coordinates, where the segment ends. It must project after `startPoint` along the connection."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "endPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
+        },
+        {
+          "location": "body",
           "path": "flipTexture",
           "type": "Boolean",
           "optional": false,
@@ -22618,6 +22842,34 @@
           "type": "Number",
           "optional": false,
           "description": "start offset of the connection segment. This value is relative to the start of the connection when `relativeToEnd=false`."
+        },
+        {
+          "location": "body",
+          "path": "startPoint",
+          "type": "Object",
+          "optional": false,
+          "description": "point, in the project coordinates, where the segment starts. Send it with `endPoint` instead of `startOffset`, `length` and `relativeToEnd`: both points are projected on the connection, which sets them."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.x",
+          "type": "Number",
+          "optional": false,
+          "description": "x coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.y",
+          "type": "Number",
+          "optional": false,
+          "description": "y coordinate of the point."
+        },
+        {
+          "location": "body",
+          "path": "startPoint.z",
+          "type": "Number",
+          "optional": true,
+          "description": "z coordinate of the point, like the z of the connection points. With it, the point is projected on the connection in 3D, which places it on parts that overlap in plan view, such as a riser; without it, in plan view."
         },
         {
           "location": "path",
@@ -25137,7 +25389,7 @@
           "path": "root.id.costObject",
           "type": "Object",
           "optional": false,
-          "description": "Cost object details."
+          "description": "Cost object details. Only returned to a role that may view custom cost values."
         },
         {
           "location": "response",
@@ -25583,7 +25835,7 @@
           "path": "costObject",
           "type": "Object",
           "optional": false,
-          "description": "Cost object details."
+          "description": "Cost object details. Only returned to a role that may view custom cost values."
         },
         {
           "location": "response",
@@ -25846,7 +26098,7 @@
           "path": "costObject",
           "type": "Object",
           "optional": false,
-          "description": "Cost object details."
+          "description": "Cost object details. Only returned to a role that may view custom cost values."
         },
         {
           "location": "response",
@@ -26256,7 +26508,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -26453,7 +26705,7 @@
           "path": "creator",
           "type": "string",
           "optional": true,
-          "description": "Email of the creator if JWT is not provided"
+          "description": "Email of the creator if JWT is not provided. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -28278,7 +28530,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Creates at least this many items, padding items with empty objects when needed."
+          "description": "Creates at least this many items, padding items with empty objects when needed. At most 100."
         }
       ]
     },
@@ -28304,7 +28556,7 @@
           "type": "Number",
           "optional": true,
           "default": "10",
-          "description": "Number of contour planes used when exporting layers."
+          "description": "Number of contour planes used when exporting layers, between 1 and 3000."
         },
         {
           "location": "query",
@@ -28601,7 +28853,7 @@
           "path": "points",
           "type": "Object[]",
           "optional": false,
-          "description": "Array of points to be height sampled"
+          "description": "Array of points to be height sampled. At most 1000000 points."
         },
         {
           "location": "body",
@@ -28718,7 +28970,7 @@
           "path": "subProject.externalParentSubProjects",
           "type": "Object",
           "optional": false,
-          "description": "Object containing external parent sub-projects."
+          "description": "Object containing external parent sub-projects. Not returned to a service principal."
         },
         {
           "location": "response",
@@ -32150,7 +32402,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -33805,7 +34057,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Creates at least this many items, padding items with empty objects when needed."
+          "description": "Creates at least this many items, padding items with empty objects when needed. At most 100."
         }
       ]
     },
@@ -34739,7 +34991,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": true,
-          "description": "Creates at least this many items, padding items with empty objects when needed."
+          "description": "Creates at least this many items, padding items with empty objects when needed. At most 100."
         }
       ]
     },
@@ -39907,7 +40159,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -43800,7 +44052,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -48815,7 +49067,7 @@
           "path": "totalNumberOfItems",
           "type": "Number",
           "optional": false,
-          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects."
+          "description": "total number of items to be created, if inferior to the length of the items array, the length of the items array will be used. if superior, the items array will be padded with empty objects. At most 100."
         }
       ]
     },
@@ -48959,8 +49211,8 @@
           "location": "body",
           "path": "user",
           "type": "String",
-          "optional": false,
-          "description": "user email for the creator of the comment."
+          "optional": true,
+          "description": "user email for the creator of the comment, required with an API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "path",
@@ -50923,101 +51175,6 @@
       "method": "GET",
       "path": "/API/v1.10/connectionSegmentTypes",
       "title": "Request a list of all defined connection segment types for an account",
-      "name": "GetConnectionSegmentTypes",
-      "group": "ConnectionSegmentTypes",
-      "sourceVersion": "v1.9",
-      "inherited": true,
-      "attributes": [
-        {
-          "location": "header",
-          "path": "Authorization",
-          "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes",
-          "type": "Object[]",
-          "optional": false,
-          "description": "Array of object containing all connection segment types defined for an account."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.accountId",
-          "type": "String",
-          "optional": true,
-          "description": "Account ID of the connection segment type."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.getFrom",
-          "type": "String",
-          "optional": false,
-          "description": "URL to get the connection segment type from the external account."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.id",
-          "type": "String",
-          "optional": false,
-          "description": "Uniq ID of the connection segment type."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.isForeign",
-          "type": "Boolean",
-          "optional": false,
-          "description": "Indicating if the connection segment type is from an external account."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.name",
-          "type": "String",
-          "optional": false,
-          "description": "Display name of the connection segment type."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.projectId",
-          "type": "String",
-          "optional": true,
-          "description": "Project ID of the connection segment type."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.tags",
-          "type": "String[]",
-          "optional": false,
-          "description": "Array of tags associated with the connection definition."
-        },
-        {
-          "location": "response",
-          "path": "connectionSegmentTypes.vendorId",
-          "type": "String",
-          "optional": false,
-          "description": "Vendor ID of the connection segment type."
-        },
-        {
-          "location": "query",
-          "path": "projectId",
-          "type": "String",
-          "optional": true,
-          "description": "if present, will also return connection segment types tied to a specific project, in plus of the account data."
-        },
-        {
-          "location": "header",
-          "path": "token",
-          "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
-        }
-      ]
-    },
-    {
-      "method": "GET",
-      "path": "/API/v1.10/connectionSegmentTypes",
-      "title": "Request a list of all defined connection segment types for an account",
       "name": "GetConnectionSegmentTypesById",
       "group": "ConnectionSegmentTypes",
       "sourceVersion": "v1.10",
@@ -51977,38 +52134,6 @@
       ]
     },
     {
-      "method": "DELETE",
-      "path": "/API/v1.10/connectors/:connectorId",
-      "title": "Delete and existing connector for an account",
-      "name": "DeletehConnectors",
-      "group": "Accounts",
-      "sourceVersion": "v1.9",
-      "inherited": true,
-      "attributes": [
-        {
-          "location": "header",
-          "path": "Authorization",
-          "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
-        },
-        {
-          "location": "path",
-          "path": "connectorId",
-          "type": "String",
-          "optional": false,
-          "description": "connector unique id"
-        },
-        {
-          "location": "header",
-          "path": "token",
-          "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
-        }
-      ]
-    },
-    {
       "method": "GET",
       "path": "/API/v1.10/connectors/:connectorId",
       "title": "Request a defined connector by id for an account",
@@ -52388,7 +52513,7 @@
           "path": "creator",
           "type": "String",
           "optional": true,
-          "description": "Email of the creator if JWT is not provided"
+          "description": "Email of the creator if JWT is not provided. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -54230,7 +54355,7 @@
           "path": "from",
           "type": "Number",
           "optional": false,
-          "description": "the date from when to start look back to get logs. Date format is time in seconds, Unix epoch default is \"now\""
+          "description": "the date from when to start look back to get logs. Date format is time in milliseconds, Unix epoch. Default is \"now\""
         },
         {
           "location": "header",
@@ -54627,14 +54752,22 @@
           "path": "account",
           "type": "String",
           "optional": true,
-          "description": "project uniq id if definition is linked to a project"
+          "description": "Account ID on an account-owned definition"
+        },
+        {
+          "location": "query",
+          "path": "at",
+          "type": "String",
+          "optional": true,
+          "default": "latest",
+          "description": "Account snapshot time. Accepts `latest`, Unix time in milliseconds, or an ISO 8601 date or datetime."
         },
         {
           "location": "header",
           "path": "Authorization",
           "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
+          "optional": true,
+          "description": "`Bearer <JWT>` for browser integrations. Required if `token` is omitted."
         },
         {
           "location": "response",
@@ -54646,37 +54779,44 @@
         {
           "location": "response",
           "path": "clonedFroms",
-          "type": "String",
+          "type": "String[]",
           "optional": true,
-          "description": "if present, chain of if the item was cloned from, last entry is the immediate parent, first entry is the farthest ancestor"
+          "description": "Ancestor definition IDs from oldest to most recent"
         },
         {
           "location": "response",
           "path": "cost",
-          "type": "String",
+          "type": "Number",
           "optional": true,
-          "description": "In case of basic cost server, cost of the definition if present"
+          "description": "Cost associated with the definition"
         },
         {
           "location": "response",
           "path": "costPerLength",
-          "type": "String",
+          "type": "Boolean",
           "optional": true,
-          "description": "In case of basic cost server, tell if the cost should be multiply by the length"
+          "description": "Whether cost scales with length"
         },
         {
           "location": "response",
           "path": "definitionId",
           "type": "String",
           "optional": false,
-          "description": "Unique id of the definition"
+          "description": "Identifier for matching definitions in the collection. Use `id` in the single-definition endpoint path."
         },
         {
           "location": "response",
           "path": "displayIfConditions",
           "type": "Object[]",
           "optional": false,
-          "description": "Flat collection of the condition nodes forming the tree that decides whether the meta datum is displayed. Nesting is expressed with `children`; only root nodes appear in the array. A set whose root is not a \"group\" is legacy data and keeps its old, order dependent evaluation until it is saved again."
+          "description": "Root condition nodes of the tree that decides whether the meta datum is displayed. Nesting is expressed with `children`; only root nodes appear in the array. A set whose root is not a \"group\" is legacy data and keeps its old, order dependent evaluation until it is saved again."
+        },
+        {
+          "location": "response",
+          "path": "displayIfConditions.children",
+          "type": "Object[]",
+          "optional": true,
+          "description": "Child condition nodes of a group"
         },
         {
           "location": "response",
@@ -54766,29 +54906,29 @@
           "location": "response",
           "path": "getFrom",
           "type": "String",
-          "optional": false,
-          "description": "URL to get the foreign meta data definition details"
+          "optional": true,
+          "description": "URL for the external definition when available"
         },
         {
-          "location": "header",
-          "path": "include-last-modified",
-          "type": "Boolean",
-          "optional": true,
-          "description": "Set to `true` to add a `lastModified` field to every"
+          "location": "response",
+          "path": "id",
+          "type": "String",
+          "optional": false,
+          "description": "Resource ID used in the single-definition endpoint path"
         },
         {
           "location": "response",
           "path": "isForeign",
           "type": "Boolean",
-          "optional": false,
-          "description": "if true, the meta data definition is from an external account"
+          "optional": true,
+          "description": "Present and true for an external definition"
         },
         {
           "location": "path",
           "path": "metaDataDefinitionId",
           "type": "String",
           "optional": false,
-          "description": "MetadataDefinition unique id"
+          "description": "Metadata definition resource ID. Use `metaDatumId` from a REST metadata row, `id` from a host `getResources` metadata row, or the definitions collection key."
         },
         {
           "location": "response",
@@ -54807,83 +54947,104 @@
         {
           "location": "response",
           "path": "options.items",
-          "type": "Object[]",
-          "optional": false,
-          "description": "If type \"choices\", this will define the list of item that the user can pick from"
+          "type": "Object",
+          "optional": true,
+          "description": "Choice configuration for a definition of type `choices`"
         },
         {
           "location": "response",
-          "path": "options.items.cost",
+          "path": "options.items.default",
+          "type": "Object|Object[]",
+          "optional": true,
+          "description": "Default choice or choices"
+        },
+        {
+          "location": "response",
+          "path": "options.items.list",
+          "type": "Object[]",
+          "optional": true,
+          "description": "Available choices"
+        },
+        {
+          "location": "response",
+          "path": "options.items.list.cost",
           "type": "Number",
           "optional": false,
           "description": "Associated cost of the item"
         },
         {
           "location": "response",
-          "path": "options.items.filterValue",
+          "path": "options.items.list.filterValue",
           "type": "Object[]",
           "optional": false,
           "description": "If filterIf is defined, the application will then use this value to define if the option is selectable. An array holding exactly one \"group\" object is a tree; anything else is a legacy flat list and keeps its legacy evaluation."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.children",
+          "path": "options.items.list.filterValue.children",
           "type": "Object[]",
           "optional": true,
-          "description": "Groups only. Nested rules and groups, in `order`. Unlike displayIfConditions, filterValue nests inline rather than through `parent`."
+          "description": "Groups only. Nested rules and groups, in `order`. Child nodes are nested inline."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.id",
+          "path": "options.items.list.filterValue.id",
           "type": "String",
           "optional": false,
           "description": "Rules only. Id of the element in filterIf value that will be evaluated on"
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.kind",
+          "path": "options.items.list.filterValue.kind",
           "type": "String=\"rule\",\"group\"",
           "optional": true,
           "description": "\"group\" for a set of parentheses, \"rule\" for a comparison. Absent on legacy entries, which behave as rules."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.metaDatumId",
+          "path": "options.items.list.filterValue.metaDatumId",
           "type": "String",
           "optional": false,
           "description": "Rules only. If defined, the value used for filtering is taken from the meta datum defined by this id instead of filterIf."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.not",
+          "path": "options.items.list.filterValue.not",
           "type": "Boolean",
           "optional": false,
           "description": "The node's result is inverted."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.operator",
+          "path": "options.items.list.filterValue.operator",
           "type": "String=\"and\",\"or\",\"xor\"",
           "optional": false,
           "description": "Operator of a \"group\": \"and\", \"or\", or \"xor\" meaning EXACTLY ONE child is true. On a legacy flat entry this is the per-entry operator and is only honoured by the legacy evaluation."
         },
         {
           "location": "response",
-          "path": "options.items.filterValue.order",
+          "path": "options.items.list.filterValue.order",
           "type": "Integer",
           "optional": true,
           "description": "Position of the node among its siblings."
         },
         {
           "location": "response",
-          "path": "options.items.name",
+          "path": "options.items.list.id",
+          "type": "String",
+          "optional": false,
+          "description": "Choice ID used in stored values"
+        },
+        {
+          "location": "response",
+          "path": "options.items.list.name",
           "type": "String",
           "optional": false,
           "description": "String that will be displayed in the UI"
         },
         {
           "location": "response",
-          "path": "options.items.vendorId",
+          "path": "options.items.list.vendorId",
           "type": "String",
           "optional": false,
           "description": "Specific id that an external software can use to descriminate this value"
@@ -54891,23 +55052,23 @@
         {
           "location": "response",
           "path": "order",
-          "type": "String",
+          "type": "Integer",
           "optional": false,
-          "description": "Order of the definition in the list"
+          "description": "Sort order of the definition"
         },
         {
           "location": "response",
           "path": "project",
           "type": "String",
           "optional": true,
-          "description": "account uniq id if definition is linked to an account"
+          "description": "Project ID on a project-owned definition"
         },
         {
           "location": "response",
           "path": "public",
-          "type": "String",
+          "type": "Boolean",
           "optional": false,
-          "description": "True if the definition is public"
+          "description": "Whether the definition is public"
         },
         {
           "location": "response",
@@ -54934,8 +55095,8 @@
           "location": "header",
           "path": "token",
           "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
+          "optional": true,
+          "description": "Account API token for server-to-server clients. Required if `Authorization` is omitted."
         },
         {
           "location": "response",
@@ -55310,32 +55471,33 @@
       "inherited": false,
       "attributes": [
         {
-          "location": "header",
-          "path": "Authorization",
+          "location": "query",
+          "path": "at",
           "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
+          "optional": true,
+          "default": "latest",
+          "description": "Account snapshot time. Accepts `latest`, Unix time in milliseconds, or an ISO 8601 date or datetime."
         },
         {
           "location": "header",
-          "path": "include-last-modified",
-          "type": "Boolean",
+          "path": "Authorization",
+          "type": "String",
           "optional": true,
-          "description": "Set to `true` to add a `lastModified` field to every"
+          "description": "`Bearer <JWT>` for browser integrations. Required if `token` is omitted."
         },
         {
           "location": "response",
           "path": "key",
           "type": "Object",
           "optional": false,
-          "description": "the name of the object is the uniq id of the metadata."
+          "description": "Metadata definition keyed by its resource ID for the single-definition endpoint"
         },
         {
           "location": "response",
           "path": "key.account",
           "type": "String",
-          "optional": false,
-          "description": "account uniq id"
+          "optional": true,
+          "description": "Account ID on an account-owned definition"
         },
         {
           "location": "response",
@@ -55347,30 +55509,30 @@
         {
           "location": "response",
           "path": "key.clonedFroms",
-          "type": "String",
+          "type": "String[]",
           "optional": true,
-          "description": "if present, chain of if the item was cloned from, last entry is the immediate parent, first entry is the farthest ancestor"
+          "description": "Ancestor definition IDs from oldest to most recent"
         },
         {
           "location": "response",
           "path": "key.cost",
-          "type": "String",
+          "type": "Number",
           "optional": true,
-          "description": "In case of basic cost server, cost of the definition if present"
+          "description": "Cost associated with the definition"
         },
         {
           "location": "response",
           "path": "key.costPerLength",
-          "type": "String",
+          "type": "Boolean",
           "optional": true,
-          "description": "In case of basic cost server, tell if the cost should be multiply by the length"
+          "description": "Whether cost scales with length"
         },
         {
           "location": "response",
           "path": "key.definitionId",
           "type": "String",
           "optional": false,
-          "description": "Unique id of the definition"
+          "description": "Identifier for matching definitions in this collection. Use the entry key in the single-definition endpoint path."
         },
         {
           "location": "response",
@@ -55378,6 +55540,13 @@
           "type": "Object[]",
           "optional": false,
           "description": "Root condition nodes of the tree that decides whether the meta datum is displayed. A group carries its own rules and sub groups in `children`. A set whose root is not a \"group\" is legacy data and keeps its old, order dependent evaluation until it is saved again."
+        },
+        {
+          "location": "response",
+          "path": "key.displayIfConditions.children",
+          "type": "Object[]",
+          "optional": true,
+          "description": "Child condition nodes of a group"
         },
         {
           "location": "response",
@@ -55468,14 +55637,21 @@
           "path": "key.getFrom",
           "type": "String",
           "optional": true,
-          "description": "URL to get the foreign meta data definition details"
+          "description": "URL for the external definition when available"
+        },
+        {
+          "location": "response",
+          "path": "key.id",
+          "type": "String",
+          "optional": false,
+          "description": "Resource ID, also used as this entry's key"
         },
         {
           "location": "response",
           "path": "key.isForeign",
           "type": "Boolean",
           "optional": true,
-          "description": "if true, the meta data definition is from an external account"
+          "description": "Present and true for an external definition"
         },
         {
           "location": "response",
@@ -55494,83 +55670,104 @@
         {
           "location": "response",
           "path": "key.options.items",
-          "type": "Object[]",
-          "optional": false,
-          "description": "If type \"choices\", this will define the list of item that the user can pick from"
+          "type": "Object",
+          "optional": true,
+          "description": "Choice configuration for a definition of type `choices`"
         },
         {
           "location": "response",
-          "path": "key.options.items.cost",
+          "path": "key.options.items.default",
+          "type": "Object|Object[]",
+          "optional": true,
+          "description": "Default choice or choices"
+        },
+        {
+          "location": "response",
+          "path": "key.options.items.list",
+          "type": "Object[]",
+          "optional": true,
+          "description": "Available choices"
+        },
+        {
+          "location": "response",
+          "path": "key.options.items.list.cost",
           "type": "Number",
           "optional": false,
           "description": "Associated cost of the item"
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue",
+          "path": "key.options.items.list.filterValue",
           "type": "Object[]",
           "optional": false,
           "description": "If filterIf is defined, the application will then use this value to define if the option is selectable. An array holding exactly one \"group\" object is a tree; anything else is a legacy flat list and keeps its legacy evaluation."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.children",
+          "path": "key.options.items.list.filterValue.children",
           "type": "Object[]",
           "optional": true,
           "description": "Groups only. Nested rules and groups, in `order`."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.id",
+          "path": "key.options.items.list.filterValue.id",
           "type": "String",
           "optional": false,
           "description": "Rules only. Id of the element in filterIf value that will be evaluated on"
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.kind",
+          "path": "key.options.items.list.filterValue.kind",
           "type": "String=\"rule\",\"group\"",
           "optional": true,
           "description": "\"group\" for a set of parentheses, \"rule\" for a comparison. Absent on legacy entries, which behave as rules."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.metaDatumId",
+          "path": "key.options.items.list.filterValue.metaDatumId",
           "type": "String",
           "optional": false,
           "description": "Rules only. If defined, the value used for filtering is taken from the meta datum defined by this id instead of filterIf."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.not",
+          "path": "key.options.items.list.filterValue.not",
           "type": "Boolean",
           "optional": false,
           "description": "The node's result is inverted."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.operator",
+          "path": "key.options.items.list.filterValue.operator",
           "type": "String=\"and\",\"or\",\"xor\"",
           "optional": false,
           "description": "Operator of a \"group\": \"and\", \"or\", or \"xor\" meaning EXACTLY ONE child is true. On a legacy flat entry this is the per-entry operator and is only honoured by the legacy evaluation."
         },
         {
           "location": "response",
-          "path": "key.options.items.filterValue.order",
+          "path": "key.options.items.list.filterValue.order",
           "type": "Integer",
           "optional": true,
           "description": "Position of the node among its siblings."
         },
         {
           "location": "response",
-          "path": "key.options.items.name",
+          "path": "key.options.items.list.id",
+          "type": "String",
+          "optional": false,
+          "description": "Choice ID used in stored values"
+        },
+        {
+          "location": "response",
+          "path": "key.options.items.list.name",
           "type": "String",
           "optional": false,
           "description": "String that will be displayed in the UI"
         },
         {
           "location": "response",
-          "path": "key.options.items.vendorId",
+          "path": "key.options.items.list.vendorId",
           "type": "String",
           "optional": false,
           "description": "Specific id that an external software can use to descriminate this value"
@@ -55578,16 +55775,23 @@
         {
           "location": "response",
           "path": "key.order",
-          "type": "String",
+          "type": "Integer",
           "optional": false,
-          "description": "Order of the definition in the list"
+          "description": "Sort order of the definition"
+        },
+        {
+          "location": "response",
+          "path": "key.project",
+          "type": "String",
+          "optional": true,
+          "description": "Project ID on a project-owned definition"
         },
         {
           "location": "response",
           "path": "key.public",
-          "type": "String",
+          "type": "Boolean",
           "optional": false,
-          "description": "True if the definition is public"
+          "description": "Whether the definition is public"
         },
         {
           "location": "response",
@@ -55636,14 +55840,14 @@
           "path": "projectId",
           "type": "String",
           "optional": true,
-          "description": "if present, will also return meta data definitions tied to a specific project, in plus of the account."
+          "description": "Project resource ID (`project` from `loaded`), excluding any subproject or stream ID. When it resolves within the account, include project definitions and keep account and global definitions unless the project is configured to use project metadata only. If omitted or unavailable in the account, use account scope."
         },
         {
           "location": "header",
           "path": "token",
           "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
+          "optional": true,
+          "description": "Account API token for server-to-server clients. Required if `Authorization` is omitted."
         }
       ]
     },
@@ -57846,8 +58050,8 @@
           "location": "body",
           "path": "userEmail",
           "type": "String",
-          "optional": false,
-          "description": "- Email of user who do the request, used and require only with API token"
+          "optional": true,
+          "description": "- Email of user who do the request, used and require only with API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -59442,7 +59646,7 @@
           "path": "creator",
           "type": "String",
           "optional": true,
-          "description": "Email of the user creating the folder. If not provided, the user will be inferred from the JWT token."
+          "description": "Email of the user creating the folder. If not provided, the user will be inferred from the JWT token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -63675,101 +63879,6 @@
     {
       "method": "GET",
       "path": "/API/v1.10/wellBoreTypes",
-      "title": "Request a list of shape types for an account",
-      "name": "GetShapeTypes",
-      "group": "ShapeTypes",
-      "sourceVersion": "v1.9",
-      "inherited": true,
-      "attributes": [
-        {
-          "location": "header",
-          "path": "Authorization",
-          "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes",
-          "type": "Object[]",
-          "optional": false,
-          "description": "Array of object containing all shape types defined for an account."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.account",
-          "type": "String",
-          "optional": false,
-          "description": "Account ID of the shape type."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.clonedFroms",
-          "type": "String[]",
-          "optional": true,
-          "description": "Array of ids that describe the parents this element was cloned from"
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.color",
-          "type": "String",
-          "optional": true,
-          "description": "Default rendering color for shapes assigned to this type."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.getFrom",
-          "type": "String",
-          "optional": false,
-          "description": "URL to get the shape type from the external account."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.global",
-          "type": "boolean",
-          "optional": false,
-          "description": "true if the shape type is global."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.id",
-          "type": "String",
-          "optional": false,
-          "description": "Uniq ID of the shape type."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.isForeign",
-          "type": "Boolean",
-          "optional": false,
-          "description": "Indicating if the shape type is from an external account."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.name",
-          "type": "String",
-          "optional": false,
-          "description": "Display name of the shape type."
-        },
-        {
-          "location": "response",
-          "path": "shapeTypes.tags",
-          "type": "String[]",
-          "optional": false,
-          "description": "Array of tags associated with the shape type."
-        },
-        {
-          "location": "header",
-          "path": "token",
-          "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
-        }
-      ]
-    },
-    {
-      "method": "GET",
-      "path": "/API/v1.10/wellBoreTypes",
       "title": "Request a list of well bore types for an account",
       "name": "GetWellBoreTypeById",
       "group": "WellBoreTypes",
@@ -63859,101 +63968,6 @@
           "type": "String[]",
           "optional": false,
           "description": "Array of tags associated with the well bore type."
-        }
-      ]
-    },
-    {
-      "method": "GET",
-      "path": "/API/v1.10/wellBoreTypes",
-      "title": "Request a list of all defined well bore types for an account",
-      "name": "GetWellBoreTypes",
-      "group": "WellBoreTypes",
-      "sourceVersion": "v1.9",
-      "inherited": true,
-      "attributes": [
-        {
-          "location": "header",
-          "path": "Authorization",
-          "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
-        },
-        {
-          "location": "query",
-          "path": "projectId",
-          "type": "String",
-          "optional": true,
-          "description": "if present, will also return well bore types tied to a specific project, in plus of the account data."
-        },
-        {
-          "location": "header",
-          "path": "token",
-          "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes",
-          "type": "Object[]",
-          "optional": false,
-          "description": "Array of object containing all well bore types defined for an account."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.accountId",
-          "type": "String",
-          "optional": false,
-          "description": "Account ID of the well bore type."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.getFrom",
-          "type": "String",
-          "optional": false,
-          "description": "URL to get the wellBore type from the external account."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.id",
-          "type": "String",
-          "optional": false,
-          "description": "Uniq ID of the well bore type."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.isForeign",
-          "type": "Boolean",
-          "optional": false,
-          "description": "Indicating if the wellBore type is from an external account."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.name",
-          "type": "String",
-          "optional": false,
-          "description": "Display name of the well bore type."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.projectId",
-          "type": "String",
-          "optional": false,
-          "description": "Project ID of the well bore type."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.tags",
-          "type": "String[]",
-          "optional": false,
-          "description": "Array of tags associated with the well bore type."
-        },
-        {
-          "location": "response",
-          "path": "wellBoreTypes.vendorId",
-          "type": "String",
-          "optional": false,
-          "description": "Vendor ID of the well bore type."
         }
       ]
     },
@@ -64735,80 +64749,6 @@
     {
       "method": "GET",
       "path": "/API/v1.10/workflowColumns/",
-      "title": "Request a Workflow Column details",
-      "name": "GetWorkflowColumn",
-      "group": "Workflow",
-      "sourceVersion": "v1.10",
-      "inherited": false,
-      "attributes": [
-        {
-          "location": "response",
-          "path": "account",
-          "type": "String",
-          "optional": false,
-          "description": "Account Id of the creator of the column."
-        },
-        {
-          "location": "header",
-          "path": "Authorization",
-          "type": "String",
-          "optional": false,
-          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
-        },
-        {
-          "location": "response",
-          "path": "global",
-          "type": "String",
-          "optional": false,
-          "description": "true if the column is global, false otherwise."
-        },
-        {
-          "location": "response",
-          "path": "id",
-          "type": "String",
-          "optional": false,
-          "description": "Unique identifier of the column."
-        },
-        {
-          "location": "header",
-          "path": "include-last-modified",
-          "type": "Boolean",
-          "optional": true,
-          "description": "Set to `true` to add a `lastModified` field to every"
-        },
-        {
-          "location": "response",
-          "path": "name",
-          "type": "String",
-          "optional": false,
-          "description": "Name of the column."
-        },
-        {
-          "location": "response",
-          "path": "templates",
-          "type": "Object",
-          "optional": false,
-          "description": "list of templates this column is included in."
-        },
-        {
-          "location": "header",
-          "path": "token",
-          "type": "String",
-          "optional": false,
-          "description": "API token ( `Authorization` header must not be set )"
-        },
-        {
-          "location": "response",
-          "path": "vendorId",
-          "type": "String",
-          "optional": false,
-          "description": "Vendor Id of the column."
-        }
-      ]
-    },
-    {
-      "method": "GET",
-      "path": "/API/v1.10/workflowColumns/",
       "title": "Request a list of all Workflow Columns",
       "name": "GetWorkflowColumns",
       "group": "Workflow",
@@ -64941,6 +64881,87 @@
       ]
     },
     {
+      "method": "GET",
+      "path": "/API/v1.10/workflowColumns/:workflowColumnId",
+      "title": "Request a Workflow Column details",
+      "name": "GetWorkflowColumn",
+      "group": "Workflow",
+      "sourceVersion": "v1.10",
+      "inherited": false,
+      "attributes": [
+        {
+          "location": "response",
+          "path": "account",
+          "type": "String",
+          "optional": false,
+          "description": "Account Id of the creator of the column."
+        },
+        {
+          "location": "header",
+          "path": "Authorization",
+          "type": "String",
+          "optional": false,
+          "description": "JWT token ( `token` header must not be set ) ( value should be \"Bearer $JWT_TOKEN\" )"
+        },
+        {
+          "location": "response",
+          "path": "global",
+          "type": "String",
+          "optional": false,
+          "description": "true if the column is global, false otherwise."
+        },
+        {
+          "location": "response",
+          "path": "id",
+          "type": "String",
+          "optional": false,
+          "description": "Unique identifier of the column."
+        },
+        {
+          "location": "header",
+          "path": "include-last-modified",
+          "type": "Boolean",
+          "optional": true,
+          "description": "Set to `true` to add a `lastModified` field to every"
+        },
+        {
+          "location": "response",
+          "path": "name",
+          "type": "String",
+          "optional": false,
+          "description": "Name of the column."
+        },
+        {
+          "location": "response",
+          "path": "templates",
+          "type": "Object",
+          "optional": false,
+          "description": "list of templates this column is included in."
+        },
+        {
+          "location": "header",
+          "path": "token",
+          "type": "String",
+          "optional": false,
+          "description": "API token ( `Authorization` header must not be set )"
+        },
+        {
+          "location": "response",
+          "path": "vendorId",
+          "type": "String",
+          "optional": false,
+          "description": "Vendor Id of the column."
+        },
+        {
+          "location": "path",
+          "path": "workflowColumnId",
+          "type": "String",
+          "optional": false,
+          "description": "Resource ID of the workflow column"
+        }
+      ]
+    },
+    {
       "method": "PATCH",
       "path": "/API/v1.10/workflowColumns/:workflowColumnId",
       "title": "Update a Workflow Column",
@@ -65028,7 +65049,7 @@
           "path": "creator",
           "type": "String",
           "optional": true,
-          "description": "Email of the creator."
+          "description": "Email of the creator. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -65193,7 +65214,7 @@
           "path": "creator",
           "type": "string",
           "optional": true,
-          "description": "Email of the creator if JWT is not provided"
+          "description": "Email of the creator if JWT is not provided. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -65294,8 +65315,8 @@
           "location": "body",
           "path": "creator",
           "type": "String",
-          "optional": false,
-          "description": "Email of the creator."
+          "optional": true,
+          "description": "Email of the creator, required with an API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -65529,8 +65550,8 @@
           "location": "body",
           "path": "updatedBy",
           "type": "String",
-          "optional": false,
-          "description": "Email of the updater."
+          "optional": true,
+          "description": "Email of the updater, required with an API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "path",
@@ -67565,7 +67586,7 @@
           "path": "creator",
           "type": "string",
           "optional": true,
-          "description": "Email of the creator if JWT is not provided"
+          "description": "Email of the creator if JWT is not provided. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",
@@ -67666,8 +67687,8 @@
           "location": "body",
           "path": "creator",
           "type": "String",
-          "optional": false,
-          "description": "Email of the creator."
+          "optional": true,
+          "description": "Email of the creator, required with an API token. With a JWT, leave it out: the JWT user is used, and an email of another user is refused with a 422."
         },
         {
           "location": "body",

@@ -1,26 +1,16 @@
 # Changelog
 
-## 0.11.0 - 2026-11-13
+## 0.17.0 - 2026-11-26
 
 - Added the `upgrade-fieldtwin-integration` skill for moving an integration, script, or server
   client from FieldTwin API v1.x to v2.0: an eight-step workflow from inventory to rollback, the
   complete v1.10 to v2.0 endpoint mapping, read and write migration references with fictional
   before-and-after examples, behaviour changes, the calls that stay on v1.10, and eleven
-  evaluations.
-- Followed the updated migration guide on the v2.0 account ID: an embedded integration takes it
-  from `account` in the `loaded` message, an integration backend gets it from its own frontend,
-  and `GET /users/whoami` is only the fallback for a job that no frontend can pass it to. Removed
-  the `whoami` comparison from the upgrade workflow, and added `account` to the `loaded` field
-  lists and the sample bridge in `develop-fieldtwin-integration`.
-- Regenerated both API attribute catalogs from the FieldTwin 9.0 contract: 304 effective v1.10
-  operations with 9,512 fields, and 50 v2.0 operations, 112 readable resource types and every
-  per-stream write schema. New v2.0 coverage includes `whoami`, paged `/resources` and
-  `/resources/count` on every stream, `/logs`, account `/summary`, `loadingStatus`,
-  `customTabs/manifest`, and the reservoir, point-cloud, Gaussian-splat and scene-model types.
-- Repaired the catalog generator for the current source layout. It now builds the OpenAPI
-  document through the single builder entry point, and its module loader copies schema
-  declarations from the source text instead of carrying hand-maintained copies, with a trace
-  switch for diagnosing intercepted modules.
+  evaluations. It carries the same update check as the other two skills.
+- Documented where the v2.0 account ID comes from: an embedded integration takes it from
+  `account` in the `loaded` message, an integration backend gets it from its own frontend, and
+  `GET /users/whoami` is only the fallback for a job that no frontend can pass it to. Added
+  `account` to the `loaded` field lists and the sample bridge in `develop-fieldtwin-integration`.
 - Corrected v2.0 guidance in `develop-fieldtwin-integration`: an unknown `resourceTypes` value
   answers `422`, not `400`; unknown batch types and fields are dropped silently instead of being
   rejected; PATCH answers `{}`; v2.0 ships with FieldTwin 9.0 beside v1.10.
@@ -31,6 +21,134 @@
 - Pointed every "do not translate v1.10 to v2.0" rule at the new skill, split the public API
   reference links by version, added two develop-skill evaluations, and raised the validator's
   v2.0 operation threshold and scanned-file size limit so the larger catalog stays checked.
+
+## 0.16.4 - 2026-11-26
+
+- A request sent with a stored secret is described with fields instead of a hand-built URL and
+  body: `query` for query parameters, and `json`, `form` or `multipart` for the body, beside
+  `headers` and the raw `body`. The secrets reference lists them with examples.
+- The integration guide bundled with `develop-fieldtwin-integration` has a section on calling a
+  remote API with a stored secret, and the skill names the request fields.
+
+## 0.16.3 - 2026-11-25
+
+- The hosting reference has a section on the pages file of a hosted integration: a manifest and
+  `pages.json` example, URLs relative to the pages file, the fields a page may set, when `url`
+  can be omitted, and what to expect after a redeploy.
+- It says the list is the same for every user, since it is a static file, and what to do when
+  tabs must differ per user.
+- `develop-fieldtwin-integration` says that a hosted integration's `dynamicPagesUrl` is a file
+  read with a plain GET, not an endpoint.
+- The secrets reference lists `DELETE /secrets`, which removes every secret of an integration,
+  and says that removing an integration from its account removes its secrets.
+
+## 0.16.2 - 2026-11-25
+
+- Fixed the API failure and cancellation recipe, which called `subprojects/{id}/stagedAssets`
+  without the project ID. It now uses `v110SubProjectPath`.
+
+## 0.16.1 - 2026-11-25
+
+- Both skills tell the agent how to talk to users who are not developers: plain words first, one
+  question at a time, what is about to happen, and who does the next step after a failure.
+- Both skills ask the agent to test the integration in the real FieldTwin application whenever
+  an instance and a browser tool are available, and to say so when it could not.
+- `create-fieldtwin-integration` says where an integration should appear: a one-off task such as
+  an export opens as a toolbar dialog, and a hosted integration can list several tabs in a pages file of its bundle.
+- `create-fieldtwin-integration` no longer lists every Account Settings page as needing a full
+  repository, and a single page may ship a settings page for its API key.
+
+## 0.16.0 - 2026-11-25
+
+- Added `references/integration-secrets.md` to `create-fieldtwin-integration`: a static or hosted
+  integration can call a remote API with an API key that an account admin stores in FieldTwin. The
+  key is write-only, bound to a URL prefix and a header, and FieldTwin sends the request and
+  streams the answer. The reference covers the settings page to generate, the request call and its
+  errors.
+- Every user of the integration can list which secrets are set, so a page can show whether it is
+  connected before it calls the remote API.
+- The same reference says where non-secret setup goes: `vendorAttributes` of the account or the
+  project, under a key named after the integration.
+- An API key alone no longer makes `create-fieldtwin-integration` recommend the full repository
+  shape, and `develop-fieldtwin-integration` points to the reference.
+
+## 0.15.4 - 2026-11-25
+
+- Cut the create skill's instructions from 20 KB to 5 KB and shortened its description. The
+  full-repository contracts are read from the repository and deployment reference only.
+
+## 0.15.3 - 2026-11-25
+
+- Compare each installed skill with its own version in the latest stable package release.
+
+## 0.15.2 - 2026-11-25
+
+- Both skills check for a newer stable release and explain how to update the installed copy.
+
+## 0.15.1 - 2026-11-25
+
+- Shortened the integration skill and routed detailed guidance to focused references.
+- Regenerated API v1.10 and v2.0 catalogs and added a strict method and path lookup.
+- Documented metadata lookup parameters and the distinct REST and host metadata IDs.
+
+## 0.15.0 - 2026-11-23
+
+- Added `rollback <integrationId> --version N` and `pull --version N` to `ft-integrations.mjs`:
+  FieldTwin keeps ten versions of each hosted integration, and a kept version can be made live
+  again or downloaded.
+- Hosted integrations can be deployed by non-admin users whose role has "Can deploy integrations"
+  under a PRO licence, on accounts with the `hosted-integrations` module. The errors
+  `not-account-admin` and `no-administered-account` became `not-allowed`, `module-not-enabled`
+  and `no-deployable-account`.
+- The skill deploys only through the script, never through FieldTwin Admin or a browser, and says
+  what to do when an agent sandbox blocks the network. `develop-fieldtwin-integration` points to
+  it, so an agent with only that skill installed does not fall back to the Admin upload.
+- The hosting reference says FieldTwin serves hosted integrations under `<instance>/integration/`.
+
+## 0.14.0 - 2026-11-23
+
+- Added deployment to FieldTwin integration hosting to `create-fieldtwin-integration`:
+  `scripts/ft-integrations.mjs` logs the user in through their browser and deploys or updates a
+  static integration on a FieldTwin instance that hosts integrations, and
+  `references/hosted-integrations.md` describes what a hosted integration must be and the deploy
+  workflow.
+- The package now ships a script that makes network requests and stores a deploy token; `README.md`
+  and `SECURITY.md` say exactly what it does, including what the token allows and how the
+  credentials file is protected on each platform.
+- Dot-files, dot-directories and `node_modules` are never packaged for hosting, `zip` never
+  archives its own output, and the script reports how many entries it left out.
+- A dead login (the grant was revoked, or the user logged in again elsewhere) now leads to a clean
+  `login-required`; an instance without integration hosting reports `hosting-disabled`; only a
+  refused token refresh (400, 401, 403) drops the stored login.
+- Flags accept `--name=value` as well as `--name value`, and `delete` removes the project link when
+  it pointed at the deleted integration.
+- The hosting reference lists every error the script reports, explains the one-login-per-instance
+  rule, and `SKILL.md` no longer asks a hosted page for absolute manifest URLs.
+
+## 0.13.0 - 2026-11-23
+
+- Removed the hosted-deployment guidance added to `create-fieldtwin-integration` in 0.12.0. It
+  described a service that is not released yet. A single-page integration is deployed by copying
+  it to a static host, as before.
+
+## 0.12.0 - 2026-11-19
+
+- Added Vibe Deploy guidance to `create-fieldtwin-integration`: the static and Node.js shapes it
+  builds without a Dockerfile, the runtime contract (`PORT`, read-only filesystem, FieldTwin
+  origins in environment variables and `/__vibe/config.json`), and deploying from an agent with a
+  per-application deploy token and status polling.
+
+## 0.11.0 - 2026-11-18
+
+- Added Operate shared views: the `supportShareView` integration and dynamic-page flag, the
+  `shareViewCapture` / `shareViewState` / `shareViewRestore` messages, the 5-second capture wait,
+  64 KiB / 16-integration limits, integration-ID keys, and restore timing after `loaded`. Each dynamic
+  page opts in, is asked separately, and receives its `pageId` in both host messages.
+- Documented that integrations must version their state and validate it on restore, since shared
+  links outlive releases.
+- Brought the postMessage catalog back in line with the host dispatcher by adding `getAllDeepTags`,
+  `updateResourceColors`, and `displayTimeline` with their replies; aligned provenance with
+  integration-guide revision 66.
 
 ## 0.10.0 - 2026-10-01
 

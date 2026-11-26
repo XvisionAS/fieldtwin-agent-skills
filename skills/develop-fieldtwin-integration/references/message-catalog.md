@@ -40,6 +40,8 @@ origin with `*` when sending credentials, project data, or production messages.
 | Host → integration | `viewBox` | bounds are under `data.viewBox` |
 | Host → integration | `waterCurrentRequest` | event-only broadcast when walking starts, plus normal transport fields |
 | Host → integration | `waterCurrentUpdate` | direct reply with top-level `success` and optional `error` |
+| Host → integration | `shareViewCapture` | `data.requestId`, `data.pageId` for a dynamic page; answer with `shareViewState` |
+| Host → integration | `shareViewRestore` | saved state under `data.state`, `data.pageId` for a dynamic page, once, right after `loaded` |
 | Host → integration | `visibleResources` | resources and `queryId` are under `data` |
 | Host → integration | `resources` | resources and `queryId` are under `data` |
 | Host → integration | `resourcesByTags` | grouped results, `queryId`, and any error are under `data` |
@@ -51,6 +53,7 @@ origin with `*` when sending credentials, project data, or production messages.
 | Integration → host | `zoomAt` / `zoomOn` | focus parameters are under `data` |
 | Integration → host | `toast` | notification type and text are under `data` |
 | Integration → host | `waterCurrentUpdate` | `data.stations`, optional `data.label`; empty stations clear only this sender |
+| Integration → host | `shareViewState` | `data.requestId` and versioned `data.state`, or `null` for nothing to save |
 | Integration → host | `getProjectData` / `getViewBox` / `clearSelection` | event-only request |
 
 Operation Mode adds several intentionally different envelopes. See
@@ -59,6 +62,9 @@ Operation Mode adds several intentionally different envelopes. See
 `contextMenuAction` carry their fields at the top level, while search results,
 progress, filter registration, context-menu registration, panel navigation, and
 time-series payloads use `data`.
+
+Read [shared-views.md](shared-views.md) for the `supportShareView` opt-in, state size limits,
+versioning, and restore timing.
 
 Read [water-current.md](water-current.md) for walking/swimming depth profiles, numerical limits,
 project coordinates, true depths, ownership, sampling, time changes, and pop-out cleanup.

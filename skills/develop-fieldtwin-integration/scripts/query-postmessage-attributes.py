@@ -30,7 +30,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--surface", help="Surface such as designer, pop-out, modal, or project-settings")
     parser.add_argument(
         "--delivery",
-        choices=("sendMessage", "bootstrapDirect", "directReply", "integrationSend"),
+        choices=("sendMessage", "bootstrapDirect", "targetedDirect", "directReply", "integrationSend"),
     )
     parser.add_argument("--field", help="Nested field path substring")
     parser.add_argument("--list-events", action="store_true")

@@ -180,7 +180,8 @@ The reply preserves the request order among resources that resolve. Unknown IDs
 and unknown collections are omitted; the reply does not insert `null` or a
 per-item error. Returned resources contain their released attributes plus host
 query decorations such as `metaData`, `tags`, and applicable length or connection
-type values.
+type values. The host's metadata row `id` is the definition resource ID. For REST metadata rows,
+use `metaDatumId` instead. See [metadata lookup](backend-api-v1.10.md#read-metadata-for-a-selection).
 
 Account, project, and subproject IDs may be fully qualified as
 `resourceId:streamId`. When a root resource is in its main stream,
@@ -269,6 +270,7 @@ API contract is a better fit than UI-mediated mutations.
 | `deleteChart` | `data.id` | Top-level `deleteChart` result with `success`, `chartId`, or `error`. |
 | `updateTagStyles` | `data.tagStyles` with a required `category` on every rule; optional `data.requestId` | Top-level `updateTagStyles` result with `success`, `requestId`, `ignored`, or `error`. |
 | `waterCurrentUpdate` | `data.stations[]` with CRS `x`/`y` and depth `profile[]`; optional `data.label` | Top-level `waterCurrentUpdate` result with `success` and optional `error`; no request ID. |
+| `shareViewState` | `data.requestId` from `shareViewCapture`; versioned JSON `data.state` of at most 64 KiB, or `null` | Top-level `shareViewState` result with `success` and optional `error`. Only the asked window may answer. See [shared-views.md](shared-views.md). |
 
 For walking/swimming current, read [water-current.md](water-current.md). The host broadcasts
 `waterCurrentRequest` when a walk starts; the sender's latest complete snapshot replaces its field,
